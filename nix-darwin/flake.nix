@@ -28,7 +28,11 @@
           "firefox"
           "keepassxc"
         ];
-        onActivation.cleanup = "zap";
+        onActivation = {
+          cleanup = "zap";
+          autoUpdate = true;
+          upgrade = true;
+        };
       };
 
       nixpkgs.config.allowUnfree = true;
