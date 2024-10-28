@@ -27,6 +27,7 @@
         casks = [
           "firefox"
           "keepassxc"
+          "google-drive"
         ];
         onActivation = {
           cleanup = "zap";
