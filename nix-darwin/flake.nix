@@ -64,6 +64,21 @@
       system.defaults = {
         dock.autohide = true; # Hide mac dock
         dock.mru-spaces = false; # No auto-rearrange spaces
+        dock.persistent-apps = [
+          "/System/Applications/Mail.app"
+          "${pkgs.discord}/Applications/Discord.app"
+          "/Applications/Firefox.app"
+          "/Applications/KeePassXC.app"
+          "${pkgs.obsidian}/Applications/Obsidian.app"
+        ];
+        # Specifies apps that should always be pinned to the macOS dock. 
+        # Alacritty and Obsidian are specified through Nix packages (using `${pkgs}` syntax), 
+        # while other applications are provided by absolute paths.
+        
+        loginwindow.GuestEnabled = false;      # Disables guest login
+        NSGlobalDomain.AppleICUForce24HourTime = true;  # Forces 24-hour time format
+        NSGlobalDomain.AppleInterfaceStyle = "Dark";    # Sets the interface to Dark mode
+        NSGlobalDomain.KeyRepeat = 2;                   # Sets the key repeat rate
         finder.AppleShowAllExtensions = true; # Show all extensions
         finder.FXPreferredViewStyle = "clmv"; # Finder column view
         screencapture.location = "~/Pictures/screenshots";
