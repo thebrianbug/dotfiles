@@ -19,6 +19,7 @@
          gitAndTools.gitFull
          mkalias
          obsidian
+         discord
       ];
 
       homebrew = {
