@@ -75,6 +75,12 @@
           "${pkgs.vscode}/Applications/Visual Studio Code.app"
         ];
 
+        # Disable hot corners
+        dock."wvous-tl-corner" = 1;
+        dock."wvous-tr-corner" = 1;
+        dock."wvous-bl-corner" = 1;
+        dock."wvous-br-corner" = 1;
+
         # Specifies apps that should always be pinned to the macOS dock. 
         # Alacritty and Obsidian are specified through Nix packages (using `${pkgs}` syntax), 
         # while other applications are provided by absolute paths.
