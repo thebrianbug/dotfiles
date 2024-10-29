@@ -20,6 +20,7 @@
          mkalias
          obsidian
          discord
+         vscode
       ];
 
       homebrew = {
@@ -71,7 +72,9 @@
           "/Applications/Firefox.app"
           "/Applications/KeePassXC.app"
           "${pkgs.obsidian}/Applications/Obsidian.app"
+          "${pkgs.vscode}/Applications/Visual Studio Code.app"
         ];
+
         # Specifies apps that should always be pinned to the macOS dock. 
         # Alacritty and Obsidian are specified through Nix packages (using `${pkgs}` syntax), 
         # while other applications are provided by absolute paths.
