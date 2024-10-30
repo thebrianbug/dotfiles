@@ -162,9 +162,6 @@
           # for home-manager, don't change this!
           home.stateVersion = "24.05";
 
-          # Let home-manager install and manage itself.
-          programs.home-manager.enable = true;
-
           home.packages = with pkgs; [ ];
 
           home.sessionVariables = {
