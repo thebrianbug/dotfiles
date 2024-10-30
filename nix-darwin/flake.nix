@@ -32,10 +32,6 @@
             curl
             gitAndTools.gitFull
             mkalias
-            obsidian
-            discord
-            vscode
-            zoom-us
           ];
 
           homebrew = {

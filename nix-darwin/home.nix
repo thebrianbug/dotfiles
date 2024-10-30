@@ -5,7 +5,12 @@
   # for home-manager, don't change this!
   home.stateVersion = "24.05";
 
-  home.packages = with pkgs; [ ];
+  home.packages = with pkgs; [
+    obsidian
+    discord
+    vscode
+    zoom-us
+  ];
 
   home.sessionVariables = {
     EDITOR = "vim";
