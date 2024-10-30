@@ -1,0 +1,6 @@
+.direnv/*
+.pre-commit-config.yaml
+.DS_Store
+result
+*.otter.*
+
