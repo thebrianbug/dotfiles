@@ -18,6 +18,7 @@
       # List packages installed in system profile. To search by name, run:
       # $ nix-env -qaP | grep wget
       environment.systemPackages = with pkgs; [
+         home-manager
          vim
          curl
          gitAndTools.gitFull
@@ -134,6 +135,11 @@
         done
             '';
 
+        users.users.brianmcilwain = {
+          name = "brianmcilwain";
+          home = "/Users/brianmcilwain";
+        };
+
     };
   in
   {
@@ -154,20 +160,22 @@
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           
-          users.users.brianmcilwain = {
-            name = "brianmcilwain";
-            home = "/Users/brianmcilwain";
-          };
-          
           # Home Manager configuration for user
-          home-manager.users.brianmcilwain = { pkgs, ... }: {
+          home-manager.users.brianmcilwain = { pkgs, config, ... }: {
             home.stateVersion = "24.05";
+            programs.bash.enable = true;
 
             home.packages = [
               pkgs.atool
               pkgs.httpie
             ];
-            programs.bash.enable = true;
+
+            home.file = {
+              ".config/discord/settings.json" =  {
+                text = "{ \"SKIP_HOST_UPDATE\": true }";
+              };
+
+            };
           };
         }
       ];
