@@ -35,6 +35,7 @@
             obsidian
             discord
             vscode
+            zoom-us
           ];
 
           homebrew = {
