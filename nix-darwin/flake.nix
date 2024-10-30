@@ -141,6 +141,26 @@
         };
 
     };
+  homeconfig = {pkgs, ...}: {
+    # this is internal compatibility configuration 
+    # for home-manager, don't change this!
+    home.stateVersion = "24.05";
+
+    # Let home-manager install and manage itself.
+    programs.home-manager.enable = true;
+
+    home.packages = with pkgs; [];
+
+    home.sessionVariables = {
+        EDITOR = "vim";
+    };
+    home.file = {
+      ".config/discord/settings.json" =  {
+	text = "{ \"SKIP_HOST_UPDATE\": true }";
+      };
+    };
+
+  };
   in
   {
     # Build darwin flake using:
@@ -149,34 +169,19 @@
       modules = [ 
         configuration
         nix-homebrew.darwinModules.nix-homebrew
-        home-manager.darwinModules.home-manager
         {
           nix-homebrew = {
             enable = true;
             # User owning Homebrew prefix
             user = "brianmcilwain";
           };
-
+        }
+        home-manager.darwinModules.home-manager
+        {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
-          
-          # Home Manager configuration for user
-          home-manager.users.brianmcilwain = { pkgs, config, ... }: {
-            home.stateVersion = "24.05";
-            programs.bash.enable = true;
-
-            home.packages = [
-              pkgs.atool
-              pkgs.httpie
-            ];
-
-            home.file = {
-              ".config/discord/settings.json" =  {
-                text = "{ \"SKIP_HOST_UPDATE\": true }";
-              };
-
-            };
-          };
+          home-manager.verbose = true;
+          home-manager.users.brianmcilwain = homeconfig;
         }
       ];
     };
