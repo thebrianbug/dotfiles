@@ -22,6 +22,12 @@
     nodePackages.typescript
   ];
 
+  programs.git = {
+    enable = true;
+    userName = "thebrianbug";
+    userEmail = "thebrianbug@gmail.com";
+  };
+
   programs.vscode = {
     enable = true;
     # package = pkgs.vscodium;
