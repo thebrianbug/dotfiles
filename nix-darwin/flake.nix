@@ -34,6 +34,7 @@
             curl
             gitAndTools.gitFull
             mkalias
+            docker-client
           ];
 
           homebrew = {
