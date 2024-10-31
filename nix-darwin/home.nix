@@ -10,6 +10,7 @@
     discord
     vscode
     zoom-us
+    google-chrome
   ];
 
   home.sessionVariables = {
