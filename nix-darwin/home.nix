@@ -8,16 +8,26 @@
   home.packages = with pkgs; [
     obsidian
     discord
-    vscode
     zoom-us
     google-chrome
+
+    # Dev tools
+    vscode
+    nodePackages.typescript
+    nodejs_20
+    python39
   ];
 
-  programs.zsh.enable = true;
-  programs.zsh.enableCompletion = true;
-  programs.zsh.autosuggestion.enable = true;
-  programs.zsh.syntaxHighlighting.enable = true;
-  programs.zsh.defaultKeymap = "vicmd";
+  programs.zsh = {
+    enable = true;
+    enableCompletion = true;
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
+    #defaultKeymap = "vicmd";
+    initExtra = ''
+      bindkey -v
+    '';
+  };
 
   home.sessionVariables = {
     EDITOR = "vim";
