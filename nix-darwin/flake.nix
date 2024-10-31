@@ -6,6 +6,14 @@
     nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    homebrew-core = {
+      url = "github:homebrew/homebrew-core";
+      flake = false;
+    };
+    homebrew-cask = {
+      url = "github:homebrew/homebrew-cask";
+      flake = false;
+    };
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -18,6 +26,8 @@
       nix-darwin,
       nixpkgs,
       nix-homebrew,
+      homebrew-core,
+      homebrew-cask,
       home-manager,
     }:
     let
@@ -147,8 +157,12 @@
           {
             nix-homebrew = {
               enable = true;
-              # User owning Homebrew prefix
               user = "brianmcilwain";
+              taps = {
+                "homebrew/homebrew-core" = homebrew-core;
+                "homebrew/homebrew-cask" = homebrew-cask;
+              };
+              mutableTaps = false;
             };
           }
           home-manager.darwinModules.home-manager
