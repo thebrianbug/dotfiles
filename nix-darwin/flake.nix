@@ -49,7 +49,6 @@
             curl
             gitAndTools.gitFull
             mkalias
-            docker-client
           ];
 
           homebrew = {
@@ -58,6 +57,7 @@
               "firefox"
               "keepassxc"
               "google-drive"
+              "docker"
             ];
             onActivation = {
               cleanup = "zap";
