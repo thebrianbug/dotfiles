@@ -14,6 +14,10 @@
       url = "github:homebrew/homebrew-cask";
       flake = false;
     };
+    homebrew-bundle = {
+      url = "github:homebrew/homebrew-bundle";
+      flake = false;
+    };
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -28,6 +32,7 @@
       nix-homebrew,
       homebrew-core,
       homebrew-cask,
+      homebrew-bundle,
       home-manager,
     }:
     let
@@ -152,17 +157,22 @@
       # $ darwin-rebuild build --flake .#simple
       darwinConfigurations."Brians-MacBook-Pro" = nix-darwin.lib.darwinSystem {
         modules = [
+          ({ config, ... }: {
+            homebrew.taps = builtins.attrNames config.nix-homebrew.taps;
+          })  
           configuration
           nix-homebrew.darwinModules.nix-homebrew
           {
             nix-homebrew = {
               enable = true;
               user = "brianmcilwain";
+              # autoMigrate = true;
               taps = {
                 "homebrew/homebrew-core" = homebrew-core;
                 "homebrew/homebrew-cask" = homebrew-cask;
+                "homebrew/homebrew-bundle" = homebrew-bundle;
               };
-              mutableTaps = false;
+              mutableTaps = true;
             };
           }
           home-manager.darwinModules.home-manager
