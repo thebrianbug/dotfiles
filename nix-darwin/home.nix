@@ -11,12 +11,24 @@
     zoom-us
     google-chrome
 
-    # Dev tools
-    vscode
-    nodePackages.typescript
-    nodejs_20
+    # Dev languages
+    fzf
     python39
+    nodejs
+    nodePackages.live-server
+    nodePackages.nodemon
+    nodePackages.prettier
+    nodePackages.npm
+    nodePackages.typescript
   ];
+
+  programs.vscode = {
+    enable = true;
+    # package = pkgs.vscodium;
+    extensions = with pkgs.vscode-extensions; [
+      vscodevim.vim
+    ];
+  };
 
   programs.zsh = {
     enable = true;
