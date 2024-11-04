@@ -111,18 +111,14 @@
             dock."wvous-bl-corner" = 1;
             dock."wvous-br-corner" = 1;
 
-            # Specifies apps that should always be pinned to the macOS dock.
-            # Alacritty and Obsidian are specified through Nix packages (using `${pkgs}` syntax),
-            # while other applications are provided by absolute paths.
-
-            loginwindow.GuestEnabled = false; # Disables guest login
-            NSGlobalDomain.AppleICUForce24HourTime = true; # Forces 24-hour time format
-            NSGlobalDomain.AppleInterfaceStyle = "Dark"; # Sets the interface to Dark mode
-            NSGlobalDomain.KeyRepeat = 2; # Sets the key repeat rate
-            finder.AppleShowAllExtensions = true; # Show all extensions
+            loginwindow.GuestEnabled = false;
+            NSGlobalDomain.AppleICUForce24HourTime = true;
+            NSGlobalDomain.AppleInterfaceStyle = "Dark";
+            NSGlobalDomain.KeyRepeat = 2;
+            finder.AppleShowAllExtensions = true;
             finder.FXPreferredViewStyle = "clmv"; # Finder column view
             screencapture.location = "~/Pictures/screenshots";
-            screensaver.askForPasswordDelay = 10;
+            screensaver.askForPasswordDelay = 10; # Minutes
           };
 
           # Enable Linux builder for building GNU/Linux binaries
