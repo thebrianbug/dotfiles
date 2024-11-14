@@ -115,6 +115,7 @@
             NSGlobalDomain.AppleICUForce24HourTime = true;
             NSGlobalDomain.AppleInterfaceStyle = "Dark";
             NSGlobalDomain.KeyRepeat = 2;
+            NSGlobalDomain."com.apple.mouse.tapBehavior" = 1;
             finder.AppleShowAllExtensions = true;
             finder.FXPreferredViewStyle = "clmv"; # Finder column view
             screencapture.location = "~/Pictures/screenshots";
