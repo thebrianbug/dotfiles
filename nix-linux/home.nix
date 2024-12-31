@@ -99,6 +99,10 @@
     "org/gnome/shell" = {
       favorite-apps = [
         "firefox.desktop"
+        "org.gnome.Terminal.desktop"
+        "org.gnome.Nautilus.desktop"
+	"discord.desktop"
+	"keepassxc.desktop"
       ];
     };
     "org/gnome/desktop/interface" = {
