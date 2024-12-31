@@ -25,11 +25,13 @@
 
     pkgs.keepassxc
     pkgs.obsidian
-    pkgs.discord
-    pkgs.rclone
-    pkgs.zoom-us
+    pkgs.vesktop # Replacement for pkgs.discord
+
     pkgs.google-chrome
     pkgs.vscodium
+
+    pkgs.rclone
+    pkgs.zoom-us
 
     # Dev
     pkgs.fzf
@@ -101,7 +103,7 @@
         "org.gnome.Nautilus.desktop"
         "firefox.desktop"
 	"obsidian.desktop"
-	"discord.desktop"
+	"vesktop.desktop"
 	"org.keepassxc.KeePassXC.desktop"
         "org.gnome.Terminal.desktop"
       ];
