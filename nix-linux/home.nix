@@ -98,11 +98,12 @@
   dconf.settings = {
     "org/gnome/shell" = {
       favorite-apps = [
-        "firefox.desktop"
-        "org.gnome.Terminal.desktop"
         "org.gnome.Nautilus.desktop"
+        "firefox.desktop"
+	"obsidian.desktop"
 	"discord.desktop"
-	"keepassxc.desktop"
+	"org.keepassxc.KeePassXC.desktop"
+        "org.gnome.Terminal.desktop"
       ];
     };
     "org/gnome/desktop/interface" = {
