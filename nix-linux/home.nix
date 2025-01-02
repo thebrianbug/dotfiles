@@ -31,7 +31,7 @@
     pkgs.vscodium
 
     pkgs.rclone
-    pkgs.zoom-us
+    # pkgs.zoom-us # Not launching
 
     # Dev
     pkgs.fzf
