@@ -28,7 +28,6 @@
     pkgs.vesktop # Replacement for pkgs.discord
 
     pkgs.google-chrome
-    pkgs.vscodium
 
     pkgs.rclone
     # pkgs.zoom-us # Not launching
@@ -49,20 +48,6 @@
     package = pkgs.vscodium;
     extensions = with pkgs.vscode-extensions; [
       vscodevim.vim
-    ];
-  };
-
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
-    plugins = [
-      {
-        name = "vi-mode";
-        src = pkgs.zsh-vi-mode;
-        file = "share/zsh-vi-mode/zsh-vi-mode.plugin.zsh";
-      }
     ];
   };
 
@@ -105,7 +90,6 @@
 	"obsidian.desktop"
 	"vesktop.desktop"
 	"org.keepassxc.KeePassXC.desktop"
-        "org.gnome.Terminal.desktop"
       ];
     };
     "org/gnome/desktop/interface" = {
