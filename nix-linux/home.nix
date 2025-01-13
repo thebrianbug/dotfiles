@@ -36,11 +36,11 @@
     # Dev
     pkgs.fzf
     pkgs.python39
-    pkgs.nodejs
+    pkgs.nodejs_20
     pkgs.nodePackages.live-server
     pkgs.nodePackages.nodemon
     pkgs.nodePackages.prettier
-    pkgs.nodePackages.npm
+    # pkgs.nodePackages.npm
     pkgs.nodePackages.typescript
   ];
 
