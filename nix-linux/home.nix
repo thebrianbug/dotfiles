@@ -34,7 +34,9 @@
     # pkgs.zoom-us # Not launching
 
     # Dev
+    pkgs.podman
     pkgs.podman-compose
+    pkgs.dbeaver-bin
 
     pkgs.fzf
     pkgs.python39
@@ -104,10 +106,6 @@
     enable = true;
     userName = "Brian Bug";
     userEmail = "thebrianbug@gmail.com";
-  };
-
-  services.podman = {
-    enable = true;
   };
 
   programs.neovim = {
