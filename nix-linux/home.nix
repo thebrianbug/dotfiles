@@ -53,6 +53,7 @@
     package = pkgs.vscodium;
     extensions = with pkgs.vscode-extensions; [
       vscodevim.vim
+      saoudrizwan.claude-dev
     ];
   };
 
