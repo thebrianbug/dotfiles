@@ -54,6 +54,7 @@
     extensions = with pkgs.vscode-extensions; [
       vscodevim.vim
       saoudrizwan.claude-dev
+      jnoortheen.nix-ide
     ];
   };
 
