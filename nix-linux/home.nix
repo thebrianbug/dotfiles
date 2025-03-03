@@ -93,9 +93,9 @@
       favorite-apps = [
         "org.gnome.Nautilus.desktop"
         "firefox.desktop"
-	"obsidian.desktop"
-	"vesktop.desktop"
-	"org.keepassxc.KeePassXC.desktop"
+        "obsidian.desktop"
+        "vesktop.desktop"
+        "org.keepassxc.KeePassXC.desktop"
       ];
     };
     "org/gnome/desktop/interface" = {
