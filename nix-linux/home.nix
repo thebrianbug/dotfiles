@@ -23,6 +23,16 @@
   home.packages = [
     pkgs.wl-clipboard # Wayland clipboard access
     pkgs.gnome-tweaks
+    (pkgs.writeShellScriptBin "docker" ''
+      #!/usr/bin/env bash
+      set -euo pipefail
+      exec podman "$@"
+    '')
+    (pkgs.writeShellScriptBin "docker-compose" ''
+      #!/usr/bin/env bash
+      set -euo pipefail
+      exec podman-compose "$@"
+    '')
 
     pkgs.keepassxc
     pkgs.obsidian
@@ -79,6 +89,8 @@
   #
   home.sessionVariables = {
     EDITOR = "nvim";
+    DOCKER_HOST = "unix://$XDG_RUNTIME_DIR/podman/podman.sock";
+    DOCKER_SOCK = "$XDG_RUNTIME_DIR/podman/podman.sock";
   };
 
   # Enable X server services
@@ -109,6 +121,8 @@
     userName = "Brian Bug";
     userEmail = "thebrianbug@gmail.com";
   };
+
+  programs.bash.enable = true;
 
   programs.neovim = {
     enable = true;
