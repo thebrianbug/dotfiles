@@ -19,12 +19,18 @@
     };
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
+      enable-hot-corners = true;
+    };
+    "org/gnome/desktop/wm/preferences" = {
+      button-layout = "appmenu:minimize,maximize,close";  # Ensure window controls are visible
+      resize-with-right-button = true;
     };
   };
 
   home.packages = with pkgs; [
     # System utilities
     gnome-tweaks
+    adwaita-icon-theme  # Ensure proper GNOME theming
     nerd-fonts.jetbrains-mono
 
     # Wayland utilities
