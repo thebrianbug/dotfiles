@@ -25,7 +25,6 @@
 
   home.packages = with pkgs; [
     # System utilities
-    alacritty
     gnome-tweaks
     wl-clipboard
 
