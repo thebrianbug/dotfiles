@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   dconf.settings = {
@@ -54,7 +54,7 @@
   ];
 
   home.sessionVariables = {
-    QT_QPA_PLATFORM = "wayland;xcb";  # Prefer Wayland, fallback to XCB
+    QT_QPA_PLATFORM = lib.mkForce "wayland;xcb";  # Prefer Wayland, fallback to XCB
     QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";  # Let GNOME handle decorations
     QT_AUTO_SCREEN_SCALE_FACTOR = "1";  # Enable HiDPI scaling
   };
