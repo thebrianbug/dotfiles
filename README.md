@@ -30,7 +30,7 @@ cd dotfiles
 2. Apply the configuration:
 ```bash
 cd nix-linux
-home-manager switch
+home-manager switch --flake .
 ```
 
 ## Structure
