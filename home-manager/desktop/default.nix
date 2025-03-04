@@ -14,6 +14,7 @@
         "obsidian.desktop"
         "vesktop.desktop"
         "org.keepassxc.KeePassXC.desktop"
+        "codium.desktop"
       ];
     };
     "org/gnome/desktop/interface" = {
