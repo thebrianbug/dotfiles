@@ -4,7 +4,11 @@
   programs.alacritty = {
     enable = true;
     settings = {
+      env = {
+        TERM = "xterm-256color";
+      };
       window = {
+        startup_mode = "Windowed";
         opacity = 0.95;
         padding = {
           x = 10;
