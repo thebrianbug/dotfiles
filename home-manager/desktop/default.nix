@@ -32,6 +32,8 @@
     gnome-tweaks
     adwaita-icon-theme  # Ensure proper GNOME theming
     nerd-fonts.jetbrains-mono
+    libcanberra-gtk3    # Sound support for GTK apps
+    pkgtk               # Package kit GTK module
 
     # Wayland utilities
     wl-clipboard
@@ -40,7 +42,9 @@
     wf-recorder  # Screen recording
     waypipe      # Network transparency
     wlr-randr    # Screen management
-    qt5.qtwayland  # Qt Wayland support
+    qt5.qtwayland    # Qt Wayland support
+    qt6.qtwayland    # Qt6 Wayland support
+    libsForQt5.qt5.qtwayland  # Additional Qt Wayland integration
     xdg-desktop-portal-wlr  # Screen sharing
 
     # Applications
@@ -49,4 +53,10 @@
     vesktop
     google-chrome
   ];
+
+  home.sessionVariables = {
+    QT_QPA_PLATFORM = "wayland;xcb";  # Prefer Wayland, fallback to XCB
+    QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";  # Let GNOME handle decorations
+    QT_AUTO_SCREEN_SCALE_FACTOR = "1";  # Enable HiDPI scaling
+  };
 }
