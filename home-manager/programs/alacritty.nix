@@ -6,6 +6,7 @@
     settings = {
       env = {
         TERM = "xterm-256color";
+        WINIT_UNIX_BACKEND = "wayland";
       };
       window = {
         startup_mode = "Windowed";
@@ -13,6 +14,10 @@
         padding = {
           x = 10;
           y = 10;
+        };
+        dimensions = {
+          columns = 120;
+          lines = 30;
         };
       };
       font = {
