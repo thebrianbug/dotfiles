@@ -35,15 +35,12 @@
     libcanberra-gtk3    # Sound support for GTK apps
 
     # Wayland utilities
-    wl-clipboard
+    wl-clipboard  # Clipboard management
     grim         # Screenshot utility
     slurp        # Screen area selection
     wf-recorder  # Screen recording
-    waypipe      # Network transparency
     wlr-randr    # Screen management
-    qt5.qtwayland    # Qt Wayland support
     qt6.qtwayland    # Qt6 Wayland support
-    libsForQt5.qt5.qtwayland  # Additional Qt Wayland integration
     xdg-desktop-portal-wlr  # Screen sharing
 
     # Applications
@@ -54,8 +51,7 @@
   ];
 
   home.sessionVariables = {
-    QT_QPA_PLATFORM = lib.mkForce "wayland;xcb";  # Prefer Wayland, fallback to XCB
-    QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";  # Let GNOME handle decorations
+    QT_QPA_PLATFORM = "wayland";  # Use Wayland for Qt applications
     QT_AUTO_SCREEN_SCALE_FACTOR = "1";  # Enable HiDPI scaling
   };
 }
