@@ -29,13 +29,13 @@ cd dotfiles
 
 2. Apply the configuration:
 ```bash
-cd nix-linux
+cd home-manager
 home-manager switch --flake .
 ```
 
 ## Structure
 
-- `nix-linux/`: Nix configuration files
+- `home-manager/`: Home Manager configuration files
   - `desktop/`: Desktop environment configurations
   - `development/`: Development tool configurations
   - `programs/`: Program-specific configurations
