@@ -1,12 +1,11 @@
 { config, pkgs, ... }:
 
 {
-  xsession = {
-    enable = true;
-    windowManager.command = "gnome-session";
-  };
-
   dconf.settings = {
+    "org/gnome/mutter" = {
+      experimental-features = [ "scale-monitor-framebuffer" ];
+      edge-tiling = true;
+    };
     "org/gnome/shell" = {
       favorite-apps = [
         "org.gnome.Nautilus.desktop"
@@ -26,8 +25,17 @@
   home.packages = with pkgs; [
     # System utilities
     gnome-tweaks
-    wl-clipboard
     nerd-fonts.jetbrains-mono
+
+    # Wayland utilities
+    wl-clipboard
+    grim         # Screenshot utility
+    slurp        # Screen area selection
+    wf-recorder  # Screen recording
+    waypipe      # Network transparency
+    wlr-randr    # Screen management
+    qt5.qtwayland  # Qt Wayland support
+    xdg-desktop-portal-wlr  # Screen sharing
 
     # Applications
     keepassxc
