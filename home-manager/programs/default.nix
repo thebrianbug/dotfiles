@@ -61,6 +61,9 @@
     _JAVA_AWT_WM_NONREPARENTING = "1";
     XDG_SESSION_TYPE = "wayland";
     XDG_CURRENT_DESKTOP = "GNOME";
+    # Electron Wayland support
+    NIXOS_OZONE_WL = "1";  # Forces Electron apps to use Wayland
+    ELECTRON_OZONE_PLATFORM_HINT = "wayland";  # Hint to use Wayland backend
   };
 
   programs.home-manager.enable = true;
