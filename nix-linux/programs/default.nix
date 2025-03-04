@@ -13,7 +13,12 @@
       {
         key = "ctrl+p";
         command = "workbench.action.quickOpen";
-        when = "!terminalFocus";
+        when = "!terminalFocus && !inQuickOpen";
+      }
+      {
+        key = "ctrl+p";
+        command = "workbench.action.terminal.selectPrevious";
+        when = "terminalFocus";
       }
     ];
   };
