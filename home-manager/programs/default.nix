@@ -1,6 +1,10 @@
 { config, pkgs, ... }:
 
 {
+  imports = [
+    ./alacritty.nix
+  ];
+
   programs.vscode = let
     defaultExtensions = with pkgs.vscode-extensions; [
       vscodevim.vim
