@@ -27,6 +27,7 @@
     # System utilities
     gnome-tweaks
     wl-clipboard
+    alacritty
 
     # Applications
     keepassxc
