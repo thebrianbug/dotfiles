@@ -1,26 +1,35 @@
 { config, pkgs, ... }:
 
 {
-  programs.vscode = {
-    enable = true;
-    package = pkgs.vscodium;
-    profiles.default.extensions = with pkgs.vscode-extensions; [
+  programs.vscode = let
+    defaultExtensions = with pkgs.vscode-extensions; [
       vscodevim.vim
       saoudrizwan.claude-dev
       jnoortheen.nix-ide
     ];
-    profiles.default.keybindings = [
-      {
+    
+    contextAwareKeybindings = let
+      fileFinderOutsideTerminal = {
         key = "ctrl+p";
         command = "workbench.action.quickOpen";
         when = "!terminalFocus && !inQuickOpen";
-      }
-      {
+      };
+      commandHistoryInTerminal = {
         key = "ctrl+p";
         command = "workbench.action.terminal.selectPrevious";
         when = "terminalFocus";
-      }
+      };
+    in [
+      fileFinderOutsideTerminal  # Ctrl+P opens file finder when not in terminal
+      commandHistoryInTerminal   # Ctrl+P navigates history when in terminal
     ];
+  in {
+    enable = true;
+    package = pkgs.vscodium;
+    profiles.default = {
+      extensions = defaultExtensions;
+      keybindings = contextAwareKeybindings;
+    };
   };
 
   programs.git = {
