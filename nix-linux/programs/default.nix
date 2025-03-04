@@ -1,5 +1,8 @@
 { config, pkgs, ... }:
 
+let
+  upArrowSequence = "\\u001b[A";
+in
 {
   programs.vscode = {
     enable = true;
@@ -12,7 +15,10 @@
     profiles.default.keybindings = [
       {
         key = "ctrl+p";
-        command = "workbench.action.terminal.scrollToPreviousCommand";
+        command = "workbench.action.terminal.sendSequence";
+        args = {
+          text = upArrowSequence;
+        };
         when = "terminalFocus";
       }
       {
