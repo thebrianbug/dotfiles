@@ -33,7 +33,6 @@
     adwaita-icon-theme  # Ensure proper GNOME theming
     nerd-fonts.jetbrains-mono
     libcanberra-gtk3    # Sound support for GTK apps
-    pkgtk               # Package kit GTK module
 
     # Wayland utilities
     wl-clipboard
