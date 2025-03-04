@@ -1,8 +1,5 @@
 { config, pkgs, ... }:
 
-let
-  upArrowSequence = "\u001b[A";
-in
 {
   programs.vscode = {
     enable = true;
@@ -16,14 +13,7 @@ in
       {
         key = "ctrl+p";
         command = "workbench.action.terminal.sendSequence";
-        args = {
-          text = upArrowSequence;
-        };
-        when = "terminalFocus";
-      }
-      {
-        key = "ctrl+p";
-        command = "-workbench.action.quickOpen";
+        args = { text = "\u001b[A"; };
         when = "terminalFocus";
       }
       {
