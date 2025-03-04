@@ -12,12 +12,6 @@
     profiles.default.keybindings = [
       {
         key = "ctrl+p";
-        command = "workbench.action.terminal.sendSequence";
-        args = { text = "\u001b[A"; };
-        when = "terminalFocus";
-      }
-      {
-        key = "ctrl+p";
         command = "workbench.action.quickOpen";
         when = "!terminalFocus";
       }
