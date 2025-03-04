@@ -1,6 +1,8 @@
 { config, pkgs, ... }:
 
 {
+  programs.gnome-terminal.enable = true;
+
   dconf.settings = {
     "org/gnome/terminal/legacy" = {
       default-show-menubar = false;
