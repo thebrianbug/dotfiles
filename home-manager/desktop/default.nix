@@ -27,7 +27,6 @@
     # System utilities
     gnome-tweaks
     wl-clipboard
-    alacritty
     nerd-fonts.jetbrains-mono
 
     # Applications
