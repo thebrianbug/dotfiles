@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./alacritty.nix
+    ./wezterm.nix
   ];
 
   programs.vscode = let
@@ -68,5 +68,4 @@
 
   programs.home-manager.enable = true;
 
-  programs.alacritty.package = pkgs.alacritty;
 }
