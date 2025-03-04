@@ -6,9 +6,10 @@
     settings = {
       env = {
         TERM = "xterm-256color";
+        WINIT_UNIX_BACKEND = "wayland";
       };
       window = {
-        startup_mode = "Maximized";
+        startup_mode = "Windowed";
         opacity = 0.95;
         padding = {
           x = 10;
@@ -19,7 +20,7 @@
           lines = 30;
         };
         dynamic_title = true;
-        decorations = "none";
+        decorations = "full";
         class = {
           instance = "Alacritty";
           general = "Alacritty";
