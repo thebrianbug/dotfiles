@@ -10,7 +10,7 @@
       favorite-apps = [
         "org.gnome.Nautilus.desktop"
         "firefox.desktop"
-        "org.wezfurlong.wezterm.desktop"
+        "org.gnome.Terminal.desktop"
         "obsidian.desktop"
         "vesktop.desktop"
         "org.keepassxc.KeePassXC.desktop"

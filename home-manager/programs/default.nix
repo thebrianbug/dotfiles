@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./wezterm.nix
+    ./gnome-terminal.nix
   ];
 
   programs.vscode = let
