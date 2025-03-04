@@ -9,6 +9,18 @@
       saoudrizwan.claude-dev
       jnoortheen.nix-ide
     ];
+    profiles.default.keybindings = [
+      {
+        key = "ctrl+p";
+        command = "workbench.action.terminal.scrollToPreviousCommand";
+        when = "terminalFocus";
+      }
+      {
+        key = "ctrl+p";
+        command = "-workbench.action.quickOpen";
+        when = "terminalFocus";
+      }
+    ];
   };
 
   programs.git = {
