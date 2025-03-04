@@ -22,7 +22,7 @@
       enable-hot-corners = true;
     };
     "org/gnome/desktop/wm/preferences" = {
-      button-layout = "appmenu:minimize,maximize,close";  # Ensure window controls are visible
+      button-layout = ":minimize,maximize,close";  # Show window controls on the right without appmenu
       resize-with-right-button = true;
     };
   };
