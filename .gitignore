@@ -1,6 +1,22 @@
-.direnv/*
-.pre-commit-config.yaml
-.DS_Store
+# Nix
 result
-*.otter.*
+result-*
 
+# Direnv
+.direnv/
+
+# Nix build outputs
+*.qcow2
+*.vdi
+*.vmdk
+*.ova
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
