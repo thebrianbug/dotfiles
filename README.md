@@ -29,15 +29,15 @@ cd dotfiles
 
 2. Apply the configuration:
 ```bash
+cd nix-linux
 home-manager switch
 ```
 
 ## Structure
 
 - `nix-linux/`: Nix configuration files
-  - `modules/`: Modular configurations split by domain
-    - `desktop/`: Desktop environment configurations
-    - `development/`: Development tool configurations
-    - `programs/`: Program-specific configurations
+  - `desktop/`: Desktop environment configurations
+  - `development/`: Development tool configurations
+  - `programs/`: Program-specific configurations
   - `home.nix`: Main Home Manager configuration
   - `flake.nix`: Nix flake configuration
