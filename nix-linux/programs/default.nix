@@ -26,6 +26,11 @@ in
         command = "-workbench.action.quickOpen";
         when = "terminalFocus";
       }
+      {
+        key = "ctrl+p";
+        command = "workbench.action.quickOpen";
+        when = "!terminalFocus";
+      }
     ];
   };
 
