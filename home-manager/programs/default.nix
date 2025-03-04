@@ -1,10 +1,6 @@
 { config, pkgs, ... }:
 
 {
-  imports = [
-    ./gnome-terminal.nix
-  ];
-
   programs.vscode = let
     defaultExtensions = with pkgs.vscode-extensions; [
       vscodevim.vim
