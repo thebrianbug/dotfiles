@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 
 let
-  upArrowSequence = "\\u001b[A";
+  upArrowSequence = "\u001b[A";
 in
 {
   programs.vscode = {
