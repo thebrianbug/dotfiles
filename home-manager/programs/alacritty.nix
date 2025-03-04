@@ -6,10 +6,10 @@
     settings = {
       env = {
         TERM = "xterm-256color";
-        WINIT_UNIX_BACKEND = "wayland";
+        WINIT_UNIX_BACKEND = "x11"; # Force X11 backend as fallback
       };
       window = {
-        startup_mode = "Windowed";
+        startup_mode = "Maximized";
         opacity = 0.95;
         padding = {
           x = 10;
@@ -19,7 +19,17 @@
           columns = 120;
           lines = 30;
         };
+        dynamic_title = true;
+        decorations = "none";
+        class = {
+          instance = "Alacritty";
+          general = "Alacritty";
+        };
       };
+      shell = {
+        program = "${pkgs.bashInteractive}/bin/bash";
+      };
+
       colors = {
         primary = {
           background = "#1a1b26";
