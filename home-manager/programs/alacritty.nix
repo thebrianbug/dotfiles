@@ -6,7 +6,6 @@
     settings = {
       env = {
         TERM = "xterm-256color";
-        WINIT_UNIX_BACKEND = "x11"; # Force X11 backend as fallback
       };
       window = {
         startup_mode = "Maximized";
@@ -26,8 +25,10 @@
           general = "Alacritty";
         };
       };
-      shell = {
-        program = "${pkgs.bashInteractive}/bin/bash";
+      terminal = {
+        shell = {
+          program = "${pkgs.bashInteractive}/bin/bash";
+        };
       };
 
       colors = {
