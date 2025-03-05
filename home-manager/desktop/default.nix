@@ -163,7 +163,7 @@
     "autostart/obsidian.desktop".text = ''
       [Desktop Entry]
       Name=Obsidian
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh obsidian --force-device-scale-factor=1 %U
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh obsidian --force-device-scale-factor=1 --enable-features=UseOzonePlatform,WaylandWindowDecorations %U
       Terminal=false
       Type=Application
       Icon=obsidian

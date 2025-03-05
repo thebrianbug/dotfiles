@@ -63,6 +63,7 @@
     NIXOS_OZONE_WL = "1";  # Forces Electron apps to use Wayland
     ELECTRON_OZONE_PLATFORM_HINT = "wayland";  # Hint to use Wayland backend
     ELECTRON_ENABLE_STACK_DUMPING = "1";
+    OZONE_PLATFORM = "wayland";
   };
 
   programs.home-manager.enable = true;
