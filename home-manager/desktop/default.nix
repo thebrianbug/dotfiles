@@ -122,7 +122,7 @@
       [Desktop Entry]
       Name=KeePassXC
       GenericName=Password Manager
-      Exec=env QT_QPA_PLATFORMTHEME=gnome-dark keepassxc
+      Exec=env QT_QPA_PLATFORM=wayland QT_QPA_PLATFORMTHEME=gnome-dark QT_AUTO_SCREEN_SCALE_FACTOR=1 keepassxc
       Icon=keepassxc
       StartupWMClass=keepassxc
       Terminal=false
