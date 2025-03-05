@@ -184,6 +184,7 @@
       Categories=Utility;Security;Qt;
       StartupNotify=true
     '';
+
   };
 
   home.packages = with pkgs; [
