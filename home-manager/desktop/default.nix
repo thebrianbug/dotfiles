@@ -2,11 +2,13 @@
 
 {
   dconf.settings = {
+    # Mutter window and focus settings
     "org/gnome/mutter" = {
       experimental-features = [ "scale-monitor-framebuffer" ];
       edge-tiling = true;
       workspaces-only-on-primary = true;
       remember-window-size = true;
+      focus-change-on-pointer-rest = true;
     };
 
     # Add window state preservation settings
@@ -23,6 +25,17 @@
     # Window state preservation
     "org/gnome/mutter/wayland" = {
       restore-monitor-config = true;
+    };
+
+    # Application specific window rules
+    "org/gnome/shell/extensions/auto-move-windows" = {
+      focus-new-windows = true;  # Ensure new windows get focus
+    };
+
+    # Ensure proper window focus and activation
+    "org/gnome/desktop/wm/preferences" = {
+      focus-new-windows = "strict";
+      auto-raise = true;
     };
 
     # Shell configuration and extensions
@@ -108,7 +121,20 @@
       MimeType=application/x-keepass2;
     '';
 
-    "autostart/obsidian.desktop".source = "${pkgs.obsidian}/share/applications/obsidian.desktop";
+    "autostart/obsidian.desktop".text = ''
+      [Desktop Entry]
+      Name=Obsidian
+      Exec=obsidian --force-device-scale-factor=1 %U
+      Terminal=false
+      Type=Application
+      Icon=obsidian
+      StartupWMClass=obsidian
+      Comment=Obsidian
+      Categories=Office;
+      MimeType=x-scheme-handler/obsidian;
+      X-GNOME-UsesNotifications=true
+      StartupNotify=true
+    '';
 
     "autostart/vesktop.desktop".source = "${pkgs.vesktop}/share/applications/vesktop.desktop";
   };
