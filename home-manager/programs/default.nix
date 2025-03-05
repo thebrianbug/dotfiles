@@ -60,15 +60,13 @@
     XDG_SESSION_TYPE = "wayland";  # Keep basic Wayland session type
     XDG_CURRENT_DESKTOP = "GNOME";  # Keep GNOME desktop identification
     # Electron Wayland support
-    # NIXOS_OZONE_WL = "1";  # Let Electron apps choose their backend
-    # ELECTRON_OZONE_PLATFORM_HINT = "wayland";  # Don't force Wayland
-    # ELECTRON_ENABLE_STACK_DUMPING = "1";  # Debug feature, not needed
-    # OZONE_PLATFORM = "wayland";  # Don't force Wayland
+    NIXOS_OZONE_WL = "1";  # Force Ozone Wayland
+    ELECTRON_OZONE_PLATFORM_HINT = "wayland";  # Use Wayland by default
+    OZONE_PLATFORM = "wayland";  # Force Wayland platform
     # HiDPI scaling fixes
-    # ELECTRON_FORCE_DEVICE_SCALE_FACTOR = "1";  # Let apps handle their own scaling
-    # GDK_SCALE = "1";  # Let GTK handle scaling
-    # GDK_DPI_SCALE = "1";  # Let GTK handle DPI
-    # WINIT_X11_SCALE_FACTOR = "1";  # Not needed for Wayland
+    ELECTRON_FORCE_DEVICE_SCALE_FACTOR = "1";  # Force consistent scaling
+    GDK_SCALE = "1";  # Force GDK scaling
+    GDK_DPI_SCALE = "1";  # Force GDK DPI
   };
 
   programs.home-manager.enable = true;

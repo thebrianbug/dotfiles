@@ -4,7 +4,7 @@
   dconf.settings = {
     # Mutter window and focus settings
     "org/gnome/mutter" = {
-      experimental-features = [ "scale-monitor-framebuffer" ];
+      experimental-features = [ "scale-monitor-framebuffer" "x11-randr-fractional-scaling" ];
       edge-tiling = true;
       workspaces-only-on-primary = true;
       remember-window-size = true;
@@ -58,6 +58,8 @@
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
       enable-hot-corners = true;
+      scaling-factor = 1;
+      text-scaling-factor = 1.0;
     };
 
     "org/gnome/desktop/wm/preferences" = {
@@ -149,7 +151,7 @@
     "autostart/obsidian.desktop".text = ''
       [Desktop Entry]
       Name=Obsidian
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh obsidian --force-device-scale-factor=1 --enable-features=UseOzonePlatform,WaylandWindowDecorations %U
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh obsidian --force-device-scale-factor=1 --enable-features=UseOzonePlatform,WaylandWindowDecorations --enable-webrtc-pipewire-capturer --ozone-platform-hint=auto --enable-gpu-rasterization --enable-zero-copy %U
       Terminal=false
       Type=Application
       Icon=obsidian
@@ -164,7 +166,7 @@
     "autostart/vesktop.desktop".text = ''
       [Desktop Entry]
       Name=Vesktop
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh vesktop
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh vesktop --force-device-scale-factor=1 --enable-features=UseOzonePlatform,WaylandWindowDecorations --enable-webrtc-pipewire-capturer --ozone-platform-hint=auto --enable-gpu-rasterization --enable-zero-copy
       Terminal=false
       Type=Application
       Icon=vesktop
@@ -176,7 +178,7 @@
     "autostart/keepassxc.desktop".text = ''
       [Desktop Entry]
       Name=KeePassXC
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh keepassxc
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh keepassxc --force-device-scale-factor=1 --enable-features=UseOzonePlatform,WaylandWindowDecorations --enable-webrtc-pipewire-capturer --ozone-platform-hint=auto --enable-gpu-rasterization --enable-zero-copy
       Terminal=false
       Type=Application
       Icon=keepassxc
@@ -184,7 +186,6 @@
       Categories=Utility;Security;Qt;
       StartupNotify=true
     '';
-
   };
 
   home.packages = with pkgs; [
@@ -210,5 +211,4 @@
     vesktop
     google-chrome
   ];
-
 }
