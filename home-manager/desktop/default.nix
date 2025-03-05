@@ -44,6 +44,22 @@
       resize-with-right-button = true;
       auto-maximize = true;  # Automatically maximize windows like Obsidian
     };
+
+    # Autostart applications
+    "org/gnome/shell/extensions/auto-move-windows" = {
+      application-list = [
+        "firefox.desktop:1"  # Start Firefox on workspace 1
+        "org.keepassxc.KeePassXC.desktop:1"  # Start KeePassXC on workspace 1
+        "obsidian.desktop:2"  # Start Obsidian on workspace 2
+        "vesktop.desktop:3"  # Start Vesktop (Discord) on workspace 3
+      ];
+    };
+
+    # Desktop icons settings
+    "org/gnome/shell/extensions/ding" = {
+      show-home = false;  # Hide home folder on desktop
+      show-trash = true;  # Show trash icon on desktop
+    };
   };
 
   home.packages = with pkgs; [
