@@ -57,7 +57,7 @@
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
       enable-hot-corners = false;  # Don't force hot corners
-      scaling-factor = 0;  # Let system determine appropriate scaling
+      scaling-factor = 0;  # Let system handle scaling
       text-scaling-factor = 0.0;  # Let system handle text scaling
     };
 
