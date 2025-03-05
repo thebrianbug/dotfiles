@@ -62,7 +62,6 @@
     };
 
     "org/gnome/desktop/wm/preferences" = {
-      button-layout = ":minimize,maximize,close";
       resize-with-right-button = true;
       auto-maximize = true;
     };
