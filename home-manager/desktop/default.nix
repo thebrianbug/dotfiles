@@ -92,37 +92,13 @@
 
   # Configure XDG autostart entries
   xdg.configFile = {
-    "autostart/firefox.desktop".text = ''
-      [Desktop Entry]
-      Type=Application
-      Name=Firefox
-      Exec=${pkgs.firefox}/bin/firefox
-      X-GNOME-Autostart-enabled=true
-    '';
+    "autostart/firefox.desktop".source = "${pkgs.firefox}/share/applications/firefox.desktop";
 
-    "autostart/keepassxc.desktop".text = ''
-      [Desktop Entry]
-      Type=Application
-      Name=KeePassXC
-      Exec=${pkgs.keepassxc}/bin/keepassxc
-      X-GNOME-Autostart-enabled=true
-    '';
+    "autostart/keepassxc.desktop".source = "${pkgs.keepassxc}/share/applications/org.keepassxc.KeePassXC.desktop";
 
-    "autostart/obsidian.desktop".text = ''
-      [Desktop Entry]
-      Type=Application
-      Name=Obsidian
-      Exec=${pkgs.obsidian}/bin/obsidian
-      X-GNOME-Autostart-enabled=true
-    '';
+    "autostart/obsidian.desktop".source = "${pkgs.obsidian}/share/applications/obsidian.desktop";
 
-    "autostart/vesktop.desktop".text = ''
-      [Desktop Entry]
-      Type=Application
-      Name=Vesktop
-      Exec=${pkgs.vesktop}/bin/vesktop
-      X-GNOME-Autostart-enabled=true
-    '';
+    "autostart/vesktop.desktop".source = "${pkgs.vesktop}/share/applications/vesktop.desktop";
   };
 
   home.packages = with pkgs; [
