@@ -1,11 +1,11 @@
 { config, pkgs, ... }:
 
 {
-  home.packages = with pkgs; [
-    # Container management
-    podman
-    podman-compose
+  imports = [
+    ./docker.nix
+  ];
 
+  home.packages = with pkgs; [
     # Database tools
     dbeaver-bin
 
@@ -25,22 +25,5 @@
 
     # IDE
     code-cursor
-
-    # Docker compatibility
-    (writeShellScriptBin "docker" ''
-      #!/usr/bin/env bash
-      set -euo pipefail
-      exec podman "$@"
-    '')
-    (writeShellScriptBin "docker-compose" ''
-      #!/usr/bin/env bash
-      set -euo pipefail
-      exec podman-compose "$@"
-    '')
   ];
-
-  home.sessionVariables = {
-    DOCKER_HOST = "unix://$XDG_RUNTIME_DIR/podman/podman.sock";
-    DOCKER_SOCK = "$XDG_RUNTIME_DIR/podman/podman.sock";
-  };
 }
