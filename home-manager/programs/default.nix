@@ -51,22 +51,17 @@
   home.sessionVariables = {
     EDITOR = "nvim";
     # Wayland-specific
-    MOZ_ENABLE_WAYLAND = "1";  # Keep Firefox on Wayland
-    # QT_QPA_PLATFORM = "wayland";  # Let Qt apps decide their platform
+    MOZ_ENABLE_WAYLAND = "1";  # Enable Wayland support in Firefox
+    QT_QPA_PLATFORM = "wayland;xcb";  # Prefer Wayland but fallback to X11
     QT_STYLE_OVERRIDE = "Adwaita-Dark";  # Keep dark theme
-    # QT_AUTO_SCREEN_SCALE_FACTOR = "1";  # Let Qt handle scaling automatically
-    # SDL_VIDEODRIVER = "wayland";  # Let SDL choose its driver
-    # _JAVA_AWT_WM_NONREPARENTING = "1";  # Only needed for certain Java apps
-    XDG_SESSION_TYPE = "wayland";  # Keep basic Wayland session type
+    QT_AUTO_SCREEN_SCALE_FACTOR = "1";  # Enable automatic scaling
+    SDL_VIDEODRIVER = "wayland,x11";  # Prefer Wayland but fallback to X11
+    XDG_SESSION_TYPE = "wayland";  # Indicate Wayland session
     XDG_CURRENT_DESKTOP = "GNOME";  # Keep GNOME desktop identification
-    # Electron Wayland support
-    NIXOS_OZONE_WL = "1";  # Force Ozone Wayland
-    ELECTRON_OZONE_PLATFORM_HINT = "wayland";  # Use Wayland by default
-    OZONE_PLATFORM = "wayland";  # Force Wayland platform
-    # HiDPI scaling fixes
-    ELECTRON_FORCE_DEVICE_SCALE_FACTOR = "1";  # Force consistent scaling
-    GDK_SCALE = "1";  # Force GDK scaling
-    GDK_DPI_SCALE = "1";  # Force GDK DPI
+    # Electron Wayland support - more permissive
+    ELECTRON_OZONE_PLATFORM_HINT = "auto";  # Let Electron choose best platform
+    # Remove forced Wayland settings to allow automatic platform selection
+    # Remove fixed scaling to allow automatic adaptation
   };
 
   programs.home-manager.enable = true;

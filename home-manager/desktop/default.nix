@@ -2,19 +2,18 @@
 
 {
   dconf.settings = {
-    # Mutter window and focus settings
+    # Mutter window and focus settings - more flexible configuration
     "org/gnome/mutter" = {
-      experimental-features = [ "scale-monitor-framebuffer" "x11-randr-fractional-scaling" ];
-      edge-tiling = true;
-      workspaces-only-on-primary = true;
-      remember-window-size = true;
-      focus-change-on-pointer-rest = true;
+      edge-tiling = false;  # Don't force tiling behavior
+      workspaces-only-on-primary = false;  # Allow workspaces on all monitors
+      remember-window-size = false;  # Let windows use their default sizes
+      focus-change-on-pointer-rest = false;  # Don't force focus behavior
     };
 
-    # Add window state preservation settings
+    # Window state settings - more permissive
     "org/gnome/shell/overrides" = {
-      edge-tiling = true;
-      attach-modal-dialogs = true;
+      edge-tiling = false;  # Don't enforce tiling
+      attach-modal-dialogs = false;  # Let dialogs position naturally
     };
     
     # Add specific window management rules
@@ -57,9 +56,9 @@
 
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
-      enable-hot-corners = true;
-      scaling-factor = 1;
-      text-scaling-factor = 1.0;
+      enable-hot-corners = false;  # Don't force hot corners
+      scaling-factor = 0;  # Let system determine appropriate scaling
+      text-scaling-factor = 0.0;  # Let system handle text scaling
     };
 
     "org/gnome/desktop/wm/preferences" = {
@@ -151,7 +150,7 @@
     "autostart/obsidian.desktop".text = ''
       [Desktop Entry]
       Name=Obsidian
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh obsidian --force-device-scale-factor=1 --enable-features=UseOzonePlatform,WaylandWindowDecorations --enable-webrtc-pipewire-capturer --ozone-platform-hint=auto --enable-gpu-rasterization --enable-zero-copy %U
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh obsidian --enable-features=WaylandWindowDecorations --enable-webrtc-pipewire-capturer --enable-gpu-rasterization --enable-zero-copy %U
       Terminal=false
       Type=Application
       Icon=obsidian
@@ -166,7 +165,7 @@
     "autostart/vesktop.desktop".text = ''
       [Desktop Entry]
       Name=Vesktop
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh vesktop --force-device-scale-factor=1 --enable-features=UseOzonePlatform,WaylandWindowDecorations --enable-webrtc-pipewire-capturer --ozone-platform-hint=auto --enable-gpu-rasterization --enable-zero-copy
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh vesktop --enable-features=WaylandWindowDecorations --enable-webrtc-pipewire-capturer --enable-gpu-rasterization --enable-zero-copy
       Terminal=false
       Type=Application
       Icon=vesktop
@@ -178,7 +177,7 @@
     "autostart/keepassxc.desktop".text = ''
       [Desktop Entry]
       Name=KeePassXC
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh keepassxc --force-device-scale-factor=1 --enable-features=UseOzonePlatform,WaylandWindowDecorations --enable-webrtc-pipewire-capturer --ozone-platform-hint=auto --enable-gpu-rasterization --enable-zero-copy
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh keepassxc --enable-features=WaylandWindowDecorations --enable-webrtc-pipewire-capturer --enable-gpu-rasterization --enable-zero-copy
       Terminal=false
       Type=Application
       Icon=keepassxc
