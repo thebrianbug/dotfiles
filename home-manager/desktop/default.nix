@@ -94,7 +94,19 @@
   xdg.configFile = {
     "autostart/firefox.desktop".source = "${pkgs.firefox}/share/applications/firefox.desktop";
 
-    "autostart/keepassxc.desktop".source = "${pkgs.keepassxc}/share/applications/org.keepassxc.KeePassXC.desktop";
+    "autostart/keepassxc.desktop".text = ''
+      [Desktop Entry]
+      Name=KeePassXC
+      GenericName=Password Manager
+      Exec=env QT_QPA_PLATFORMTHEME=gnome-dark keepassxc
+      Icon=keepassxc
+      StartupWMClass=keepassxc
+      Terminal=false
+      Type=Application
+      Version=1.0
+      Categories=Utility;Security;Qt;
+      MimeType=application/x-keepass2;
+    '';
 
     "autostart/obsidian.desktop".source = "${pkgs.obsidian}/share/applications/obsidian.desktop";
 
@@ -127,6 +139,7 @@
 
   home.sessionVariables = {
     QT_QPA_PLATFORM = "wayland";
+    QT_QPA_PLATFORMTHEME = "gnome-dark";
     QT_AUTO_SCREEN_SCALE_FACTOR = "1";
     ELECTRON_ENABLE_STACK_DUMPING = "1";
   };
