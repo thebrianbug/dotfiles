@@ -23,6 +23,9 @@
     fzf
     rclone
 
+    # IDE
+    code-cursor
+
     # Docker compatibility
     (writeShellScriptBin "docker" ''
       #!/usr/bin/env bash
