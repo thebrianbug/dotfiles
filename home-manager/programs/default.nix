@@ -60,8 +60,6 @@
     XDG_CURRENT_DESKTOP = "GNOME";  # Keep GNOME desktop identification
     # Electron Wayland support - more permissive
     ELECTRON_OZONE_PLATFORM_HINT = "auto";  # Let Electron choose best platform
-    # Remove forced Wayland settings to allow automatic platform selection
-    # Remove fixed scaling to allow automatic adaptation
   };
 
   programs.home-manager.enable = true;
