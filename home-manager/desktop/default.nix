@@ -24,6 +24,8 @@
     "org/gnome/mutter/wayland" = {
       restore-monitor-config = true;
     };
+
+    # Shell configuration and extensions
     "org/gnome/shell" = {
       favorite-apps = [
         "org.gnome.Nautilus.desktop"
@@ -34,34 +36,40 @@
         "org.keepassxc.KeePassXC.desktop"
         "codium.desktop"
       ];
+      enabled-extensions = [
+        "auto-move-windows@gnome-shell-extensions.gcampax.github.com"  # Required for auto workspace assignment
+      ];
+      disable-user-extensions = false;
     };
+
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
       enable-hot-corners = true;
     };
+
     "org/gnome/desktop/wm/preferences" = {
-      button-layout = ":minimize,maximize,close";  # Show window controls on the right without appmenu
+      button-layout = ":minimize,maximize,close";
       resize-with-right-button = true;
-      auto-maximize = true;  # Automatically maximize windows like Obsidian
+      auto-maximize = true;
     };
 
-    # Autostart applications
+    # Configure automatic workspace assignment (requires auto-move-windows extension)
     "org/gnome/shell/extensions/auto-move-windows" = {
       application-list = [
-        "firefox.desktop:1"  # Start Firefox on workspace 1
-        "org.keepassxc.KeePassXC.desktop:1"  # Start KeePassXC on workspace 1
-        "obsidian.desktop:2"  # Start Obsidian on workspace 2
-        "vesktop.desktop:3"  # Start Vesktop (Discord) on workspace 3
+        "firefox.desktop:1"              # Move Firefox to workspace 1
+        "org.keepassxc.KeePassXC.desktop:1"  # Move KeePassXC to workspace 1
+        "obsidian.desktop:2"            # Move Obsidian to workspace 2
+        "vesktop.desktop:3"             # Move Vesktop to workspace 3
       ];
     };
 
     # Desktop icons settings
     "org/gnome/shell/extensions/ding" = {
-      show-home = false;  # Hide home folder on desktop
-      show-trash = true;  # Show trash icon on desktop
+      show-home = false;
+      show-trash = true;
     };
 
-    # Autostart settings
+    # Dock settings
     "org/gnome/shell/extensions/dash-to-dock" = {
       click-action = "minimize";
       dock-fixed = true;
@@ -69,40 +77,70 @@
       dock-position = "LEFT";
     };
 
+    # Custom keybindings
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
       binding = "<Control><Alt>t";
       command = "gnome-terminal";
       name = "Launch Terminal";
     };
 
-    # Additional autostart applications
-    "org/gnome/shell/extensions/autostart" = {
-      autostart-apps = [
-        "firefox.desktop"
-        "org.keepassxc.KeePassXC.desktop"
-        "obsidian.desktop"
-        "vesktop.desktop"
-        "org.gnome.Terminal.desktop"
-      ];
+    # Session settings
+    "org/gnome/desktop/session" = {
+      idle-delay = "uint32 0";
     };
+  };
+
+  # Configure XDG autostart entries
+  xdg.configFile = {
+    "autostart/firefox.desktop".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=Firefox
+      Exec=${pkgs.firefox}/bin/firefox
+      X-GNOME-Autostart-enabled=true
+    '';
+
+    "autostart/keepassxc.desktop".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=KeePassXC
+      Exec=${pkgs.keepassxc}/bin/keepassxc
+      X-GNOME-Autostart-enabled=true
+    '';
+
+    "autostart/obsidian.desktop".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=Obsidian
+      Exec=${pkgs.obsidian}/bin/obsidian
+      X-GNOME-Autostart-enabled=true
+    '';
+
+    "autostart/vesktop.desktop".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=Vesktop
+      Exec=${pkgs.vesktop}/bin/vesktop
+      X-GNOME-Autostart-enabled=true
+    '';
   };
 
   home.packages = with pkgs; [
     # System utilities
     gnome-tweaks
-    gnome-shell-extensions  # Required for autostart functionality
-    adwaita-icon-theme  # Ensure proper GNOME theming
+    gnome-shell-extensions
+    adwaita-icon-theme
     nerd-fonts.jetbrains-mono
-    libcanberra-gtk3    # Sound support for GTK apps
+    libcanberra-gtk3
 
     # Wayland utilities
-    wl-clipboard  # Clipboard management
-    grim         # Screenshot utility
-    slurp        # Screen area selection
-    wf-recorder  # Screen recording
-    wlr-randr    # Screen management
-    qt6.qtwayland    # Qt6 Wayland support
-    xdg-desktop-portal-wlr  # Screen sharing
+    wl-clipboard
+    grim
+    slurp
+    wf-recorder
+    wlr-randr
+    qt6.qtwayland
+    xdg-desktop-portal-wlr
 
     # Applications
     keepassxc
@@ -112,9 +150,8 @@
   ];
 
   home.sessionVariables = {
-    QT_QPA_PLATFORM = "wayland";  # Use Wayland for Qt applications
-    QT_AUTO_SCREEN_SCALE_FACTOR = "1";  # Enable HiDPI scaling
-    # Add specific Electron flags for Vesktop
-    ELECTRON_ENABLE_STACK_DUMPING = "1";    # Better error reporting
+    QT_QPA_PLATFORM = "wayland";
+    QT_AUTO_SCREEN_SCALE_FACTOR = "1";
+    ELECTRON_ENABLE_STACK_DUMPING = "1";
   };
 }
