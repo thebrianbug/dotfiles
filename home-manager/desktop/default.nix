@@ -105,7 +105,18 @@
 
   # Configure XDG autostart entries
   xdg.configFile = {
-    "autostart/firefox.desktop".source = "${pkgs.firefox}/share/applications/firefox.desktop";
+    "autostart/firefox.desktop".text = ''
+      [Desktop Entry]
+      Name=Firefox Web Browser
+      Exec=firefox %u
+      Terminal=false
+      Type=Application
+      Icon=firefox
+      StartupWMClass=firefox
+      Categories=Network;WebBrowser;
+      MimeType=text/html;text/xml;application/xhtml+xml;application/vnd.mozilla.xul+xml;x-scheme-handler/http;x-scheme-handler/https;
+      StartupNotify=true
+    '';
 
     "autostart/keepassxc.desktop".text = ''
       [Desktop Entry]
