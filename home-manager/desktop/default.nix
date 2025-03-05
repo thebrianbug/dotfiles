@@ -70,9 +70,9 @@
     "org/gnome/shell/extensions/auto-move-windows" = {
       application-list = [
         "firefox.desktop:1"              # Move Firefox to workspace 1
-        "obsidian.desktop:2"            # Move Obsidian to workspace 2
+        "obsidian.desktop:3"            # Move Obsidian to workspace 2
         "org.keepassxc.KeePassXC.desktop:2"  # Move KeePassXC to workspace 2
-        "vesktop.desktop:3"             # Move Vesktop to workspace 3
+        "vesktop.desktop:2"             # Move Vesktop to workspace 3
       ];
     };
 
