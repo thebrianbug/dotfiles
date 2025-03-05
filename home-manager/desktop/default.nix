@@ -78,11 +78,11 @@
     # Additional autostart applications
     "org/gnome/shell/extensions/autostart" = {
       autostart-apps = [
-        "firefox"
-        "org.keepassxc.KeePassXC"
-        "obsidian"
-        "vesktop"
-        "gnome-terminal"
+        "firefox.desktop"
+        "org.keepassxc.KeePassXC.desktop"
+        "obsidian.desktop"
+        "vesktop.desktop"
+        "org.gnome.Terminal.desktop"
       ];
     };
   };
