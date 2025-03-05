@@ -108,25 +108,27 @@
     "bin/wait-for-env.sh" = {
       text = ''
       #!/bin/sh
-      # Wait for environment variables to be set
       max_attempts=30
-      attempt=0
-      
-      check_env() {
-        [ -n "$QT_QPA_PLATFORM" ] && [ -n "$QT_STYLE_OVERRIDE" ]
-      }
-      
-      while ! check_env && [ $attempt -lt $max_attempts ]; do
+      required_vars="${lib.concatStringsSep " " (lib.attrNames config.home.sessionVariables)}"
+      missing_vars=""
+
+      for attempt in $(seq 1 $max_attempts); do
+        missing_vars=""
+        for var in $required_vars; do
+          eval "val=\$$var"
+          [ -z "$val" ] && missing_vars="$missing_vars $var"
+        done
+        
+        if [ -z "$missing_vars" ]; then
+          exec "$@"
+        fi
+        
+        echo "Waiting for:$missing_vars (attempt $attempt/$max_attempts)"
         sleep 1
-        attempt=$((attempt + 1))
       done
-      
-      if check_env; then
-        exec "$@"
-      else
-        echo "Environment variables not set after $max_attempts seconds"
-        exit 1
-      fi
+
+      echo "Timed out waiting for:$missing_vars"
+      exit 1
     '';
       executable = true;
     };
@@ -148,7 +150,7 @@
       [Desktop Entry]
       Name=KeePassXC
       GenericName=Password Manager
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh env QT_QPA_PLATFORM=wayland QT_STYLE_OVERRIDE=Adwaita-Dark QT_AUTO_SCREEN_SCALE_FACTOR=1 keepassxc
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh keepassxc
       Icon=keepassxc
       StartupWMClass=keepassxc
       Terminal=false
@@ -210,10 +212,4 @@
     google-chrome
   ];
 
-  home.sessionVariables = {
-    QT_QPA_PLATFORM = "wayland";
-    QT_STYLE_OVERRIDE = "Adwaita-Dark";
-    QT_AUTO_SCREEN_SCALE_FACTOR = "1";
-    ELECTRON_ENABLE_STACK_DUMPING = "1";
-  };
 }
