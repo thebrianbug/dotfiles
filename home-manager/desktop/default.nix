@@ -47,6 +47,7 @@
         "vesktop.desktop"
         "org.keepassxc.KeePassXC.desktop"
         "codium.desktop"
+        "cursor.desktop"
       ];
       enabled-extensions = [
         "auto-move-windows@gnome-shell-extensions.gcampax.github.com"  # Required for auto workspace assignment
