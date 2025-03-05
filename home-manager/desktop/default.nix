@@ -146,20 +146,6 @@
       StartupNotify=true
     '';
 
-    "autostart/keepassxc.desktop".text = ''
-      [Desktop Entry]
-      Name=KeePassXC
-      GenericName=Password Manager
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh keepassxc
-      Icon=keepassxc
-      StartupWMClass=keepassxc
-      Terminal=false
-      Type=Application
-      Version=1.0
-      Categories=Utility;Security;Qt;
-      MimeType=application/x-keepass2;
-    '';
-
     "autostart/obsidian.desktop".text = ''
       [Desktop Entry]
       Name=Obsidian
