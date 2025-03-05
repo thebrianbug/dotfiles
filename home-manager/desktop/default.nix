@@ -60,11 +60,37 @@
       show-home = false;  # Hide home folder on desktop
       show-trash = true;  # Show trash icon on desktop
     };
+
+    # Autostart settings
+    "org/gnome/shell/extensions/dash-to-dock" = {
+      click-action = "minimize";
+      dock-fixed = true;
+      extend-height = true;
+      dock-position = "LEFT";
+    };
+
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
+      binding = "<Control><Alt>t";
+      command = "gnome-terminal";
+      name = "Launch Terminal";
+    };
+
+    # Additional autostart applications
+    "org/gnome/shell/extensions/autostart" = {
+      autostart-apps = [
+        "firefox"
+        "org.keepassxc.KeePassXC"
+        "obsidian"
+        "vesktop"
+        "gnome-terminal"
+      ];
+    };
   };
 
   home.packages = with pkgs; [
     # System utilities
     gnome-tweaks
+    gnome-shell-extensions  # Required for autostart functionality
     adwaita-icon-theme  # Ensure proper GNOME theming
     nerd-fonts.jetbrains-mono
     libcanberra-gtk3    # Sound support for GTK apps
