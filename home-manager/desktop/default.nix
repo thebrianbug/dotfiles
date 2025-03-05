@@ -8,7 +8,7 @@
       workspaces-only-on-primary = true;
       remember-window-size = true;
     };
-    
+
     # Add window state preservation settings
     "org/gnome/shell/overrides" = {
       edge-tiling = true;
@@ -42,6 +42,7 @@
     "org/gnome/desktop/wm/preferences" = {
       button-layout = ":minimize,maximize,close";  # Show window controls on the right without appmenu
       resize-with-right-button = true;
+      auto-maximize = true;  # Automatically maximize windows like Obsidian
     };
   };
 
