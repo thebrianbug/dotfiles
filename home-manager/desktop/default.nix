@@ -105,10 +105,36 @@
 
   # Configure XDG autostart entries
   xdg.configFile = {
+    "bin/wait-for-env.sh" = {
+      text = ''
+      #!/bin/sh
+      # Wait for environment variables to be set
+      max_attempts=30
+      attempt=0
+      
+      check_env() {
+        [ -n "$QT_QPA_PLATFORM" ] && [ -n "$QT_STYLE_OVERRIDE" ]
+      }
+      
+      while ! check_env && [ $attempt -lt $max_attempts ]; do
+        sleep 1
+        attempt=$((attempt + 1))
+      done
+      
+      if check_env; then
+        exec "$@"
+      else
+        echo "Environment variables not set after $max_attempts seconds"
+        exit 1
+      fi
+    '';
+      executable = true;
+    };
+
     "autostart/firefox.desktop".text = ''
       [Desktop Entry]
       Name=Firefox Web Browser
-      Exec=firefox %u
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh firefox %u
       Terminal=false
       Type=Application
       Icon=firefox
@@ -122,7 +148,7 @@
       [Desktop Entry]
       Name=KeePassXC
       GenericName=Password Manager
-      Exec=env QT_QPA_PLATFORM=wayland QT_STYLE_OVERRIDE=Adwaita-Dark QT_AUTO_SCREEN_SCALE_FACTOR=1 keepassxc
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh env QT_QPA_PLATFORM=wayland QT_STYLE_OVERRIDE=Adwaita-Dark QT_AUTO_SCREEN_SCALE_FACTOR=1 keepassxc
       Icon=keepassxc
       StartupWMClass=keepassxc
       Terminal=false
@@ -135,7 +161,7 @@
     "autostart/obsidian.desktop".text = ''
       [Desktop Entry]
       Name=Obsidian
-      Exec=obsidian --force-device-scale-factor=1 %U
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh obsidian --force-device-scale-factor=1 %U
       Terminal=false
       Type=Application
       Icon=obsidian
@@ -147,7 +173,17 @@
       StartupNotify=true
     '';
 
-    "autostart/vesktop.desktop".source = "${pkgs.vesktop}/share/applications/vesktop.desktop";
+    "autostart/vesktop.desktop".text = ''
+      [Desktop Entry]
+      Name=Vesktop
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh vesktop
+      Terminal=false
+      Type=Application
+      Icon=vesktop
+      StartupWMClass=vesktop
+      Categories=Network;InstantMessaging;
+      StartupNotify=true
+    '';
   };
 
   home.packages = with pkgs; [
