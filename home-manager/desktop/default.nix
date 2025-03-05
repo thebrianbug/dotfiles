@@ -70,8 +70,8 @@
     "org/gnome/shell/extensions/auto-move-windows" = {
       application-list = [
         "firefox.desktop:1"              # Move Firefox to workspace 1
-        "org.keepassxc.KeePassXC.desktop:1"  # Move KeePassXC to workspace 1
         "obsidian.desktop:2"            # Move Obsidian to workspace 2
+        "org.keepassxc.KeePassXC.desktop:2"  # Move KeePassXC to workspace 2
         "vesktop.desktop:3"             # Move Vesktop to workspace 3
       ];
     };
@@ -170,6 +170,18 @@
       Icon=vesktop
       StartupWMClass=vesktop
       Categories=Network;InstantMessaging;
+      StartupNotify=true
+    '';
+
+    "autostart/keepassxc.desktop".text = ''
+      [Desktop Entry]
+      Name=KeePassXC
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh keepassxc
+      Terminal=false
+      Type=Application
+      Icon=keepassxc
+      StartupWMClass=keepassxc
+      Categories=Utility;Security;Qt;
       StartupNotify=true
     '';
   };

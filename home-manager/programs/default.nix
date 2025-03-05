@@ -68,13 +68,12 @@
 
   programs.home-manager.enable = true;
 
-  # Force KeePassXC to use dark theme consistently
+  # KeePassXC dark theme configuration
   xdg.configFile."keepassxc/keepassxc.ini".text = ''
     [General]
     ConfigVersion=2
 
     [GUI]
     ApplicationTheme=dark
-    TrayIconAppearance=monochrome-light
   '';
 }
