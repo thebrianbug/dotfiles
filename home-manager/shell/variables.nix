@@ -13,8 +13,5 @@
     XDG_CURRENT_DESKTOP = "GNOME";  # Keep GNOME desktop identification
     # Electron Wayland support - more permissive
     ELECTRON_OZONE_PLATFORM_HINT = "auto";  # Let Electron choose best platform
-    # Docker/Podman configuration
-    DOCKER_HOST = "unix://$XDG_RUNTIME_DIR/podman/podman.sock";
-    DOCKER_SOCK = "$XDG_RUNTIME_DIR/podman/podman.sock";
   };
 }
