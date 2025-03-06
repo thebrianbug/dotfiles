@@ -35,6 +35,18 @@ in
     profiles.default = {
       extensions = defaultExtensions;
       keybindings = contextAwareKeybindings;
+      userSettings = {
+        "nix.enableLanguageServer" = true;
+        "nix.serverPath" = "${pkgs.nil}/bin/nil";
+        "[nix]" = {
+          "editor.formatOnSave" = true;
+          "editor.defaultFormatter" = "jnoortheen.nix-ide";
+          "editor.tabSize" = 2;
+        };
+        "files.associations" = {
+          "*.nix" = "nix";
+        };
+      };
     };
   };
 
