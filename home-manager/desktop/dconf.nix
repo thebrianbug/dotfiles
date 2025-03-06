@@ -88,13 +88,6 @@
       dock-position = "LEFT";
     };
 
-    # Custom keybindings
-    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
-      binding = "<Control><Alt>t";
-      command = "gnome-terminal";
-      name = "Launch Terminal";
-    };
-
     # Session settings
     "org/gnome/desktop/session" = {
       idle-delay = "uint32 0";
