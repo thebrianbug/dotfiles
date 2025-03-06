@@ -8,7 +8,6 @@ in
     defaultExtensions = with pkgs.vscode-extensions; [
       vscodevim.vim
       jnoortheen.nix-ide
-      esbenp.prettier-vscode
     ] ++ (if useVSCodium then [
       saoudrizwan.claude-dev
       supermaven.supermaven
@@ -34,19 +33,7 @@ in
     package = if useVSCodium then pkgs.vscodium else pkgs.windsurf;
     profiles.default = {
       extensions = defaultExtensions;
-      keybindings = contextAwareKeybindings;
-      userSettings = {
-        "nix.enableLanguageServer" = true;
-        "nix.serverPath" = "${pkgs.nil}/bin/nil";
-        "[nix]" = {
-          "editor.formatOnSave" = true;
-          "editor.defaultFormatter" = "jnoortheen.nix-ide";
-          "editor.tabSize" = 2;
-        };
-        "files.associations" = {
-          "*.nix" = "nix";
-        };
-      };
+      keybindings = if useVSCodium then contextAwareKeybindings else [];
     };
   };
 
