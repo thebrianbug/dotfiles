@@ -52,15 +52,15 @@ cd dotfiles
 
 2. Apply the configuration:
 ```bash
-cd home-manager
 home-manager switch --flake .
 ```
 
 ## Structure
 
+- `flake.nix`: Nix flake configuration
 - `home-manager/`: Home Manager configuration files
   - `desktop/`: Desktop environment configurations
-  - `development/`: Development tool configurations
   - `programs/`: Program-specific configurations
+  - `session.nix`: Session and Wayland variables
+  - `shell/`: Shell configurations
   - `home.nix`: Main Home Manager configuration
-  - `flake.nix`: Nix flake configuration
