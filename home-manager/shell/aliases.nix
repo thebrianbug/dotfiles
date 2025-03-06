@@ -4,7 +4,10 @@
   programs.bash = {
     enable = true;
     shellAliases = {
-      # Add your shell aliases here
+      cl = "clear";
+      gs = "git status";
+      gp = "git pull";
+      gg = "git push";
     };
   };
 }
