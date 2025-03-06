@@ -1,6 +1,6 @@
 # Dotfiles
 
-Personal system configuration using [Home Manager](https://nix-community.github.io/home-manager/) and [Nix](https://nixos.org/).
+Personal system configuration using [Home Manager](https://nix-community.github.io/home-manager/) and [Nix](https://nixos.org/) for Fedora 41 with GNOME on Wayland.
 
 ## Features
 
@@ -13,6 +13,12 @@ Personal system configuration using [Home Manager](https://nix-community.github.
 - **Desktop Environment**: GNOME configuration with custom preferences
 - **Development Tools**: Node.js, Python, and container management tools
 - **System Tools**: Various utility programs and applications
+
+## System Requirements
+
+- Fedora 41 or later
+- GNOME Desktop Environment
+- Wayland display server
 
 ## Prerequisites
 
