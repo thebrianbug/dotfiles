@@ -9,10 +9,11 @@ in
       vscodevim.vim
       jnoortheen.nix-ide
       esbenp.prettier-vscode
-    ] ++ (if useVSCodium then [
-      saoudrizwan.claude-dev
-      supermaven.supermaven
-    ] else []);
+      dbaeumer.vscode-eslint
+      prisma.prisma
+      svelte.svelte-vscode
+      bradlc.vscode-tailwindcss
+    ];
     
     contextAwareKeybindings = let
       fileFinderOutsideTerminal = {
