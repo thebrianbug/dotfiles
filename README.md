@@ -55,6 +55,28 @@ cd dotfiles
 home-manager switch --flake .
 ```
 
+## Updating
+
+To update your system packages and configurations:
+
+1. Update flake inputs (nixpkgs, home-manager, etc.):
+```bash
+nix flake update  # Updates all inputs
+# OR
+nix flake lock --update-input nixpkgs  # Update specific input
+```
+
+2. Apply the updates:
+```bash
+home-manager switch --flake .
+```
+
+3. To see what packages will be updated before applying:
+```bash
+nix flake check  # Verify flake integrity
+home-manager build --flake .  # Build without applying
+```
+
 ## Structure
 
 - `flake.nix`: Nix flake configuration
