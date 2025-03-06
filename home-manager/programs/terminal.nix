@@ -7,20 +7,16 @@
   # Enable GNOME Terminal
   programs.gnome-terminal = {
     enable = true;
-    profile = {
+    settings = {
       "b1dcc9dd-5262-4d8d-a863-c897e6d979b9" = {
         default = true;
-        visibleName = "Default";
+        name = "Default";
         showMenubar = false;
         audibleBell = false;
-        colors = {
-          backgroundColor = "rgb(23, 20, 33)";
-          foregroundColor = "rgb(208, 207, 204)";
-          useThemeColors = false;
-        };
-        font = {
-          useSystemFont = true;
-        };
+        backgroundColor = "rgb(23, 20, 33)";
+        foregroundColor = "rgb(208, 207, 204)";
+        useThemeColors = false;
+        useSystemFont = true;
       };
     };
   };
