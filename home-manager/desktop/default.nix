@@ -19,8 +19,7 @@
     grim
     slurp
     wf-recorder
-  ];
-}    wlr-randr
+    wlr-randr
     qt6.qtwayland
     xdg-desktop-portal-wlr
 
@@ -30,4 +29,5 @@
     vesktop
     google-chrome
   ];
+}
 }
