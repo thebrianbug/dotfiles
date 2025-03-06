@@ -8,6 +8,7 @@ in
     defaultExtensions = with pkgs.vscode-extensions; [
       vscodevim.vim
       jnoortheen.nix-ide
+      esbenp.prettier-vscode
     ] ++ (if useVSCodium then [
       saoudrizwan.claude-dev
       supermaven.supermaven
