@@ -22,8 +22,5 @@
     # CLI tools
     fzf
     rclone
-
-    # IDE
-    # code-cursor
   ];
 }

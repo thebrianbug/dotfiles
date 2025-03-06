@@ -1,13 +1,17 @@
 { config, pkgs, ... }:
 
+let
+  useWindsurf = true;  # Set to false to use VSCodium, true for Windsurf
+in
 {
   programs.vscode = let
     defaultExtensions = with pkgs.vscode-extensions; [
       vscodevim.vim
       jnoortheen.nix-ide
-      #saoudrizwan.claude-dev
-      #supermaven.supermaven
-    ];
+    ] ++ (if (!useWindsurf) then [
+      saoudrizwan.claude-dev
+      supermaven.supermaven
+    ] else []);
     
     contextAwareKeybindings = let
       fileFinderOutsideTerminal = {
@@ -26,7 +30,7 @@
     ];
   in {
     enable = true;
-    package = pkgs.windsurf; #pkgs.vscodium;
+    package = if useWindsurf then pkgs.windsurf else pkgs.vscodium;
     profiles.default = {
       extensions = defaultExtensions;
       keybindings = contextAwareKeybindings;
