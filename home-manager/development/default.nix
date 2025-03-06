@@ -24,6 +24,6 @@
     rclone
 
     # IDE
-    code-cursor
+    # code-cursor
   ];
 }

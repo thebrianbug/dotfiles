@@ -4,9 +4,9 @@
   programs.vscode = let
     defaultExtensions = with pkgs.vscode-extensions; [
       vscodevim.vim
-      saoudrizwan.claude-dev
       jnoortheen.nix-ide
-      supermaven.supermaven
+      #saoudrizwan.claude-dev
+      #supermaven.supermaven
     ];
     
     contextAwareKeybindings = let
@@ -26,7 +26,7 @@
     ];
   in {
     enable = true;
-    package = pkgs.vscodium;
+    package = pkgs.windsurf; #pkgs.vscodium;
     profiles.default = {
       extensions = defaultExtensions;
       keybindings = contextAwareKeybindings;
