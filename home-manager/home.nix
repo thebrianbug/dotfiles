@@ -18,7 +18,7 @@
   imports = [
     ./desktop      # Desktop environment and window management
     ./programs     # Application and development configurations
-    ./session.nix # Session and Wayland variables
+    ./session     # Session and Wayland variables
     ./shell        # Shell and environment variables
   ];
 }
