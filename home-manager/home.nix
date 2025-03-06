@@ -19,5 +19,6 @@
     ./desktop
     ./development
     ./programs
+    ./session
   ];
 }
