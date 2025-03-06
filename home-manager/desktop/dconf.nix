@@ -109,18 +109,5 @@
       default-size-columns = 120;
       default-size-rows = 35;
     };
-
-    # Terminal keyboard shortcut
-    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
-      binding = "<Control><Alt>t";
-      command = "gnome-terminal";
-      name = "Launch Terminal";
-    };
-
-    "org/gnome/settings-daemon/plugins/media-keys" = {
-      custom-keybindings = [
-        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
-      ];
-    };
   };
 }
