@@ -6,6 +6,7 @@
       vscodevim.vim
       saoudrizwan.claude-dev
       jnoortheen.nix-ide
+      supermaven.supermaven
     ];
     
     contextAwareKeybindings = let
