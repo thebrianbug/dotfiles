@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./docker.nix
-    ./languages.nix
+    ./aliases.nix
+    ./variables.nix
   ];
 }

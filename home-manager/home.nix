@@ -16,9 +16,9 @@
 
   # Import modular configurations
   imports = [
-    ./desktop
-    ./development
-    ./programs
-    ./session
+    ./desktop      # Desktop environment and window management
+    ./development  # Development tools and languages
+    ./programs     # Application configurations
+    ./shell        # Shell and environment variables
   ];
 }
