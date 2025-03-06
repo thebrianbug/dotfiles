@@ -14,39 +14,27 @@
 
   outputs = { nixpkgs, home-manager, ... }:
     let
-      # Supported systems
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
-      
-      # Helper to generate outputs for each system
-      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-      
-      # Nixpkgs instantiated for each system
-      nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
+      # System configuration
+      system = "x86_64-linux";
+      pkgs = import nixpkgs { inherit system; };
     in {
       # Home Manager configurations
       homeConfigurations = {
         "brianbug" = home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgsFor.x86_64-linux;
+          inherit pkgs;
           modules = [ ./home-manager/home.nix ];
-          
-          # Make system info available to modules
-          extraSpecialArgs = {
-            inherit supportedSystems;
-          };
         };
       };
 
       # Development shell with helpful tools
-      devShells = forAllSystems (system: {
-        default = nixpkgsFor.${system}.mkShell {
-          packages = with nixpkgsFor.${system}; [
-            nixpkgs-fmt  # Nix code formatter
-            nil         # Nix language server
-          ];
-        };
-      });
+      devShells.${system}.default = pkgs.mkShell {
+        packages = with pkgs; [
+          nixpkgs-fmt  # Nix code formatter
+          nil         # Nix language server
+        ];
+      };
 
       # Formatter for 'nix fmt'
-      formatter = forAllSystems (system: nixpkgsFor.${system}.nixpkgs-fmt);
+      formatter.${system} = pkgs.nixpkgs-fmt;
     };
 }
