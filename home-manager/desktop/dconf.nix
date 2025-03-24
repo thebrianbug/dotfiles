@@ -109,5 +109,28 @@
       default-size-columns = 120;
       default-size-rows = 35;
     };
+
+    # Power management settings
+    "org/gnome/settings-daemon/plugins/power" = {
+      power-button-action = "interactive";
+      power-saver-profile-on-low-battery = true;
+      sleep-inactive-ac-timeout = 0;
+      sleep-inactive-ac-type = "nothing";
+      sleep-inactive-battery-timeout = 1800;
+      sleep-inactive-battery-type = "suspend";
+      power-profiles-on-ac = 1; # 1 = balanced mode when on AC
+      power-profiles-on-battery = 0; # 0 = power-saver mode when on battery
+    };
+
+    # Power profile settings
+    "org/gnome/power-profiles-daemon" = {
+      default-power-profile = "balanced";
+    };
+
+    # Power management settings
+    "org/gnome/power-manager" = {
+      info-history-type = "charge";
+      info-stats-type = "discharge-accuracy";
+    };
   };
 }
