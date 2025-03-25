@@ -16,6 +16,7 @@
 
     # Wayland utilities
     wl-clipboard
+    clipman
     grim
     slurp
     wf-recorder
