@@ -12,6 +12,7 @@
     XDG_SESSION_TYPE = "wayland";  # Indicate Wayland session
     XDG_CURRENT_DESKTOP = "GNOME";  # Keep GNOME desktop identification
     # Electron Wayland support - more permissive
-    ELECTRON_OZONE_PLATFORM_HINT = "auto";  # Let Electron choose best platform
+    # ELECTRON_OZONE_PLATFORM_HINT = "auto";  # Let Electron choose best platform
+    ELECTRON_OZONE_PLATFORM_HINT = "wayland";  # Force Wayland
   };
 }
