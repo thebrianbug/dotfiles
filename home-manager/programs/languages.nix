@@ -3,7 +3,7 @@
 {
   home.packages = with pkgs; [
     # Languages and runtimes
-    python39
+    python3
     nodejs_20
 
     # Node.js packages
