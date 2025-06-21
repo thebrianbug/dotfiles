@@ -23,6 +23,6 @@
     nil           # Nix Language Server
     nix-tree      # Visualize nix dependencies
     nix-direnv    # Project-specific environments
-    nixfmt        # Nix formatter
+    nixfmt-classic # Nix formatter
   ];
 }
