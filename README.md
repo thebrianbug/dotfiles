@@ -31,56 +31,24 @@ This configuration uses [Nix Flakes](https://nixos.wiki/wiki/Flakes), a feature 
 - **Fast**: Efficient dependency resolution and caching
 - **Version Control**: Direct integration with Git for managing configurations
 
-To enable flakes support, ensure you have the following in your Nix configuration:
-
-```nix
-{
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-}
-```
+This configuration uses [Nix Flakes](https://nixos.wiki/wiki/Flakes) for reproducible builds, composability, and version tracking.
 
 ## Setup Instructions
 
-### Fedora Base Metal Installation
+### Fedora Installation
 
 #### Prerequisites
 
 - Fedora 41 or later with GNOME and Wayland
-- Root access for Nix installation
 
-#### 1. Install Nix
-
-```bash
-# Install Nix package manager
-sh <(curl -L https://nixos.org/nix/install) --daemon
-```
-
-#### 2. Enable Flakes Support
-
-Edit `/etc/nix/nix.conf` as root and add:
-
-```
-experimental-features = nix-command flakes
-```
-
-Then restart the Nix daemon:
+#### Quick Setup (Two Commands)
 
 ```bash
-sudo systemctl restart nix-daemon
-```
+# 1. Install Nix with the determinate systems installer (automatically enables flakes)
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
-#### 3. Install Home Manager
-
-```bash
-nix-shell -p home-manager --run "home-manager --version"
-```
-
-#### 4. Clone and Apply Configuration
-
-```bash
-git clone https://github.com/thebrianbug/dotfiles.git
-cd dotfiles
-home-manager switch --flake .
+# 2. Apply dotfiles configuration
+git clone https://github.com/thebrianbug/dotfiles.git && cd dotfiles && home-manager switch --flake .
 ```
 
 ### NixOS VM Installation
@@ -166,9 +134,10 @@ home-manager build --flake .
 
 ### Common Issues
 
-- If you encounter permission errors, ensure you have the proper permissions to the Nix store
-- For "flake not found" errors, make sure you're in the repository directory
-- If dependencies fail to build, try updating the flake inputs with `nix flake update`
+- **Flake errors**: Make sure you're in the repository directory
+- **Build failures**: Try updating the flake inputs with `nix flake update`
+- **Nix issues**: The determinate installer provides built-in diagnostics - run `/nix/nix-installer diagnose`
+- **Missing Home Manager command**: The first time you run, use the full path: `~/.nix-profile/bin/home-manager switch --flake .`
 
 ### Getting Help
 
