@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   # Allow unfree packages
@@ -9,6 +9,8 @@
     ./editors.nix
     ./git.nix
     ./shell
+    ./dev.nix
+    ./gnome.nix
   ];
 
   # Basic default packages useful everywhere

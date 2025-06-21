@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ ... }:
 
 {
   # Import common configurations
@@ -7,14 +7,8 @@
   ];
 
   # NixOS-specific packages
-  home.packages = with pkgs; [
-    # System utilities
-    gnome-tweaks
-    gnome-shell-extensions
-    
-    # Basic development tools for NixOS
-    nixpkgs-fmt
-    nil  # Nix language server
+  home.packages = [
+    # Any NixOS-specific packages would go here
   ];
   
   # NixOS-specific session variables

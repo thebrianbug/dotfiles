@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   # Import common configurations
@@ -20,14 +20,14 @@
     wlr-randr
     qt6.qtwayland
     xdg-desktop-portal-wlr
-    
+
     # Applications more likely to be used on a full desktop environment
     keepassxc
     obsidian
     vesktop
     google-chrome
   ];
-  
+
   # Fedora-specific session variables
   home.sessionVariables = {
     # Wayland-specific
