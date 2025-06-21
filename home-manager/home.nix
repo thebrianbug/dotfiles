@@ -8,17 +8,11 @@
     stateVersion = "24.11"; # Please read the comment before changing.
   };
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-
-  # Enable generic Linux support
-  targets.genericLinux.enable = true;
-
-  # Import modular configurations
+  # Import common configuration
   imports = [
-    ./desktop # Desktop environment and window management
-    ./programs # Application and development configurations
-    ./session # Session and Wayland variables
-    ./shell # Shell and environment variables
+    ./common
+    
+    # Host-specific configurations can be added here
+    # Example: ./nixos or ./fedora depending on the host
   ];
 }
