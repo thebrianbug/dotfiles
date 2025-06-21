@@ -5,6 +5,7 @@
 }:
 
 {
+  # Import this file into common/default.nix
   xdg.configFile = {
     "bin/wait-for-env.sh" = {
       text = ''

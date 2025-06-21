@@ -10,8 +10,10 @@
     ./git.nix
     ./shell
     ./gnome.nix
+    ./wayland.nix
     ./languages.nix
     ./podman.nix
+    ./autostart.nix
   ];
 
   # Basic default packages useful everywhere
