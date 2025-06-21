@@ -1,6 +1,6 @@
 # Dotfiles
 
-Personal system configuration using [Home Manager](https://nix-community.github.io/home-manager/) and [Nix](https://nixos.org/) for Fedora 41 with GNOME on Wayland.
+Personal system configuration using [Home Manager](https://nix-community.github.io/home-manager/) and [Nix](https://nixos.org/) for both Fedora 41 with GNOME on Wayland and NixOS virtual machines.
 
 ## Features
 
@@ -14,16 +14,12 @@ Personal system configuration using [Home Manager](https://nix-community.github.
 - **Development Tools**: Node.js, Python, and container management tools
 - **System Tools**: Various utility programs and applications
 
-## System Requirements
+## System Overview
 
-- Fedora 41 or later
-- GNOME Desktop Environment
-- Wayland display server
+This repository supports:
 
-## Prerequisites
-
-- Nix package manager
-- Home Manager
+- **Fedora Base Metal**: Primary configuration for Fedora 41+ with GNOME/Wayland
+- **NixOS VM**: Complete system configuration for NixOS virtual machines
 
 ## Nix Flakes
 
@@ -43,96 +39,138 @@ To enable flakes support, ensure you have the following in your Nix configuratio
 }
 ```
 
-## Installation
+## Setup Instructions
 
-1. Clone this repository:
+### Fedora Base Metal Installation
+
+#### Prerequisites
+
+- Fedora 41 or later with GNOME and Wayland
+- Root access for Nix installation
+
+#### 1. Install Nix
+
+```bash
+# Install Nix package manager
+sh <(curl -L https://nixos.org/nix/install) --daemon
+```
+
+#### 2. Enable Flakes Support
+
+Edit `/etc/nix/nix.conf` as root and add:
+
+```
+experimental-features = nix-command flakes
+```
+
+Then restart the Nix daemon:
+
+```bash
+sudo systemctl restart nix-daemon
+```
+
+#### 3. Install Home Manager
+
+```bash
+nix-shell -p home-manager --run "home-manager --version"
+```
+
+#### 4. Clone and Apply Configuration
 
 ```bash
 git clone https://github.com/thebrianbug/dotfiles.git
 cd dotfiles
-```
-
-2. Apply the configuration:
-
-```bash
 home-manager switch --flake .
 ```
 
-## VM Configuration
+### NixOS VM Installation
 
-This repository includes a NixOS VM configuration that can be applied to a NixOS virtual machine.
-
-### Prerequisites for VM
+#### Prerequisites
 
 - A NixOS virtual machine installation
-- Git installed on the VM
+- Git installed on the VM (available on default NixOS installations)
 - Root access via sudo
 
-### Setting Up NixOS VM
-
-1. Boot into your NixOS VM
-
-2. Clone this repository:
+#### 1. Clone Repository
 
 ```bash
 git clone https://github.com/thebrianbug/dotfiles.git
 cd dotfiles
 ```
 
-3. Apply the VM configuration using nixos-rebuild:
+#### 2. Apply System Configuration
 
 ```bash
 sudo nixos-rebuild switch --flake .#vm
 ```
 
-4. Once the system configuration is applied, you can also set up the user environment with Home Manager:
+#### 3. Apply User Configuration (Optional)
+
+If you're not using the NixOS module approach and want to manage the user environment separately:
 
 ```bash
-home-manager switch --flake .
+home-manager switch --flake .#brianbug-vm
 ```
 
-### VM Features
+## Maintaining Your System
 
-The VM configuration includes:
-
-- GNOME desktop environment
-- VM integration via spice-vdagentd
-- OpenSSH with password authentication enabled
-- Latest kernel packages
-- Basic development tools (vim, git, wget)
-- Flakes support enabled by default
-
-## Updating
+### Updating Dependencies
 
 To update your system packages and configurations:
 
-1. Update flake inputs (nixpkgs, home-manager, etc.):
-
 ```bash
-nix flake update  # Updates all inputs
-# OR
-nix flake lock --update-input nixpkgs  # Update specific input
+# Update all flake inputs
+nix flake update
+
+# Or update a specific input
+nix flake lock --update-input nixpkgs
 ```
 
-2. Apply the updates:
+### Applying Updates
+
+#### Fedora
 
 ```bash
+cd dotfiles
 home-manager switch --flake .
 ```
 
-3. To see what packages will be updated before applying:
+#### NixOS VM
 
 ```bash
-nix flake check  # Verify flake integrity
-home-manager build --flake .  # Build without applying
+cd dotfiles
+sudo nixos-rebuild switch --flake .#vm
 ```
 
-## Structure
+### Checking Updates Before Applying
 
-- `flake.nix`: Nix flake configuration
-- `home-manager/`: Home Manager configuration files
-  - `desktop/`: Desktop environment configurations
-  - `programs/`: Program-specific configurations
-  - `session.nix`: Session and Wayland variables
-  - `shell/`: Shell configurations
-  - `home.nix`: Main Home Manager configuration
+```bash
+# Verify flake integrity
+nix flake check
+
+# Build without applying
+home-manager build --flake .
+```
+
+## Repository Structure
+
+- `flake.nix`: Main configuration for the Nix flake
+- `home-manager/`: Home Manager configurations
+  - `common/`: Shared configurations across all systems
+  - `fedora/`: Fedora-specific configurations
+  - `vm/`: NixOS VM-specific configurations
+- `hosts/`: NixOS system configurations
+  - `vm/`: Configuration files for NixOS virtual machine
+
+## Troubleshooting
+
+### Common Issues
+
+- If you encounter permission errors, ensure you have the proper permissions to the Nix store
+- For "flake not found" errors, make sure you're in the repository directory
+- If dependencies fail to build, try updating the flake inputs with `nix flake update`
+
+### Getting Help
+
+- Nix documentation: https://nixos.org/manual/nix/stable/
+- Home Manager manual: https://nix-community.github.io/home-manager/
