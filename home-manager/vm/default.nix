@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
   # Import common configurations
@@ -6,11 +6,16 @@
     ../common
   ];
 
-  # VM-specific packages
-  home.packages = [
-    # Any VM-specific packages would go here
+  # VM-specific packages (moved from system configuration)
+  home.packages = with pkgs; [
+    # Add any other VM-specific packages
   ];
-  
+
+  # Configure Firefox (moved from system configuration)
+  programs.firefox = {
+    enable = true;
+  };
+
   # VM-specific session variables
   home.sessionVariables = {
     # Additional VM-specific variables can go here

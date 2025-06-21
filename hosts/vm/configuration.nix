@@ -104,18 +104,18 @@
     ];
   };
 
-  # Install firefox.
-  programs.firefox.enable = true;
+  # Firefox is now managed by home-manager
+  # programs.firefox.enable = true;
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    vim
-    wget
-    git
+  # System-wide packages (user packages moved to home-manager)
+  environment.systemPackages = [
+    # User packages have been moved to home-manager
+    # If you need system-wide packages, add them here
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
