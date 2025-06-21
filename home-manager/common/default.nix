@@ -12,6 +12,7 @@
     ./dev.nix
     ./gnome.nix
     ./languages.nix
+    ./podman.nix
   ];
 
   # Basic default packages useful everywhere
