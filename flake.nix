@@ -20,6 +20,16 @@
       pkgs = import nixpkgs { inherit system; };
     in
     {
+      # NixOS configurations
+      nixosConfigurations = {
+        vm = nixpkgs.lib.nixosSystem {
+          inherit system;
+          modules = [
+            ./hosts/vm/configuration.nix
+          ];
+        };
+      };
+
       # Home Manager configurations
       homeConfigurations = {
         "brianbug" = home-manager.lib.homeManagerConfiguration {
