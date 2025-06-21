@@ -9,7 +9,6 @@
     ./editors.nix
     ./git.nix
     ./shell
-    ./dev.nix
     ./gnome.nix
     ./languages.nix
     ./podman.nix
