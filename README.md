@@ -58,6 +58,50 @@ cd dotfiles
 home-manager switch --flake .
 ```
 
+## VM Configuration
+
+This repository includes a NixOS VM configuration that can be applied to a NixOS virtual machine.
+
+### Prerequisites for VM
+
+- A NixOS virtual machine installation
+- Git installed on the VM
+- Root access via sudo
+
+### Setting Up NixOS VM
+
+1. Boot into your NixOS VM
+
+2. Clone this repository:
+
+```bash
+git clone https://github.com/thebrianbug/dotfiles.git
+cd dotfiles
+```
+
+3. Apply the VM configuration using nixos-rebuild:
+
+```bash
+sudo nixos-rebuild switch --flake .#vm
+```
+
+4. Once the system configuration is applied, you can also set up the user environment with Home Manager:
+
+```bash
+home-manager switch --flake .
+```
+
+### VM Features
+
+The VM configuration includes:
+
+- GNOME desktop environment
+- VM integration via spice-vdagentd
+- OpenSSH with password authentication enabled
+- Latest kernel packages
+- Basic development tools (vim, git, wget)
+- Flakes support enabled by default
+
 ## Updating
 
 To update your system packages and configurations:
