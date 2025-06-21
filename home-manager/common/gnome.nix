@@ -9,14 +9,14 @@
     adwaita-icon-theme
     nerd-fonts.jetbrains-mono
     libcanberra-gtk3
-    
+
     # Common applications for all hosts
     keepassxc
     obsidian
     vesktop
     google-chrome
   ];
-  
+
   # Common GNOME dconf settings
   dconf.settings = {
     # Mutter window and focus settings
