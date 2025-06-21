@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   # Common GNOME utilities and settings useful across all environments
@@ -71,6 +71,13 @@
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
       enable-hot-corners = false;
+    };
+
+    # Background settings
+    "org/gnome/desktop/background" = {
+      picture-uri = "file://${config.home.homeDirectory}/assets/books-arts-wallpaper-1920x1080.jpg";
+      picture-uri-dark = "file://${config.home.homeDirectory}/assets/books-arts-wallpaper-1920x1080.jpg";
+      picture-options = "zoom";
     };
 
     # Session settings
