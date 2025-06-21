@@ -20,9 +20,9 @@
     rclone
 
     # Nix tools
-    nil           # Nix Language Server
-    nix-tree      # Visualize nix dependencies
-    nix-direnv    # Project-specific environments
+    nil # Nix Language Server
+    nix-tree # Visualize nix dependencies
+    nix-direnv # Project-specific environments
     nixfmt-classic # Nix formatter
   ];
 }

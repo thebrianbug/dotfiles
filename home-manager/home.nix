@@ -16,9 +16,9 @@
 
   # Import modular configurations
   imports = [
-    ./desktop      # Desktop environment and window management
-    ./programs     # Application and development configurations
-    ./session     # Session and Wayland variables
-    ./shell        # Shell and environment variables
+    ./desktop # Desktop environment and window management
+    ./programs # Application and development configurations
+    ./session # Session and Wayland variables
+    ./shell # Shell and environment variables
   ];
 }

@@ -4,7 +4,7 @@
   inputs = {
     # Package sources
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    
+
     # Home Manager
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -12,12 +12,14 @@
     };
   };
 
-  outputs = { nixpkgs, home-manager, ... }:
+  outputs =
+    { nixpkgs, home-manager, ... }:
     let
       # System configuration
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
-    in {
+    in
+    {
       # Home Manager configurations
       homeConfigurations = {
         "brianbug" = home-manager.lib.homeManagerConfiguration {
@@ -29,8 +31,8 @@
       # Development shell with helpful tools
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
-          nixpkgs-fmt  # Nix code formatter
-          nil         # Nix language server
+          nixpkgs-fmt # Nix code formatter
+          nil # Nix language server
         ];
       };
 

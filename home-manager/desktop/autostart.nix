@@ -1,32 +1,37 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   xdg.configFile = {
     "bin/wait-for-env.sh" = {
       text = ''
-      #!/bin/sh
-      max_attempts=30
-      required_vars="${lib.concatStringsSep " " (lib.attrNames config.home.sessionVariables)}"
-      missing_vars=""
-
-      for attempt in $(seq 1 $max_attempts); do
+        #!/bin/sh
+        max_attempts=30
+        required_vars="${lib.concatStringsSep " " (lib.attrNames config.home.sessionVariables)}"
         missing_vars=""
-        for var in $required_vars; do
-          eval "val=\$$var"
-          [ -z "$val" ] && missing_vars="$missing_vars $var"
-        done
-        
-        if [ -z "$missing_vars" ]; then
-          exec "$@"
-        fi
-        
-        echo "Waiting for:$missing_vars (attempt $attempt/$max_attempts)"
-        sleep 1
-      done
 
-      echo "Timed out waiting for:$missing_vars"
-      exit 1
-    '';
+        for attempt in $(seq 1 $max_attempts); do
+          missing_vars=""
+          for var in $required_vars; do
+            eval "val=\$$var"
+            [ -z "$val" ] && missing_vars="$missing_vars $var"
+          done
+          
+          if [ -z "$missing_vars" ]; then
+            exec "$@"
+          fi
+          
+          echo "Waiting for:$missing_vars (attempt $attempt/$max_attempts)"
+          sleep 1
+        done
+
+        echo "Timed out waiting for:$missing_vars"
+        exit 1
+      '';
       executable = true;
     };
 

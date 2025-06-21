@@ -5,7 +5,7 @@ Personal system configuration using [Home Manager](https://nix-community.github.
 ## Features
 
 - **Package Management**: Declarative system package installation
-- **Program Configurations**: 
+- **Program Configurations**:
   - VSCodium with extensions
   - Git configuration
   - Neovim setup
@@ -36,6 +36,7 @@ This configuration uses [Nix Flakes](https://nixos.wiki/wiki/Flakes), a feature 
 - **Version Control**: Direct integration with Git for managing configurations
 
 To enable flakes support, ensure you have the following in your Nix configuration:
+
 ```nix
 {
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -45,12 +46,14 @@ To enable flakes support, ensure you have the following in your Nix configuratio
 ## Installation
 
 1. Clone this repository:
+
 ```bash
 git clone https://github.com/thebrianbug/dotfiles.git
 cd dotfiles
 ```
 
 2. Apply the configuration:
+
 ```bash
 home-manager switch --flake .
 ```
@@ -60,6 +63,7 @@ home-manager switch --flake .
 To update your system packages and configurations:
 
 1. Update flake inputs (nixpkgs, home-manager, etc.):
+
 ```bash
 nix flake update  # Updates all inputs
 # OR
@@ -67,11 +71,13 @@ nix flake lock --update-input nixpkgs  # Update specific input
 ```
 
 2. Apply the updates:
+
 ```bash
 home-manager switch --flake .
 ```
 
 3. To see what packages will be updated before applying:
+
 ```bash
 nix flake check  # Verify flake integrity
 home-manager build --flake .  # Build without applying

@@ -15,12 +15,12 @@
       edge-tiling = false;
       attach-modal-dialogs = false;
     };
-    
+
     # Window management keybindings
     "org/gnome/desktop/wm/keybindings" = {
-      toggle-fullscreen = ["<Super>f"];
+      toggle-fullscreen = [ "<Super>f" ];
     };
-    
+
     # Window state preservation
     "org/gnome/mutter/wayland" = {
       restore-monitor-config = true;
