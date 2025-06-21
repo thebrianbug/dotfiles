@@ -11,6 +11,7 @@
     ./shell
     ./dev.nix
     ./gnome.nix
+    ./languages.nix
   ];
 
   # Basic default packages useful everywhere
