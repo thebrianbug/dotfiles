@@ -33,17 +33,15 @@ in
   in {
     enable = true;
     package = if useVSCodium then pkgs.vscodium else pkgs.windsurf;
-    profiles.default = {
-      extensions = defaultExtensions;
-      keybindings = if useVSCodium then contextAwareKeybindings else [];
-      settings = {
-        "nix.enableLanguageServer" = true;
-        "nix.serverPath" = "nil";
-        "nix.formatterPath" = "alejandra";
-        "editor.formatOnSave" = true;
-        "[nix]" = {
-          "editor.defaultFormatter" = "jnoortheen.nix-ide";
-        };
+    extensions = defaultExtensions;
+    keybindings = if useVSCodium then contextAwareKeybindings else [];
+    userSettings = {
+      "nix.enableLanguageServer" = true;
+      "nix.serverPath" = "nil";
+      "nix.formatterPath" = "nixfmt";
+      "editor.formatOnSave" = true;
+      "[nix]" = {
+        "editor.defaultFormatter" = "jnoortheen.nix-ide";
       };
     };
   };
