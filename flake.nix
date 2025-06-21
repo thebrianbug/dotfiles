@@ -1,5 +1,5 @@
 {
-  description = "Home Manager configuration for Fedora Workstation";
+  description = "Home Manager configuration for multiple environments";
 
   inputs = {
     # Package sources
@@ -26,15 +26,34 @@
           inherit system;
           modules = [
             ./hosts/vm/configuration.nix
+            # Include home-manager as NixOS module for the VM
+            home-manager.nixosModules.home-manager {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.brianbug = import ./home-manager/vm;
+            }
           ];
         };
       };
 
       # Home Manager configurations
       homeConfigurations = {
+        # Main Fedora configuration
         "brianbug" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
-          modules = [ ./home-manager/home.nix ];
+          modules = [ ./home-manager/fedora ];
+        };
+        
+        # VM-specific configuration (for standalone use)
+        "brianbug-vm" = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ ./home-manager/vm ];
+        };
+        
+        # NixOS configuration (for standalone use)
+        "brianbug-nixos" = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ ./home-manager/nixos ];
         };
       };
 
