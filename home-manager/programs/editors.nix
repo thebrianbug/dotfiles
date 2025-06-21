@@ -36,6 +36,15 @@ in
     profiles.default = {
       extensions = defaultExtensions;
       keybindings = if useVSCodium then contextAwareKeybindings else [];
+      settings = {
+        "nix.enableLanguageServer" = true;
+        "nix.serverPath" = "nil";
+        "nix.formatterPath" = "alejandra";
+        "editor.formatOnSave" = true;
+        "[nix]" = {
+          "editor.defaultFormatter" = "jnoortheen.nix-ide";
+        };
+      };
     };
   };
 
