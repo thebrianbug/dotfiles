@@ -58,7 +58,7 @@ in
     "org/gnome/shell" = {
       favorite-apps = [
         "org.gnome.Nautilus.desktop"
-        "firefox.desktop"
+        "org.mozilla.firefox.desktop"
         "org.gnome.Terminal.desktop"
         "obsidian.desktop"
         "vesktop.desktop"
