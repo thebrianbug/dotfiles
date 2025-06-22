@@ -70,6 +70,16 @@ in
       disable-user-extensions = false;
     };
 
+    # Auto-move windows extension configuration
+    "org/gnome/shell/extensions/auto-move-windows" = {
+      application-list = [
+        "firefox.desktop:1"
+        "keepassxc.desktop:2"
+        "vesktop.desktop:2"
+        "obsidian.desktop:3"
+      ];
+    };
+
     # Interface settings
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
