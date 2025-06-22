@@ -1,5 +1,8 @@
 { config, pkgs, ... }:
 
+let
+  repoRoot = builtins.toString ../..;
+in
 {
   # Common GNOME utilities and settings useful across all environments
   home.packages = with pkgs; [
@@ -75,8 +78,8 @@
 
     # Background settings
     "org/gnome/desktop/background" = {
-      picture-uri = "file://${config.home.homeDirectory}/assets/books-arts-wallpaper-1920x1080.jpg";
-      picture-uri-dark = "file://${config.home.homeDirectory}/assets/books-arts-wallpaper-1920x1080.jpg";
+      picture-uri = "file://${repoRoot}/assets/books-arts-wallpaper-1920x1080.jpg";
+      picture-uri-dark = "file://${repoRoot}/assets/books-arts-wallpaper-1920x1080.jpg";
       picture-options = "zoom";
     };
 
