@@ -1,9 +1,6 @@
 { pkgs, ... }:
 
 {
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-
   # Basic home configuration
   home = {
     username = "brianbug";
