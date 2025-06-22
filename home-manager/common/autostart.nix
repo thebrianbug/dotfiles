@@ -35,18 +35,6 @@
       executable = true;
     };
 
-    "autostart/clipman.desktop".text = ''
-      [Desktop Entry]
-      Name=Clipman
-      Comment=Clipboard Manager for Wayland
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh wl-paste -t text --watch clipman store --no-persist
-      Terminal=false
-      Type=Application
-      Icon=edit-paste
-      StartupWMClass=clipman
-      Categories=Utility;
-      StartupNotify=true
-    '';
 
     "autostart/firefox.desktop".text = ''
       [Desktop Entry]

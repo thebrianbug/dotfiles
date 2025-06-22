@@ -18,7 +18,6 @@
   home.packages = with pkgs; [
     # Wayland core utilities
     wl-clipboard # Clipboard utilities for Wayland
-    clipman      # Clipboard manager for Wayland
     grim         # Screenshot utility for Wayland
     slurp        # Region selection for Wayland
     wf-recorder  # Screen recording for Wayland
