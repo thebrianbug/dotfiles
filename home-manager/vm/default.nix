@@ -9,7 +9,7 @@
   # VM-specific packages (moved from system configuration)
   home.packages = with pkgs; [
     # Add any other VM-specific packages
-    gnome.gnome-console # Ptyxis terminal
+    gnome.gnome-console-43 # Ptyxis terminal
   ];
 
   # Configure Firefox (moved from system configuration)

@@ -9,7 +9,7 @@
   # NixOS-specific packages
   home.packages = with pkgs; [
     # Any NixOS-specific packages would go here
-    gnome.gnome-console # Ptyxis terminal
+    gnome.gnome-console-43 # Ptyxis terminal
   ];
 
   # Configure Firefox
