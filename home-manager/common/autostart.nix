@@ -35,7 +35,6 @@
       executable = true;
     };
 
-
     "autostart/firefox.desktop".text = ''
       [Desktop Entry]
       Name=Firefox Web Browser
@@ -79,7 +78,7 @@
     "autostart/keepassxc.desktop".text = ''
       [Desktop Entry]
       Name=KeePassXC
-      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh keepassxc --enable-features=WaylandWindowDecorations --enable-webrtc-pipewire-capturer --enable-gpu-rasterization --enable-zero-copy
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh keepassxc
       Terminal=false
       Type=Application
       Icon=keepassxc
