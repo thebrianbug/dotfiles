@@ -36,8 +36,11 @@ This guide walks you through installing NixOS on an ASUS laptop with all necessa
    ```
 2. Clone this repository:
    ```bash
-   git clone https://github.com/thebrianbug/dotfiles.git /mnt/etc/nixos/dotfiles
-   cd /mnt/etc/nixos/dotfiles
+   cd ~
+   mkdir -p source
+   cd source
+   git clone https://github.com/thebrianbug/dotfiles.git
+   cd dotfiles
    ```
 
 ## Step 3: Create ASUS-Specific Configuration
@@ -48,7 +51,7 @@ This guide walks you through installing NixOS on an ASUS laptop with all necessa
    ```
 2. Copy hardware configuration:
    ```bash
-   cp /mnt/etc/nixos/hardware-configuration.nix hosts/asus-linux/
+   cp /mnt/etc/nixos/hardware-configuration.nix ./hosts/asus-linux/
    ```
 3. Create `configuration.nix`:
    ```bash
@@ -113,7 +116,7 @@ This guide walks you through installing NixOS on an ASUS laptop with all necessa
 1. Install NixOS with your configuration:
 
    ```bash
-   nixos-install --flake /mnt/etc/nixos/dotfiles#asus-linux
+   nixos-install --flake .#asus-linux
    ```
 
 2. Set a root password when prompted
