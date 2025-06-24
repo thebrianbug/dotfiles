@@ -49,29 +49,20 @@ This guide walks you through installing NixOS on an ASUS laptop with all necessa
    ```bash
    mkdir -p hosts/asus-linux
    ```
-2. Copy hardware configuration:
+2. Copy both the hardware configuration and the installer-generated configuration.nix:
    ```bash
    cp /mnt/etc/nixos/hardware-configuration.nix ./hosts/asus-linux/
+   cp /mnt/etc/nixos/configuration.nix ./hosts/asus-linux/
    ```
-3. Create `configuration.nix`:
-   ```bash
-   cp hosts/vm/configuration.nix hosts/asus-linux/
-   ```
-4. Edit the configuration file:
+3. Edit the configuration file:
 
    ```bash
    nano hosts/asus-linux/configuration.nix
    ```
 
-5. Update the following settings:
+4. Add these ASUS-specific settings to the generated configuration.nix:
 
    ```nix
-   networking.hostName = "asus-linux";
-
-   # Update bootloader settings - for UEFI systems:
-   boot.loader.systemd-boot.enable = true;
-   boot.loader.efi.canTouchEfiVariables = true;
-
    # Use latest kernel for best ASUS hardware support
    boot.kernelPackages = pkgs.linuxPackages_latest;
 
