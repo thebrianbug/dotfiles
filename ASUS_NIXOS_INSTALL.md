@@ -375,6 +375,117 @@ systemd.services.nvidia-fallback.enable = false;
      services.tlp.enable = true;
      ```
 
+## Networking Configuration
+
+### WiFi Setup
+
+Newer ASUS laptops (including ProArt series) often use Intel or MediaTek WiFi adapters that may require additional firmware or kernel modules.
+
+1. **Identify Your WiFi Hardware**:
+   ```bash
+   lspci | grep -i network
+   ```
+
+2. **Intel WiFi Modules** (common in ASUS laptops):
+   Add to your configuration.nix:
+   ```nix
+   hardware.enableAllFirmware = true;
+   networking.networkmanager.enable = true;
+   
+   # For problematic Intel AX cards
+   boot.kernelParams = [ 
+     "iwlwifi.disable_11ax=Y"
+     "iwlmvm.power_scheme=1" 
+   ];
+   ```
+
+3. **MediaTek Cards** (found in some newer models):
+   ```nix
+   hardware.firmware = [ pkgs.linux-firmware ];
+   ```
+
+4. **Temporary Internet During Setup**:
+   - Use USB tethering from your phone
+   - Connect via Ethernet if available
+
+### Bluetooth Configuration
+
+```nix
+# Enable bluetooth
+services.blueman.enable = true;
+hardware.bluetooth.enable = true;
+hardware.bluetooth.powerOnBoot = true;
+```
+
+## Verification and Testing
+
+After installation, verify that all hardware components are working properly:
+
+### Hardware Functionality Checklist
+
+- [ ] **Graphics Switching**: `supergfxctl -g` shows the correct mode
+- [ ] **Power Profiles**: `asusctl profile -p` displays available profiles
+- [ ] **Keyboard Backlight**: `asusctl -k high` changes keyboard brightness
+- [ ] **Function Keys**: Volume, brightness, and keyboard lighting keys work
+- [ ] **WiFi Connectivity**: Can connect to wireless networks
+- [ ] **Bluetooth**: Can discover and connect to devices
+- [ ] **Suspend/Resume**: System properly sleeps and wakes
+- [ ] **External Displays**: If needed, test external monitor connections
+
+### Diagnostic Commands
+
+```bash
+# Check if ASUS services are running
+systemctl status asusd
+systemctl status supergfxd
+
+# View kernel modules for graphics
+lsmod | grep -E 'nvidia|amdgpu'
+
+# Check for any errors
+dmesg | grep -i -E 'error|fail'
+
+# Verify GPU information
+glxinfo | grep "OpenGL renderer"
+```
+
+## Firmware Updates
+
+### ASUS BIOS Updates
+
+ASUS firmware updates should generally be performed within Windows. If you're dual-booting:
+
+1. Boot into Windows
+2. Use MyASUS application to check and apply firmware updates
+3. Reboot back to NixOS
+
+If you're not dual-booting, consider these options:
+
+### Using fwupd in NixOS
+
+Add to your configuration.nix:
+```nix
+services.fwupd.enable = true;
+```
+
+Then refresh and check for updates:
+```bash
+sudo fwupdmgr refresh
+sudo fwupdmgr get-updates
+sudo fwupdmgr update
+```
+
+### Creating a Windows USB
+
+For major BIOS updates when fwupd doesn't work:
+
+1. Create a Windows installation USB
+2. Boot from the USB and enter the Windows setup
+3. Open Command Prompt (Shift+F10)
+4. Run the BIOS update from a USB drive containing the update files
+
+> **Note**: ProArt P16 owners may need less frequent firmware updates as the hardware tends to be well-supported in recent kernels
+
 ## Step 4: Update Flake Configuration
 
 1. Edit the flake.nix file:
