@@ -604,13 +604,22 @@ Add to your configuration.nix:
 services.fwupd.enable = true;
 ```
 
-Then refresh and check for updates:
+Then manage firmware updates:
 
 ```bash
+# Verify fwupd daemon status
+systemctl status fwupd
+# List supported devices
+fwupdmgr get-devices
+# Refresh firmware metadata
 sudo fwupdmgr refresh
+# Check for updates
 sudo fwupdmgr get-updates
+# Apply updates
 sudo fwupdmgr update
 ```
+
+**Note**: `fwupd` retrieves updates from the Linux Vendor Firmware Service (LVFS). Check [fwupd.org](https://fwupd.org/) for ASUS device support.
 
 ### Creating a Windows USB
 
@@ -723,6 +732,23 @@ If dual-booting with Windows:
 
 ## Troubleshooting
 
+### NVIDIA Driver Configuration
+
+For optimal performance with NVIDIA GPUs, add these settings:
+
+```nix
+hardware.nvidia = {
+  modesetting.enable = true;
+  powerManagement.enable = true; # Improves power efficiency
+  package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable drivers
+};
+```
+
+### Touchpad/Touchscreen Issues
+
+- **Touchpad**: Ensure `services.libinput.enable = true` in `configuration.nix`. Test with `xinput list` and `xinput test <id>`.
+- **Touchscreen**: If supported, add `hardware.sensor.iio.enable = true` for touchscreen input. Verify with `libinput list-devices`.
+
 ### Supergfxctl Issues
 
 If `supergfxctl -S` fails, ensure you've added:
@@ -802,12 +828,30 @@ mkswap /swap/swapfile
 swapon /swap/swapfile
 ```
 
+**Note**: The `chattr +C` command disables copy-on-write for the swap file, which is required for BTRFS swap files to function correctly. Without this setting, the system may become unstable.
+
 Add to configuration:
 
 ```nix
 swapDevices = [
   { device = "/dev/nvme0n1p8"; } # Or "/swap/swapfile"
 ];
+```
+
+### BTRFS Snapshot Configuration
+
+For automated snapshots, add a basic btrbk configuration:
+
+```nix
+environment.etc."btrbk/btrbk.conf".text = ''
+  snapshot_dir /.snapshots
+  snapshot_preserve_min 7d
+  snapshot_preserve 30d
+  volume /
+    subvolume @
+    subvolume @home
+    subvolume @nix
+'';
 ```
 
 ### BTRFS Maintenance
@@ -929,13 +973,14 @@ To restore from a BTRFS snapshot:
 
 ## References
 
-- [NixOS Manual](https://nixos.org/manual/nixos/stable/)
+- [NixOS Manual](https://nixos.org/manual/nixos/latest/)
 - [Home Manager Manual](https://nix-community.github.io/home-manager/)
 - [ASUS-Linux NixOS Guide](https://asus-linux.org/guides/nixos)
 - [Supergfxctl Documentation](https://gitlab.com/asus-linux/supergfxctl)
 - [Asusctl Documentation](https://gitlab.com/asus-linux/asusctl)
 - [NixOS Wiki on Laptops](https://nixos.wiki/wiki/Laptop) - General laptop configuration advice
 - [NixOS Hardware Configuration Database](https://github.com/NixOS/nixos-hardware) - Hardware-specific configurations
+- [ASUS Linux Community](https://asus-linux.org/community) - Forums and support for ASUS laptop users
 
 ## Notes
 
@@ -955,22 +1000,22 @@ Once you have your ASUS ProArt P16 working well with NixOS, consider contributin
    mkdir -p asus/proart/p16
    ```
 
-3. Create a basic configuration file at `asus/proart/p16/default.nix`:
+3. Create a comprehensive configuration file at `asus/proart/p16/default.nix`:
 
    ```nix
-   { lib, pkgs, ... }:
+   { lib, pkgs, config, ... }:
 
    {
      imports = [
        ../../../common/cpu/amd
        ../../../common/gpu/amd
-       # Or ../../../common/gpu/nvidia if you have the Nvidia variant
+       ../../../common/gpu/nvidia
      ];
 
-     # Use latest kernel for best support of ProArt hardware
+     # Use latest kernel for best support
      boot.kernelPackages = pkgs.linuxPackages_latest;
 
-     # Enable ASUS-specific services
+     # ASUS-specific services
      services = {
        supergfxd.enable = true;
        asusd = {
@@ -982,12 +1027,32 @@ Once you have your ASUS ProArt P16 working well with NixOS, consider contributin
      # Fix for supergfxctl
      systemd.services.supergfxd.path = [ pkgs.pciutils ];
 
-     # Add any other ProArt P16-specific configurations here
+     # NVIDIA configuration
+     hardware.nvidia = {
+       modesetting.enable = true;
+       powerManagement.enable = true;
+       package = config.boot.kernelPackages.nvidiaPackages.stable;
+     };
+
+     # WiFi and firmware
+     hardware.enableAllFirmware = true;
+     hardware.firmware = [ pkgs.linux-firmware ];
+     boot.kernelModules = [ "mt7921e" "mt7922e" ];
+
+     # Power management
+     services.power-profiles-daemon.enable = true;
+     services.tlp.enable = lib.mkDefault true;
+
+     # Touchpad and touchscreen
+     services.libinput.enable = true;
+     hardware.sensor.iio.enable = lib.mkDefault true;
    };
    ```
 
 4. Test your configuration thoroughly
 
-5. Submit a Pull Request to the nixos-hardware repository with a detailed description of your model and the changes you've made
+5. Submit a Pull Request to the nixos-hardware repository
+
+   Include details about your ProArt P16 model (e.g., CPU, GPU, WiFi chip) and test results in the Pull Request description. Reference this guide and any issues resolved.
 
 This helps build the NixOS ecosystem and makes it easier for future users with the same hardware to get started.
