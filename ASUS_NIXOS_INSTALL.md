@@ -2,6 +2,8 @@
 
 This guide walks you through installing NixOS on an ASUS laptop with all necessary configurations from this dotfiles repository. It includes instructions for both manual installation and using the Calamares installer.
 
+This guide has been specifically tested with the ASUS ProArt P16 model, but should work for most ASUS laptops including ROG series.
+
 ## Prerequisites
 
 - NixOS installation media (latest version recommended)
@@ -409,11 +411,18 @@ Most modern ASUS laptops (including ProArt series) have WiFi that works out of t
    ];
    ```
 
-   For MediaTek or other cards:
+   For MediaTek cards (common in ProArt series):
    ```nix
+   # Basic support for MediaTek cards
    hardware.enableAllFirmware = true;
    hardware.firmware = [ pkgs.linux-firmware ];
+   
+   # If experiencing poor performance or connection issues
+   boot.kernelModules = [ "mt7921e" ]; # Adjust module name if using a different MediaTek chip
+   networking.networkmanager.wifi.powersave = false; # Disable power saving for better stability
    ```
+   
+   > **Note for ProArt P16 Users**: The MediaTek cards in these laptops should work with basic configurations but may have performance limitations similar to Fedora.
 
 5. **Temporary Internet During Setup**:
    - Use USB tethering from your phone if WiFi isn't working
@@ -827,6 +836,8 @@ To restore from a BTRFS snapshot:
 - [ASUS-Linux NixOS Guide](https://asus-linux.org/guides/nixos)
 - [Supergfxctl Documentation](https://gitlab.com/asus-linux/supergfxctl)
 - [Asusctl Documentation](https://gitlab.com/asus-linux/asusctl)
+- [NixOS Wiki on Laptops](https://nixos.wiki/wiki/Laptop) - General laptop configuration advice
+- [NixOS Hardware Configuration Database](https://github.com/NixOS/nixos-hardware) - Hardware-specific configurations
 
 ## Notes
 
