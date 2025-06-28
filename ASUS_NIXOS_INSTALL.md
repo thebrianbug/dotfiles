@@ -50,16 +50,11 @@ Before beginning installation, here's a breakdown of disk partitions and what to
 
 Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be safely removed and replaced with NixOS partitions.
 
-## Disk Encryption Considerations
+## Disk Encryption (Optional)
 
-Encrypting your NixOS installation is strongly recommended for laptop security. This is separate from Secure Boot and won't cause conflicts with the ASUS hardware requirements.
+> **Note**: Skip this section if you don't need encryption. Proceed to standard installation.
 
-### Encryption Options
-
-1. **Full Disk Encryption**: Encrypts everything except the boot partition
-2. **Home-Only Encryption**: Encrypts just your personal data
-
-This guide will cover Full Disk Encryption using LUKS. Note that you'll need to enter a passphrase at boot time.
+This guide covers LUKS Full Disk Encryption, requiring a passphrase at boot time.
 
 ### Implementing Disk Encryption
 
