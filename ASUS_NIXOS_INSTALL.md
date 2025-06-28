@@ -43,8 +43,8 @@ Before beginning installation, here's a breakdown of disk partitions and what to
 | `nvme0n1p1` | vfat       | SYSTEM   | EFI System Partition           | Bootloader (shared Fedora + Windows) | ✅ Yes      |
 | `nvme0n1p2` | _(none)_   | _(none)_ | Microsoft Reserved Partition   | Required for Windows (no FS)         | ✅ Yes      |
 | `nvme0n1p3` | ntfs       | OS       | Windows System                 | Main Windows installation            | ✅ Yes      |
-| `nvme0n1p4` | ntfs       | RECOVERY | Windows Recovery Environment   | Recovery tools/partition             | ✅ Optional |
-| `nvme0n1p5` | vfat       | MYASUS   | Likely ASUS preinstalled tools | Manufacturer apps/drivers            | 🟡 Optional |
+| `nvme0n1p4` | ntfs       | RECOVERY | Windows Recovery Environment   | Recovery tools/partition             | ✅ Yes (for dual-boot) |
+| `nvme0n1p5` | vfat       | MYASUS   | ASUS preinstalled tools        | Manufacturer apps/drivers            | ✅ Yes (for dual-boot) |
 
 Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be safely removed and replaced with NixOS partitions.
 
