@@ -1,12 +1,12 @@
 # NixOS Installation Guide: ASUS Linux Setup
 
-This guide walks you through installing NixOS on an ASUS laptop with all necessary configurations from this dotfiles repository. It includes instructions for both manual installation and using the Calamares installer.
+This guide provides step-by-step instructions for installing NixOS on an ASUS laptop, using configurations from this dotfiles repository. It covers both manual installation and the Calamares installer.
 
-This guide has been specifically tested with the ASUS ProArt P16 model, but should work for most ASUS laptops including ROG series.
+This guide has been tested with the ASUS ProArt P16 (H7606 series, including H7606WI with AMD Ryzen AI 9 HX 370, NVIDIA RTX 4070, MediaTek MT7922 WiFi, and 4K OLED touchscreen) but should work for most ASUS laptops, including ROG series. Verify compatibility for other models in the [NixOS Hardware Configuration Database](https://github.com/NixOS/nixos-hardware).
 
 ## Prerequisites
 
-- NixOS installation media (latest version recommended)
+- NixOS installation media (24.11 or newer recommended for 2024 ProArt P16 H7606WI)
 - Internet connection
 - Basic knowledge of NixOS and the command line
 
@@ -14,31 +14,34 @@ This guide has been specifically tested with the ASUS ProArt P16 model, but shou
 
 ### Backup Proprietary eSupport Drivers
 
-If you have Windows installed, back up the proprietary ASUS drivers before removing Windows partitions:
+If Windows is installed, back up proprietary ASUS drivers before removing Windows partitions:
 
-1. In Windows, copy the entire `C:\eSupport` folder to external storage
-2. These drivers may be needed if you ever reinstall Windows or use Windows in a VM
+1. In Windows, copy the entire `C:\eSupport` folder to external storage.
+2. These drivers may be needed if you reinstall Windows or use it in a virtual machine.
 
 ### Disable Secure Boot
 
-**IMPORTANT FOR DUAL BOOT USERS:** Disable Windows BitLocker before doing this or your data will be inaccessible!
+**IMPORTANT FOR DUAL BOOT USERS**: Disable Windows BitLocker first, or your data will be inaccessible!
 
-1. Press DEL repeatedly during boot to enter UEFI setup
-2. Press F7 for advanced mode
-3. Security → Secure Boot Control → Disable
-4. Save and exit
+1. Press DEL repeatedly during boot to enter UEFI setup.
+2. Press F7 for advanced mode.
+3. Navigate to Security → Secure Boot Control → Disable.
+4. Save and exit.
 
 ### Use the Laptop Screen
 
-During installation, disconnect external displays to avoid unpredictable behavior with graphics switching.
+Disconnect external displays during installation to avoid unpredictable behavior with graphics switching.
 
 ### Switch to Hybrid Mode on Windows (2022+ Models)
 
-For 2022 or newer ASUS models, switch to Hybrid graphics mode in Windows before installing NixOS to prevent potential issues.
+For 2022 or newer ASUS models, including the H7606WI, switch to Hybrid graphics mode in Windows to prevent issues:
+
+1. Open the MyASUS app, go to "Customization" → "GPU Settings," and select "Hybrid Mode" (or "Optimus Mode").
+2. Save changes and reboot before installing NixOS.
 
 ## Partition Overview
 
-Before beginning installation, here's a breakdown of disk partitions and what to keep if dual-booting with Windows:
+Before installation, review the disk partitions and what to keep for dual-booting with Windows:
 
 | Partition   | Filesystem | Label    | Type                         | Purpose                              | Keep?                  |
 | ----------- | ---------- | -------- | ---------------------------- | ------------------------------------ | ---------------------- |
@@ -48,41 +51,41 @@ Before beginning installation, here's a breakdown of disk partitions and what to
 | `nvme0n1p4` | ntfs       | RECOVERY | Windows Recovery Environment | Recovery tools/partition             | ✅ Yes (for dual-boot) |
 | `nvme0n1p5` | vfat       | MYASUS   | ASUS preinstalled tools      | Manufacturer apps/drivers            | ✅ Yes (for dual-boot) |
 
-Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be safely removed and replaced with NixOS partitions.
+Existing Linux partitions (e.g., Fedora’s `/boot` or root) can be safely removed and replaced with NixOS partitions.
 
 ## Disk Encryption (Optional)
 
-> **Note**: Skip this section if you don't need encryption. Proceed to standard installation.
+> **Note**: Skip this section if you don’t need encryption. Proceed to standard installation.
 
-This guide covers LUKS Full Disk Encryption, requiring a passphrase at boot time.
+This guide covers LUKS Full Disk Encryption, requiring a passphrase at boot.
 
 ### Implementing Disk Encryption
 
 #### With Calamares Installer
 
-The Calamares installer offers an encryption checkbox during the partitioning step. Simply:
+The Calamares installer offers an encryption option during partitioning:
 
-1. Check "Encrypt system" when creating the root partition
-2. Set a strong encryption passphrase
-3. The installer will handle the LUKS setup automatically
+1. Check "Encrypt system" when creating the root partition.
+2. Set a strong encryption passphrase.
+3. The installer handles LUKS setup automatically.
 
 #### With Manual Installation
 
-During the manual installation, after creating partitions but before formatting:
+After creating partitions but before formatting:
 
 1. Set up LUKS2 encryption on your root partition:
 
    ```bash
-   # Create encrypted partition with LUKS2 (default in modern Linux) - you\'ll be asked to set a passphrase
+   # Create encrypted partition with LUKS2 (default in modern Linux) - you’ll be asked to set a passphrase
    cryptsetup luksFormat --type luks2 /dev/nvme0n1p7
 
    # Open the encrypted partition
    cryptsetup luksOpen /dev/nvme0n1p7 cryptroot
    ```
 
-   > **Note:** LUKS2 offers better security features and is the standard in modern Linux distributions in 2025.
+   > **Note**: LUKS2 offers better security and is standard in 2025.
 
-2. Format the opened LUKS device instead of the raw partition:
+2. Format the opened LUKS device:
 
    ```bash
    # For BTRFS (recommended)
@@ -97,7 +100,7 @@ During the manual installation, after creating partitions but before formatting:
    mount /dev/mapper/cryptroot /mnt
    ```
 
-4. Add this to your `configuration.nix` after installation:
+4. Add to your `configuration.nix` after installation:
 
    ```nix
    boot.initrd.luks.devices = {
@@ -108,7 +111,7 @@ During the manual installation, after creating partitions but before formatting:
    };
    ```
 
-   To get the UUID of your encrypted partition:
+   To get the UUID:
 
    ```bash
    ls -la /dev/disk/by-uuid/
@@ -116,11 +119,10 @@ During the manual installation, after creating partitions but before formatting:
 
 #### TPM-Based Encryption (Optional)
 
-If your ProArt P16 has a TPM 2.0 chip (common in 2024/2025 models), you can configure it to unlock your LUKS partition automatically during boot:
+The ProArt P16 H7606WI has a TPM 2.0 chip, which can be used to unlock the LUKS partition automatically:
 
-1. Ensure TPM is enabled in your UEFI setup (BIOS)
-
-2. Install required tools by adding to your `configuration.nix`:
+1. Ensure TPM is enabled in UEFI setup (BIOS).
+2. Install required tools in `configuration.nix`:
 
    ```nix
    environment.systemPackages = with pkgs; [
@@ -129,13 +131,13 @@ If your ProArt P16 has a TPM 2.0 chip (common in 2024/2025 models), you can conf
    ];
    ```
 
-3. After rebuilding and booting into your system, bind your LUKS partition to the TPM:
+3. After rebuilding and booting, bind the LUKS partition to TPM:
 
    ```bash
    sudo clevis luks bind -d /dev/nvme0n1p7 tpm2 '{"pcr_bank":"sha256","pcr_ids":"7"}'
    ```
 
-4. Update your `configuration.nix` to enable Clevis for automatic unlocking:
+4. Update `configuration.nix` for automatic unlocking:
 
    ```nix
    boot.initrd.luks.devices."cryptroot" = {
@@ -146,52 +148,52 @@ If your ProArt P16 has a TPM 2.0 chip (common in 2024/2025 models), you can conf
    boot.initrd.clevis.enable = true;
    ```
 
-**Important Warning**: Always test the TPM unlocking thoroughly before relying on it, and maintain a backup method (passphrase) to access your data. System updates or firmware changes may occasionally require re-binding the TPM to your LUKS partition.
+   **Warning**: Test TPM unlocking thoroughly and maintain a passphrase as a backup. System updates or firmware changes may require re-binding.
 
 ### Notes on Encryption and Dual-Boot
 
-- Encryption is independent of the Windows BitLocker issue mentioned earlier
-- You can encrypt your NixOS partitions regardless of whether Secure Boot is enabled or disabled
-- For maximum security, consider encrypting both your Windows (using BitLocker) and NixOS partitions
+- Encryption is independent of Windows BitLocker.
+- You can encrypt NixOS partitions with or without Secure Boot.
+- For maximum security, consider encrypting both Windows (BitLocker) and NixOS partitions.
 
 ## Step 1: Base NixOS Installation
 
 ### Option A: Using Calamares Installer (Graphical)
 
-1. Boot from the NixOS installation media
-2. Open the Calamares installer by clicking on the "Install System" icon
-3. Follow the initial setup steps (language, location, keyboard)
-4. When you reach the partitioning section:
-   - Select **Manual partitioning** for control over existing partitions
-   - **Do NOT format or delete** partitions `nvme0n1p1` through `nvme0n1p5` if you want to preserve Windows
-   - Delete any existing Linux partitions (like Fedora's partitions)
-   - Create the following NixOS partitions:
-     - If needed, a new `/boot` partition (ext4, ~512MB)
-     - A **swap partition** (recommended: equal to RAM size, e.g., 16GB for 16GB RAM or 32GB for 32GB RAM, to handle memory pressure; hibernation not recommended due to firmware limitations)
-     - A root partition (`/`) using the remaining space (**recommended: btrfs** or ext4)
-     - **Important:** Calamares only formats partitions as BTRFS but **does not** create any subvolumes (a key limitation). You'll need to set these up manually after installation (see Post-Installation BTRFS Setup below)
-   - Mount `nvme0n1p1` (the existing EFI partition) at `/boot/efi` but **do NOT format it**
+1. Boot from the NixOS installation media (24.11 or newer).
+2. Open the Calamares installer via the "Install System" icon.
+3. Follow initial setup steps (language, location, keyboard).
+4. In the partitioning section:
+   - Select **Manual partitioning** for control.
+   - **Do NOT format or delete** `nvme0n1p1` through `nvme0n1p5` if preserving Windows.
+   - Delete existing Linux partitions (e.g., Fedora’s).
+   - Create NixOS partitions:
+     - If needed, a `/boot` partition (ext4, ~512MB).
+     - A **swap partition** (recommended: 32GB for the H7606WI’s 32GB RAM to handle memory-intensive tasks like video editing or 3D rendering; hibernation not recommended due to firmware limitations).
+     - A root partition (`/`) using remaining space (recommended: BTRFS or ext4).
+     - **Important**: Calamares formats BTRFS but does not create subvolumes (a limitation in 24.11). Set these up manually post-installation (see below).
+   - Mount `nvme0n1p1` (existing EFI partition) at `/boot/efi` but **do NOT format it**.
 5. Continue with the installer:
-   - Create your user account
-   - Set passwords
-   - Review and confirm installation settings
-6. Complete the installation and reboot
+   - Create your user account.
+   - Set passwords.
+   - Review and confirm settings.
+6. Complete installation and reboot.
 
 ### Post-Installation BTRFS Setup (Calamares)
 
-Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll need to set them up manually after installation to benefit from BTRFS features:
+Calamares doesn’t create BTRFS subvolumes, so set them up manually to leverage BTRFS features:
 
-1. Boot into your new NixOS system
-2. Create proper BTRFS subvolumes and move your data:
+1. Boot into your new NixOS system.
+2. Create subvolumes and move data:
 
    ```bash
-   # Login as root or use sudo for these commands
+   # Login as root or use sudo
    sudo -i
 
    # Create a temporary mount point
    mkdir /mnt/btrfs-root
 
-   # Mount the BTRFS partition (adjust device as needed)
+   # Mount the BTRFS partition
    mount -o subvolid=0 /dev/nvme0n1p7 /mnt/btrfs-root
 
    # Create subvolumes
@@ -199,16 +201,16 @@ Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll
    btrfs subvolume create /mnt/btrfs-root/@home
    btrfs subvolume create /mnt/btrfs-root/@nix
 
-   # Copy data to subvolumes (this will take some time)
+   # Copy data to subvolumes (this takes time)
    cp -a --reflink=auto /home/* /mnt/btrfs-root/@home/
    cp -a --reflink=auto /nix/* /mnt/btrfs-root/@nix/
    cp -a --reflink=auto --one-file-system /* /mnt/btrfs-root/@/
 
-   # Update your configuration.nix to use these subvolumes
+   # Update configuration.nix
    nano /etc/nixos/configuration.nix
    ```
 
-   Add the following to your configuration.nix:
+   Add to `configuration.nix`:
 
    ```nix
    fileSystems = {
@@ -230,85 +232,89 @@ Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll
    };
    ```
 
-   Then rebuild and switch to apply the changes:
+   Rebuild and switch:
 
    ```bash
    nixos-rebuild switch
    ```
 
-   After rebooting, you'll be using your new BTRFS subvolume structure.
-
-3. After setting up subvolumes, continue with Step 2 (Clone Dotfiles Repository)
+3. Reboot to use the new BTRFS subvolume structure.
+4. Proceed to Step 2 (Clone Dotfiles Repository).
 
 ### Option B: Manual Installation
 
-1. Boot from NixOS installation media
-2. Check your current partition layout:
+1. Boot from NixOS installation media.
+2. Check partition layout:
+
    ```bash
    lsblk -f
    # or
    fdisk -l /dev/nvme0n1
    ```
-3. **Preserve** essential Windows partitions (if dual-booting):
-   - **DO NOT** format or delete partitions `nvme0n1p1` through `nvme0n1p5`
-   - `nvme0n1p1` is your EFI partition that will be shared between Windows and NixOS
-4. Delete any existing Linux partitions (like Fedora's `/boot` and root partitions):
+
+3. **Preserve** Windows partitions (if dual-booting):
+   - **Do NOT** format or delete `nvme0n1p1` through `nvme0n1p5`.
+   - `nvme0n1p1` is the shared EFI partition.
+4. Delete existing Linux partitions:
+
    ```bash
-   # For example, if p6 and p7 were Fedora partitions
-   fdisk /dev/nvme0n1  # Then use 'd' command to delete partitions
-   # Or use another tool like cfdisk or gparted
+   # Example: If p6 and p7 were Fedora partitions
+   fdisk /dev/nvme0n1  # Use 'd' to delete
+   # Or use cfdisk or gparted
    ```
+
 5. Create new NixOS partitions:
+
    ```bash
-   # Example: Create a new boot partition (if needed) and root partition
-   fdisk /dev/nvme0n1  # Then use 'n' command to create partitions
-   # Or use another tool like cfdisk or gparted
+   fdisk /dev/nvme0n1  # Use 'n' to create
+   # Or use cfdisk or gparted
    ```
-6. Format only the new NixOS partitions (example assumes p6 for /boot, p7 for root):
+
+   - A `/boot` partition (if needed, ~512MB).
+   - A **swap partition** (recommended: 32GB for the H7606WI’s 32GB RAM).
+   - A root partition (`/`) using remaining space.
+
+6. Format new NixOS partitions:
+
    ```bash
    mkfs.ext4 /dev/nvme0n1p6      # Boot partition (if created)
-   # Recommended: Use btrfs for root partition
-   mkfs.btrfs /dev/nvme0n1p7      # Root partition
-   # OR use ext4 if preferred
+   # Recommended: Use BTRFS for root
+   mkfs.btrfs /dev/nvme0n1p7     # Root partition
+   # OR use ext4
    # mkfs.ext4 /dev/nvme0n1p7
    ```
-7. Mount the partitions:
 
-   **For standard ext4 partitions:**
+7. Mount partitions:
+
+   **For ext4**:
 
    ```bash
-   mount /dev/nvme0n1p7 /mnt     # Root partition
+   mount /dev/nvme0n1p7 /mnt
    mkdir -p /mnt/boot
-   mount /dev/nvme0n1p6 /mnt/boot # If you created a separate boot partition
+   mount /dev/nvme0n1p6 /mnt/boot
    mkdir -p /mnt/boot/efi
-   mount /dev/nvme0n1p1 /mnt/boot/efi # Mount existing EFI partition (DO NOT format!)
+   mount /dev/nvme0n1p1 /mnt/boot/efi  # Do NOT format!
    ```
 
-   **For BTRFS with subvolumes (recommended):**
+   **For BTRFS with subvolumes**:
 
    ```bash
-   # After formatting with mkfs.btrfs
    mount /dev/nvme0n1p7 /mnt
-
-   # Create subvolumes
    btrfs subvolume create /mnt/@
    btrfs subvolume create /mnt/@home
    btrfs subvolume create /mnt/@nix
-
-   # Remount with subvolumes
    umount /mnt
    mount -o subvol=@,compress=zstd /dev/nvme0n1p7 /mnt
    mkdir -p /mnt/{home,nix,boot}
    mount -o subvol=@home,compress=zstd /dev/nvme0n1p7 /mnt/home
    mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
-
-   # Mount boot partitions
-   mount /dev/nvme0n1p6 /mnt/boot # If you created a separate boot partition
+   mount /dev/nvme0n1p6 /mnt/boot
    mkdir -p /mnt/boot/efi
-   mount /dev/nvme0n1p1 /mnt/boot/efi # Mount existing EFI partition (DO NOT format!)
+   mount /dev/nvme0n1p1 /mnt/boot/efi  # Do NOT format!
    ```
 
 8. Generate initial configuration:
+
    ```bash
    nixos-generate-config --root /mnt
    ```
@@ -316,10 +322,13 @@ Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll
 ## Step 2: Clone Dotfiles Repository
 
 1. Install Git:
+
    ```bash
    nix-env -iA nixos.git
    ```
-2. Clone this repository:
+
+2. Clone the repository:
+
    ```bash
    cd ~
    mkdir -p source
@@ -331,27 +340,31 @@ Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll
 ## Step 3: Create ASUS-Specific Configuration
 
 1. Create host directory:
+
    ```bash
    mkdir -p hosts/asus-linux
    ```
-2. Copy both the hardware configuration and the installer-generated configuration.nix:
+
+2. Copy configurations:
+
    ```bash
    cp /mnt/etc/nixos/hardware-configuration.nix ./hosts/asus-linux/
    cp /mnt/etc/nixos/configuration.nix ./hosts/asus-linux/
    ```
-3. Edit the configuration file:
+
+3. Edit the configuration:
 
    ```bash
    nano hosts/asus-linux/configuration.nix
    ```
 
-4. Add these ASUS-specific settings to the generated configuration.nix:
+4. Add ASUS-specific settings to `configuration.nix`:
 
    ```nix
    # Use latest kernel for best ASUS hardware support
    boot.kernelPackages = pkgs.linuxPackages_latest;
 
-   # Add ASUS-specific services
+   # ASUS-specific services
    services = {
      supergfxd.enable = true;
      asusd = {
@@ -362,13 +375,33 @@ Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll
 
    # Fix for supergfxctl
    systemd.services.supergfxd.path = [ pkgs.pciutils ];
+
+   # NVIDIA configuration
+   hardware.nvidia = {
+     modesetting.enable = true;
+     powerManagement.enable = true;
+     package = config.boot.kernelPackages.nvidiaPackages.stable;
+   };
+
+   # WiFi and firmware
+   hardware.enableAllFirmware = true;
+   hardware.firmware = [ pkgs.linux-firmware ];
+   boot.kernelModules = [ "mt7921e" "mt7922e" ];
+
+   # Power management
+   services.power-profiles-daemon.enable = true;
+   services.tlp.enable = lib.mkDefault true;
+
+   # Touchpad and touchscreen
+   services.libinput.enable = true;
+   hardware.sensor.iio.enable = lib.mkDefault true;
    ```
 
 ## ASUS Hardware Management
 
 ### Graphics Switching
 
-With the ASUS-specific services enabled, you can manage your GPU configuration using `supergfxctl`:
+Manage GPU configuration with `supergfxctl`:
 
 ```bash
 # Check current graphics mode
@@ -377,34 +410,38 @@ supergfxctl -g
 # List available modes
 supergfxctl -m
 
-# Set graphics mode (integrated, hybrid, compute, vfio, or dedicated)
+# Set graphics mode
 supergfxctl -m MODE
 
 # Examples:
-supergfxctl -m integrated  # Power-saving mode, uses AMD/Intel GPU only
-supergfxctl -m hybrid      # Uses both GPUs, enabling Nvidia on-demand
-supergfxctl -m dedicated   # Maximum performance, uses Nvidia GPU exclusively
+supergfxctl -m integrated  # Power-saving (AMD GPU only)
+supergfxctl -m hybrid      # Uses both GPUs, NVIDIA on-demand
+supergfxctl -m dedicated   # Maximum performance (NVIDIA RTX 4070)
 ```
 
-Note: After changing graphics modes, a logout or reboot is typically required.
+**Note**: A logout or reboot is typically required after changing modes. Check the latest `supergfxctl` version (`supergfxctl --version`) at [asus-linux.org](https://asus-linux.org/).
 
 ### Keyboard Lighting
 
-Manage your keyboard lighting using `asusctl`:
+Manage the H7606WI’s RGB keyboard with `asusctl`:
 
 ```bash
-# Set keyboard brightness level (0-3)
+# Set brightness (0-3)
 asusctl -k low|med|high|off
 
-# Set keyboard RGB mode (if supported)
+# Set RGB mode
 asusctl led-mode static     # Single color
 asusctl led-mode breathe    # Breathing effect
 asusctl led-mode rainbow    # Rainbow effect
+# Per-key RGB
+asusctl led-mode aura --key red,green,blue
+# List modes
+asusctl led-mode --help
 ```
 
 ### Power Profiles
 
-Manage power profiles for better performance or battery life:
+Manage power profiles for performance or battery life:
 
 ```bash
 # Show current profile
@@ -417,17 +454,41 @@ asusctl profile -l
 asusctl profile -P quiet|balanced|performance
 ```
 
+**Note**: Hibernation is not recommended due to H7606WI firmware limitations. Use suspend-to-idle:
+
+```nix
+services.logind.lidSwitch = "suspend-then-hibernate";
+services.logind.lidSwitchExternalPower = "suspend";
+```
+
+Test: `systemctl suspend`
+
 ### Known Limitations
 
-- If keyboard backlight doesn't work automatically, set a mode with `asusctl led-mode static`
-- On 2020 models of ROG laptops, the Nvidia GPU may have issues entering low-power state
-- For optimal battery life, use integrated graphics mode when not gaming
-- If the laptop has booted in Nvidia mode, switching to AMD integrated graphics requires a reboot or logout
-- When using external displays via USB-C DisplayPort, you may need to use X11 instead of Wayland
+- If keyboard backlight fails, set a mode: `asusctl led-mode static`.
+- Older ROG models (2020) may have NVIDIA GPU low-power issues; the H7606WI is unaffected with recent kernels.
+- Use integrated graphics for optimal battery life when not gaming or rendering.
+- Switching from NVIDIA to AMD graphics requires a reboot or logout.
+
+### Wayland Support
+
+Wayland (e.g., GNOME, Sway) is increasingly stable for NVIDIA GPUs in 2025, enhancing the H7606WI’s 4K OLED display scaling and HDR. Test with:
+
+```nix
+programs.sway.enable = true; # Or GNOME with Wayland
+hardware.nvidia.modesetting.enable = true;
+```
+
+Test with `supergfxctl -m hybrid`. If USB-C displays fail, fall back to X11:
+
+```nix
+services.xserver.enable = true;
+services.xserver.displayManager.gdm.wayland = false;
+```
 
 ### Desktop Environment Integration
 
-If using GNOME with NixOS, add these useful extensions to your configuration:
+For GNOME, add extensions:
 
 ```nix
 environment.systemPackages = with pkgs; [
@@ -440,24 +501,41 @@ environment.systemPackages = with pkgs; [
 
 #### Re-enabling Secure Boot (Optional)
 
-If your system is stable and you want to re-enable Secure Boot:
+To re-enable Secure Boot for the H7606WI:
 
 ```nix
-# Add to your configuration.nix
-boot.bootloader.secureBoot.enable = true;
+boot.loader.systemd-boot.enable = true;
+boot.loader.efi.canTouchEfiVariables = true;
+boot.loader.secureBoot = {
+  enable = true;
+  keyFile = "/path/to/secure-boot-key";
+  certFile = "/path/to/secure-boot-cert";
+};
 ```
 
-**Important Warning**: Re-enabling Secure Boot may introduce boot issues if not configured correctly. After enabling this option:
+**Steps**:
 
-1. Rebuild your system: `sudo nixos-rebuild switch`
-2. Test thoroughly after re-enabling to ensure compatibility with your ASUS model's UEFI firmware
-3. Have a recovery plan in place in case your system fails to boot (like a live USB)
+1. Install `sbctl`:
 
-If you encounter boot issues after re-enabling Secure Boot, you may need to disable it again through the UEFI setup menu (DEL key during boot).
+   ```nix
+   environment.systemPackages = with pkgs; [ sbctl ];
+   ```
+
+2. Generate and enroll keys:
+
+   ```bash
+   sudo sbctl create-keys
+   sudo sbctl enroll-keys
+   ```
+
+3. Rebuild: `sudo nixos-rebuild switch`
+4. Verify in UEFI (DEL key).
+
+**Warning**: Keep a NixOS live USB for recovery if boot fails.
 
 #### Hide Unnecessary Boot Messages
 
-To hide the "Nvidia kernel module not found. Falling back to Nouveau" message when booting in integrated mode:
+Hide "Nvidia kernel module not found" message:
 
 ```nix
 systemd.services.nvidia-fallback.enable = false;
@@ -467,20 +545,22 @@ systemd.services.nvidia-fallback.enable = false;
 
 #### Display Issues
 
-1. **External Displays**: If external displays aren't working:
+1. **External Displays**:
 
-   - Try setting the GPU mode to dedicated or hybrid: `supergfxctl -m dedicated`
-   - For USB-C/DisplayPort connections, use X11 instead of Wayland
+   - Set GPU mode: `supergfxctl -m dedicated`
+   - Use X11 if Wayland fails.
 
-2. **Black Screen After Login**: This might be related to GPU mode switching
+2. **Black Screen After Login**:
 
-   - Switch to a TTY console (Ctrl+Alt+F3)
-   - Run `supergfxctl -g` to check current mode
-   - Try changing to a different mode: `supergfxctl -m integrated`
+   - Switch to TTY (Ctrl+Alt+F3).
+   - Check mode: `supergfxctl -g`
+   - Try: `supergfxctl -m integrated`
 
-3. **Screen Brightness Control Not Working**:
-   - Ensure you're using the latest kernel
-   - Add `acpi_osi=Linux` to your boot parameters:
+3. **Screen Brightness**:
+
+   - Ensure latest kernel.
+   - Add:
+
      ```nix
      boot.kernelParams = [ "acpi_osi=Linux" ];
      ```
@@ -488,21 +568,43 @@ systemd.services.nvidia-fallback.enable = false;
 #### Power Management Issues
 
 1. **Poor Battery Life**:
-   - Set graphics to integrated mode when not gaming
-   - Enable power management services:
+
+   - Use integrated mode.
+   - Enable:
+
      ```nix
      services.power-profiles-daemon.enable = true;
-     ```
-   - Install TLP for advanced power management:
-     ```nix
      services.tlp.enable = true;
      ```
+
+#### Touchpad/Touchscreen Issues
+
+- **Touchpad**: Ensure `services.libinput.enable = true`. Test:
+
+  ```bash
+  xinput list
+  xinput test <id>
+  ```
+
+- **Touchscreen**: The H7606WI’s 4K OLED touchscreen supports stylus input (e.g., ASUS Pen 2.0). Add:
+
+  ```nix
+  hardware.sensor.iio.enable = true;
+  ```
+
+  Verify:
+
+  ```bash
+  libinput list-devices
+  ```
+
+  Test stylus input in applications like Xournal++ or Krita.
 
 ## Networking Configuration
 
 ### WiFi Setup
 
-Most modern ASUS laptops (including ProArt series) have WiFi that works out of the box with recent NixOS versions. Always try the default configuration first:
+The H7606WI’s MediaTek MT7922 WiFi card works out of the box with NixOS 24.11. Try the default configuration first:
 
 1. **Basic NetworkManager Setup**:
 
@@ -510,54 +612,55 @@ Most modern ASUS laptops (including ProArt series) have WiFi that works out of t
    networking.networkmanager.enable = true;
    ```
 
-2. **First Test**: After installing NixOS, check if WiFi works with the default setup
+2. Test WiFi:
 
    ```bash
-   # List available wifi networks
    nmcli device wifi list
    ```
 
-3. **Only If WiFi Doesn't Work**: Identify your hardware and apply specific fixes
+3. If WiFi fails, identify hardware:
 
    ```bash
-   # Identify your WiFi adapter
    lspci | grep -i network
    ```
 
-4. **Troubleshooting Options** (only if needed):
+4. Troubleshooting (if needed):
 
-   For Intel WiFi (common in ASUS laptops):
-
-   ```nix
-   # These parameters help with problematic Intel AX cards
-   boot.kernelParams = [
-     "iwlwifi.disable_11ax=Y"  # Disable WiFi 6 which can cause issues
-     "iwlmvm.power_scheme=1"   # Better power management
-   ];
-   ```
-
-   For MediaTek cards (common in ProArt series):
+   **For MediaTek MT7922**:
 
    ```nix
-   # Basic support for MediaTek cards
    hardware.enableAllFirmware = true;
    hardware.firmware = [ pkgs.linux-firmware ];
-
-   # If experiencing poor performance or connection issues
-   boot.kernelModules = [ "mt7921e" ]; # Adjust module name if using a different MediaTek chip
-   networking.networkmanager.wifi.powersave = false; # Disable power saving for better stability
+   boot.kernelModules = [ "mt7921e" "mt7922e" ];
+   networking.networkmanager.wifi.powersave = false;
    ```
 
-   > **Note for ProArt P16 Users**: The MediaTek cards in these laptops should work with basic configurations but may have performance limitations similar to Fedora.
+#### WiFi 6E/7 Support
 
-5. **Temporary Internet During Setup**:
-   - Use USB tethering from your phone if WiFi isn't working
-   - Connect via Ethernet if available
+The H7606WI’s MT7922 supports WiFi 6E/7. Test without `iwlwifi.disable_11ax=Y` to enable full performance:
+
+```nix
+boot.kernelParams = [ "iwlmvm.power_scheme=1" ]; # Remove disable_11ax
+```
+
+Verify performance:
+
+```bash
+iperf3 -c <server>
+```
+
+If unstable, add:
+
+```nix
+boot.kernelParams = [ "iwlwifi.disable_11ax=Y" ];
+```
+
+5. **Temporary Internet**:
+   - Use USB tethering or Ethernet if WiFi fails.
 
 ### Bluetooth Configuration
 
 ```nix
-# Enable bluetooth
 services.blueman.enable = true;
 hardware.bluetooth.enable = true;
 hardware.bluetooth.powerOnBoot = true;
@@ -567,13 +670,14 @@ hardware.bluetooth.powerOnBoot = true;
 
 ### Hardware Checklist
 
-- Graphics switching: `supergfxctl -g` (should show current mode)
-- Power profiles: `asusctl profile -p` (should list available profiles)
-- Keyboard backlight: `asusctl -k high` (should change keyboard brightness)
-- WiFi: Connect to your network
-- Bluetooth: Pair a device if available
-- Function keys: Test volume, brightness, and keyboard lighting keys
-- Suspend/Resume: Close lid or use power menu to test sleep/wake
+- Graphics switching: `supergfxctl -g`
+- Power profiles: `asusctl profile -p`
+- Keyboard backlight: `asusctl -k high`
+- WiFi: Connect to a network.
+- Bluetooth: Pair a device.
+- Function keys: Test volume, brightness, and lighting keys.
+- Suspend/Resume: Test with `systemctl suspend`.
+- Touchscreen/Stylus: Test in Xournal++ or Krita.
 
 ### Quick Diagnostics
 
@@ -588,59 +692,50 @@ glxinfo | grep "OpenGL renderer"
 
 ### ASUS BIOS Updates
 
-ASUS firmware updates should generally be performed within Windows. If you're dual-booting:
+Perform updates in Windows if dual-booting:
 
-1. Boot into Windows
-2. Use MyASUS application to check and apply firmware updates
-3. Reboot back to NixOS
-
-If you're not dual-booting, consider these options:
+1. Boot into Windows.
+2. Use MyASUS to apply updates.
+3. Reboot to NixOS.
 
 ### Using fwupd in NixOS
-
-Add to your configuration.nix:
 
 ```nix
 services.fwupd.enable = true;
 ```
 
-Then manage firmware updates:
+Manage updates:
 
 ```bash
-# Verify fwupd daemon status
 systemctl status fwupd
-# List supported devices
 fwupdmgr get-devices
-# Refresh firmware metadata
 sudo fwupdmgr refresh
-# Check for updates
 sudo fwupdmgr get-updates
-# Apply updates
 sudo fwupdmgr update
 ```
 
-**Note**: `fwupd` retrieves updates from the Linux Vendor Firmware Service (LVFS). Check [fwupd.org](https://fwupd.org/) for ASUS device support.
+**Note**: The H7606WI’s firmware is supported by LVFS. Check [fwupd.org](https://fwupd.org/) for updates specific to this model.
 
 ### Creating a Windows USB
 
-For major BIOS updates when fwupd doesn't work:
+For BIOS updates if `fwupd` fails:
 
-1. Create a Windows installation USB
-2. Boot from the USB and enter the Windows setup
-3. Open Command Prompt (Shift+F10)
-4. Run the BIOS update from a USB drive containing the update files
+1. Create a Windows installation USB.
+2. Boot to Windows setup, open Command Prompt (Shift+F10).
+3. Run the BIOS update from a USB with update files.
 
-> **Note**: ProArt P16 owners may need less frequent firmware updates as the hardware tends to be well-supported in recent kernels
+**Note**: The H7606WI’s hardware is well-supported in recent kernels (6.10+), reducing firmware update frequency.
 
 ## Step 4: Update Flake Configuration
 
-1. Edit the flake.nix file:
+1. Edit `flake.nix`:
 
    ```bash
    nano flake.nix
    ```
 
-2. Add a new entry to `nixosConfigurations`:
+2. Add to `nixosConfigurations`:
+
    ```nix
    asus-linux = nixpkgs.lib.nixosSystem {
      inherit system;
@@ -657,31 +752,30 @@ For major BIOS updates when fwupd doesn't work:
 
 ## Step 5: Install NixOS with Your Configuration
 
-### If you used Calamares installer:
+### If Using Calamares
 
-1. Boot into your newly installed NixOS system
-2. Open a terminal and continue with Step 2 (Clone Dotfiles Repository)
+1. Boot into the new system.
+2. Proceed to Step 2 (Clone Dotfiles Repository).
 
-### If you used manual installation:
+### If Using Manual Installation
 
-1. Install NixOS with your configuration:
+1. Install:
 
    ```bash
    nixos-install --flake .#asus-linux
    ```
 
-2. Set a root password when prompted
-
+2. Set root password when prompted.
 3. Reboot:
+
    ```bash
    reboot
    ```
 
 ## Step 6: Post-Installation
 
-1. Log in with your user account
-
-2. Verify ASUS services are running:
+1. Log in with your user account.
+2. Verify ASUS services:
 
    ```bash
    systemctl status asusd
@@ -694,7 +788,7 @@ For major BIOS updates when fwupd doesn't work:
    supergfxctl -S
    ```
 
-4. If you need to update your configuration in the future:
+4. Update configuration:
 
    ```bash
    cd ~/source/dotfiles
@@ -705,27 +799,25 @@ For major BIOS updates when fwupd doesn't work:
 5. System updates with BTRFS:
 
    ```bash
-   # Before major system updates, consider creating a BTRFS snapshot
    sudo btrfs subvolume snapshot -r / /.snapshots/pre-update-$(date +%Y%m%d)
-
-   # Then proceed with the update
    sudo nixos-rebuild switch --flake .#asus-linux
    ```
 
-   This creates a read-only snapshot before updates that you can recover from if needed.
-
 ## Dual-Boot Considerations
 
-If dual-booting with Windows:
+For dual-booting with Windows:
 
-1. The bootloader (GRUB or systemd-boot) should automatically detect Windows and add it to the boot menu
-2. If Windows doesn't appear in the boot menu, check your NixOS configuration:
+1. The bootloader (GRUB or systemd-boot) should detect Windows.
+2. If Windows doesn’t appear, check:
+
    ```nix
-   boot.loader.systemd-boot.enable = true;  # Or GRUB
+   boot.loader.systemd-boot.enable = true;
    boot.loader.efi.canTouchEfiVariables = true;
-   boot.loader.systemd-boot.configurationLimit = 10;  # Limits number of generations
+   boot.loader.systemd-boot.configurationLimit = 10;
    ```
-3. For accessing Windows files from NixOS, enable NTFS support:
+
+3. Enable NTFS support:
+
    ```nix
    boot.supportedFilesystems = [ "ntfs" ];
    ```
@@ -734,24 +826,17 @@ If dual-booting with Windows:
 
 ### NVIDIA Driver Configuration
 
-For optimal performance with NVIDIA GPUs, add these settings:
-
 ```nix
 hardware.nvidia = {
   modesetting.enable = true;
-  powerManagement.enable = true; # Improves power efficiency
-  package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable drivers
+  powerManagement.enable = true;
+  package = config.boot.kernelPackages.nvidiaPackages.stable;
 };
 ```
 
-### Touchpad/Touchscreen Issues
-
-- **Touchpad**: Ensure `services.libinput.enable = true` in `configuration.nix`. Test with `xinput list` and `xinput test <id>`.
-- **Touchscreen**: If supported, add `hardware.sensor.iio.enable = true` for touchscreen input. Verify with `libinput list-devices`.
-
 ### Supergfxctl Issues
 
-If `supergfxctl -S` fails, ensure you've added:
+If `supergfxctl -S` fails:
 
 ```nix
 systemd.services.supergfxd.path = [ pkgs.pciutils ];
@@ -759,17 +844,15 @@ systemd.services.supergfxd.path = [ pkgs.pciutils ];
 
 ### Graphics Switching
 
-Different graphics modes can be set with:
-
 ```bash
-supergfxctl -m integrated    # Power saving
-supergfxctl -m hybrid        # Balance
-supergfxctl -m dedicated     # Performance
+supergfxctl -m integrated
+supergfxctl -m hybrid
+supergfxctl -m dedicated
 ```
 
 ### ROG Control Center
 
-The ROG Control Center should be available in your applications menu. If not:
+Check:
 
 ```bash
 systemctl --user status asusd-user
@@ -777,10 +860,9 @@ systemctl --user status asusd-user
 
 ## BTRFS Configuration
 
-BTRFS offers benefits like snapshots, compression, and subvolumes. Recommended layout for isolation between system and user data:
+Recommended layout:
 
 ```nix
-# Add to configuration.nix
 fileSystems = {
   "/" = {
     device = "/dev/nvme0n1p7";
@@ -802,35 +884,27 @@ fileSystems = {
 
 ### Swap Configuration
 
-For optimal performance, especially if you plan to use hibernation, configure a swap partition (recommended) or file:
-
 **Option A: Swap Partition (Recommended)**
 
-This option provides better performance and more reliable hibernation support:
-
 ```bash
-# Format and enable swap partition
 mkswap /dev/nvme0n1p8
 swapon /dev/nvme0n1p8
 ```
 
-**Option B: Swap File (More Flexible)**
-
-Use this if you don't want to create a separate partition:
+**Option B: Swap File**
 
 ```bash
-# Create swap file on BTRFS
 btrfs subvolume create /swap
 chattr +C /swap
-dd if=/dev/zero of=/swap/swapfile bs=1M count=16384 # 16GB
+dd if=/dev/zero of=/swap/swapfile bs=1M count=32768 # 32GB for H7606WI’s 32GB RAM
 chmod 600 /swap/swapfile
 mkswap /swap/swapfile
 swapon /swap/swapfile
 ```
 
-**Note**: The `chattr +C` command disables copy-on-write for the swap file, which is required for BTRFS swap files to function correctly. Without this setting, the system may become unstable.
+**Note**: `chattr +C` disables copy-on-write for BTRFS swap files, preventing instability.
 
-Add to configuration:
+Add to `configuration.nix`:
 
 ```nix
 swapDevices = [
@@ -839,8 +913,6 @@ swapDevices = [
 ```
 
 ### BTRFS Snapshot Configuration
-
-For automated snapshots, add a basic btrbk configuration:
 
 ```nix
 environment.etc."btrbk/btrbk.conf".text = ''
@@ -855,8 +927,6 @@ environment.etc."btrbk/btrbk.conf".text = ''
 ```
 
 ### BTRFS Maintenance
-
-To maintain BTRFS health and performance, add these periodic tasks to your NixOS configuration:
 
 ```nix
 systemd.services.btrfs-scrub = {
@@ -877,51 +947,37 @@ systemd.timers.btrfs-scrub = {
 };
 ```
 
-Manual maintenance commands:
+Manual maintenance:
 
 ```bash
-# Check filesystem status
 sudo btrfs filesystem usage /
-
-# Balance filesystem (redistribute data)
 sudo btrfs balance start -dusage=85 /
-
-# Scrub to detect and repair errors
 sudo btrfs scrub start /
-# Check progress
 sudo btrfs scrub status /
 ```
 
 ## Time Synchronization for Dual-Boot
 
-When dual-booting with Windows, time synchronization issues can occur. Add this to your NixOS configuration to make NixOS compatible with Windows' time handling:
-
 ```nix
 time.hardwareClockInLocalTime = true;
 ```
 
-Alternatively, configure Windows to use UTC time:
+Alternatively, in Windows:
 
-1. Run Registry Editor (regedit) in Windows
-2. Navigate to `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation`
-3. Create a new DWORD value named `RealTimeIsUniversal`
-4. Set its value to 1
+1. Run `regedit`.
+2. Navigate to `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation`.
+3. Create DWORD `RealTimeIsUniversal`, set to 1.
 
 ## Backup Strategy
 
-While BTRFS snapshots provide protection against system configuration errors, they're not a complete backup solution. For comprehensive data protection:
+1. **System Configuration**: Covered by NixOS generations.
+2. **Data Snapshots**: Use `btrbk` or `snapper`.
+3. **Offsite Backups**: Use restic, borg, or rclone.
 
-1. **System Configuration**: Already covered by NixOS generations
-2. **Data Snapshots**: Use `btrbk` or `snapper` to manage BTRFS snapshots
-3. **Offsite Backups**: Use restic, borg, or rclone to back up important data to an external drive or cloud service
-
-Add `btrbk` to your NixOS configuration:
+Add `btrbk`:
 
 ```nix
-environment.systemPackages = with pkgs; [
-  btrbk
-];
-
+environment.systemPackages = with pkgs; [ btrbk ];
 systemd.services.btrbk = {
   description = "BTRBK periodic snapshot";
   serviceConfig = {
@@ -929,7 +985,6 @@ systemd.services.btrbk = {
     ExecStart = "${pkgs.btrbk}/bin/btrbk run";
   };
 };
-
 systemd.timers.btrbk = {
   description = "Daily BTRBK snapshots";
   wantedBy = [ "timers.target" ];
@@ -944,10 +999,8 @@ systemd.timers.btrbk = {
 
 ### Method 1: Standard Recovery
 
-If your system fails to boot:
-
-1. Boot from NixOS installation media
-2. Mount your BTRFS root partition:
+1. Boot from NixOS media.
+2. Mount BTRFS:
 
    ```bash
    mount -o subvol=@,compress=zstd /dev/nvme0n1p7 /mnt
@@ -957,19 +1010,18 @@ If your system fails to boot:
    mount /dev/nvme0n1p1 /mnt/boot/efi
    ```
 
-3. Chroot into your system and fix issues:
+3. Chroot:
+
    ```bash
    nixos-enter
    ```
 
 ### Method 2: Snapshot Recovery
 
-To restore from a BTRFS snapshot:
-
-1. Boot from installation media
-2. Mount your root partition: `mount /dev/nvme0n1p7 /mnt`
+1. Boot from media.
+2. Mount root: `mount /dev/nvme0n1p7 /mnt`
 3. Mount snapshot: `mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1p7 /recovery`
-4. Copy files from `/recovery` as needed
+4. Copy files from `/recovery`.
 
 ## References
 
@@ -978,29 +1030,26 @@ To restore from a BTRFS snapshot:
 - [ASUS-Linux NixOS Guide](https://asus-linux.org/guides/nixos)
 - [Supergfxctl Documentation](https://gitlab.com/asus-linux/supergfxctl)
 - [Asusctl Documentation](https://gitlab.com/asus-linux/asusctl)
-- [NixOS Wiki on Laptops](https://nixos.wiki/wiki/Laptop) - General laptop configuration advice
-- [NixOS Hardware Configuration Database](https://github.com/NixOS/nixos-hardware) - Hardware-specific configurations
-- [ASUS Linux Community](https://asus-linux.org/community) - Forums and support for ASUS laptop users
+- [NixOS Wiki on Laptops](https://nixos.wiki/wiki/Laptop)
+- [NixOS Hardware Configuration Database](https://github.com/NixOS/nixos-hardware)
+- [ASUS Linux Community](https://asus-linux.org/community)
 
 ## Notes
 
-This configuration uses the latest Linux kernel and includes all necessary packages for ASUS ROG laptops. Secrets are managed separately - configure WiFi through the GUI and use .env files for development secrets.
+This configuration uses the latest kernel (6.10+) and packages for ASUS laptops, including the H7606WI. Configure WiFi via GUI and use `.env` files for secrets.
 
 ## Bonus: Contributing to nixos-hardware
 
-Once you have your ASUS ProArt P16 working well with NixOS, consider contributing your configuration to the [nixos-hardware](https://github.com/NixOS/nixos-hardware) repository to help other users with the same hardware.
+Contribute your configuration to [nixos-hardware](https://github.com/NixOS/nixos-hardware):
 
-### Creating a Hardware Configuration Module
-
-1. Fork the nixos-hardware repository
-
-2. Create a directory structure for your model:
+1. Fork the repository.
+2. Create directory:
 
    ```bash
    mkdir -p asus/proart/p16
    ```
 
-3. Create a comprehensive configuration file at `asus/proart/p16/default.nix`:
+3. Create `asus/proart/p16/default.nix`:
 
    ```nix
    { lib, pkgs, config, ... }:
@@ -1012,10 +1061,7 @@ Once you have your ASUS ProArt P16 working well with NixOS, consider contributin
        ../../../common/gpu/nvidia
      ];
 
-     # Use latest kernel for best support
      boot.kernelPackages = pkgs.linuxPackages_latest;
-
-     # ASUS-specific services
      services = {
        supergfxd.enable = true;
        asusd = {
@@ -1023,36 +1069,21 @@ Once you have your ASUS ProArt P16 working well with NixOS, consider contributin
          enableUserService = true;
        };
      };
-
-     # Fix for supergfxctl
      systemd.services.supergfxd.path = [ pkgs.pciutils ];
-
-     # NVIDIA configuration
      hardware.nvidia = {
        modesetting.enable = true;
        powerManagement.enable = true;
        package = config.boot.kernelPackages.nvidiaPackages.stable;
      };
-
-     # WiFi and firmware
      hardware.enableAllFirmware = true;
      hardware.firmware = [ pkgs.linux-firmware ];
      boot.kernelModules = [ "mt7921e" "mt7922e" ];
-
-     # Power management
      services.power-profiles-daemon.enable = true;
      services.tlp.enable = lib.mkDefault true;
-
-     # Touchpad and touchscreen
      services.libinput.enable = true;
      hardware.sensor.iio.enable = lib.mkDefault true;
-   };
+   }
    ```
 
-4. Test your configuration thoroughly
-
-5. Submit a Pull Request to the nixos-hardware repository
-
-   Include details about your ProArt P16 model (e.g., CPU, GPU, WiFi chip) and test results in the Pull Request description. Reference this guide and any issues resolved.
-
-This helps build the NixOS ecosystem and makes it easier for future users with the same hardware to get started.
+4. Test thoroughly.
+5. Submit a Pull Request with details about your ProArt P16 H7606WI (AMD Ryzen AI 9 HX 370, NVIDIA RTX 4070, MediaTek MT7922, 4K OLED touchscreen) and test results, referencing this guide.
