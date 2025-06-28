@@ -35,7 +35,7 @@ Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be 
    - Delete any existing Linux partitions (like Fedora's partitions)
    - Create the following NixOS partitions:
      - If needed, a new `/boot` partition (ext4, ~512MB)
-     - A root partition (`/`) using the remaining space (ext4 or btrfs)
+     - A root partition (`/`) using the remaining space (**recommended: btrfs** or ext4)
    - Mount `nvme0n1p1` (the existing EFI partition) at `/boot/efi` but **do NOT format it**
 5. Continue with the installer:
    - Create your user account
@@ -70,9 +70,10 @@ Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be 
 6. Format only the new NixOS partitions (example assumes p6 for /boot, p7 for root):
    ```bash
    mkfs.ext4 /dev/nvme0n1p6      # Boot partition (if created)
-   mkfs.ext4 /dev/nvme0n1p7      # Root partition
-   # OR use btrfs for root if preferred
-   # mkfs.btrfs /dev/nvme0n1p7
+   # Recommended: Use btrfs for root partition
+   mkfs.btrfs /dev/nvme0n1p7      # Root partition
+   # OR use ext4 if preferred
+   # mkfs.ext4 /dev/nvme0n1p7
    ```
 7. Mount the partitions:
    ```bash
@@ -249,6 +250,38 @@ The ROG Control Center should be available in your applications menu. If not:
 
 ```bash
 systemctl --user status asusd-user
+```
+
+## BTRFS Configuration (Recommended)
+
+BTRFS is strongly recommended for NixOS installations on modern hardware due to these benefits:
+
+- **Snapshots and rollbacks** - Works excellently with NixOS generations
+- **Data integrity** - Built-in checksumming to prevent silent data corruption
+- **Space efficiency** - Transparent compression and deduplication
+- **Subvolumes** - Flexible organization of your filesystem
+
+If using BTRFS, it's recommended to create proper subvolumes rather than a flat layout:
+
+```bash
+# After formatting the partition with mkfs.btrfs
+mount /dev/nvme0n1p7 /mnt
+
+# Create subvolumes
+btrfs subvolume create /mnt/@
+btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@nix
+
+# Remount with subvolumes
+umount /mnt
+mount -o subvol=@,compress=zstd /dev/nvme0n1p7 /mnt
+mkdir -p /mnt/{home,nix}
+mount -o subvol=@home,compress=zstd /dev/nvme0n1p7 /mnt/home
+mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
+
+# Continue with boot/EFI mounting as above
+mkdir -p /mnt/boot/efi
+mount /dev/nvme0n1p1 /mnt/boot/efi
 ```
 
 ## References
