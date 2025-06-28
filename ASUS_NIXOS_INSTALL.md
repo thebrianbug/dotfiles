@@ -521,12 +521,14 @@ hardware.bluetooth.powerOnBoot = true;
 ## Verification and Testing
 
 ### Hardware Checklist
+
 - Graphics: `supergfxctl -g`
-- Power: `asusctl profile -p` 
+- Power: `asusctl profile -p`
 - Keyboard: `asusctl -k high`
 - WiFi, Bluetooth, Function keys, Suspend/Resume
 
 ### Quick Diagnostics
+
 ```bash
 systemctl status asusd supergfxd
 lsmod | grep -E 'nvidia|amdgpu'
@@ -828,6 +830,7 @@ If your system fails to boot:
 
 1. Boot from NixOS installation media
 2. Mount your BTRFS root partition:
+
    ```bash
    mount -o subvol=@,compress=zstd /dev/nvme0n1p7 /mnt
    mkdir -p /mnt/{home,nix,boot/efi}
@@ -835,10 +838,12 @@ If your system fails to boot:
    mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
    mount /dev/nvme0n1p1 /mnt/boot/efi
 
-1. Boot from installation media
-2. Mount your root partition: `mount /dev/nvme0n1p7 /mnt`
-3. Mount snapshot: `mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1p7 /recovery`
-4. Copy files from `/recovery` as needed
+   ```
+
+3. Boot from installation media
+4. Mount your root partition: `mount /dev/nvme0n1p7 /mnt`
+5. Mount snapshot: `mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1p7 /recovery`
+6. Copy files from `/recovery` as needed
 
 ## References
 
