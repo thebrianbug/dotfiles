@@ -36,7 +36,7 @@ Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be 
    - Create the following NixOS partitions:
      - If needed, a new `/boot` partition (ext4, ~512MB)
      - A root partition (`/`) using the remaining space (**recommended: btrfs** or ext4)
-     - **Note:** When selecting BTRFS, Calamares may not provide options for subvolume setup. You'll set up subvolumes after installation (see Post-Installation BTRFS Setup below)
+     - **Important:** Calamares only formats partitions as BTRFS but **does not** create any subvolumes (a key limitation). You'll need to set these up manually after installation (see Post-Installation BTRFS Setup below)
    - Mount `nvme0n1p1` (the existing EFI partition) at `/boot/efi` but **do NOT format it**
 5. Continue with the installer:
    - Create your user account
@@ -46,7 +46,7 @@ Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be 
 
 ### Post-Installation BTRFS Setup (Calamares)
 
-If you installed with BTRFS using Calamares but couldn't set up subvolumes during installation:
+Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll need to set them up manually after installation to benefit from BTRFS features:
 
 1. Boot into your new NixOS system
 2. Create proper BTRFS subvolumes and move your data:
@@ -70,10 +70,37 @@ If you installed with BTRFS using Calamares but couldn't set up subvolumes durin
    cp -a --reflink=auto /nix/* /mnt/btrfs-root/@nix/
    cp -a --reflink=auto --one-file-system /* /mnt/btrfs-root/@/
    
-   # Update your configuration.nix to use these subvolumes (see BTRFS Advanced Configuration section)
-   # Then rebuild and switch to apply the changes:
-   # nixos-rebuild switch
+   # Update your configuration.nix to use these subvolumes
+   nano /etc/nixos/configuration.nix
    ```
+   
+   Add the following to your configuration.nix:
+   ```nix
+   fileSystems = {
+     "/" = { 
+       device = "/dev/nvme0n1p7"; 
+       fsType = "btrfs";
+       options = [ "subvol=@" "compress=zstd" "noatime" ];
+     };
+     "/home" = { 
+       device = "/dev/nvme0n1p7"; 
+       fsType = "btrfs";
+       options = [ "subvol=@home" "compress=zstd" "noatime" ];
+     };
+     "/nix" = { 
+       device = "/dev/nvme0n1p7"; 
+       fsType = "btrfs";
+       options = [ "subvol=@nix" "compress=zstd" "noatime" ];
+     };
+   };
+   ```
+   
+   Then rebuild and switch to apply the changes:
+   ```bash
+   nixos-rebuild switch
+   ```
+   
+   After rebooting, you'll be using your new BTRFS subvolume structure.
 
 3. After setting up subvolumes, continue with Step 2 (Clone Dotfiles Repository)
 
