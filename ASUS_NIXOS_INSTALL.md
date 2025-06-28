@@ -842,3 +842,52 @@ To restore from a BTRFS snapshot:
 ## Notes
 
 This configuration uses the latest Linux kernel and includes all necessary packages for ASUS ROG laptops. Secrets are managed separately - configure WiFi through the GUI and use .env files for development secrets.
+
+## Bonus: Contributing to nixos-hardware
+
+Once you have your ASUS ProArt P16 working well with NixOS, consider contributing your configuration to the [nixos-hardware](https://github.com/NixOS/nixos-hardware) repository to help other users with the same hardware.
+
+### Creating a Hardware Configuration Module
+
+1. Fork the nixos-hardware repository
+
+2. Create a directory structure for your model:
+   ```bash
+   mkdir -p asus/proart/p16
+   ```
+
+3. Create a basic configuration file at `asus/proart/p16/default.nix`:
+   ```nix
+   { lib, pkgs, ... }:
+   
+   {
+     imports = [
+       ../../../common/cpu/amd
+       ../../../common/gpu/amd
+       # Or ../../../common/gpu/nvidia if you have the Nvidia variant
+     ];
+     
+     # Use latest kernel for best support of ProArt hardware
+     boot.kernelPackages = pkgs.linuxPackages_latest;
+     
+     # Enable ASUS-specific services
+     services = {
+       supergfxd.enable = true;
+       asusd = {
+         enable = true;
+         enableUserService = true;
+       };
+     };
+     
+     # Fix for supergfxctl
+     systemd.services.supergfxd.path = [ pkgs.pciutils ];
+     
+     # Add any other ProArt P16-specific configurations here
+   };
+   ```
+
+4. Test your configuration thoroughly
+
+5. Submit a Pull Request to the nixos-hardware repository with a detailed description of your model and the changes you've made
+
+This helps build the NixOS ecosystem and makes it easier for future users with the same hardware to get started.
