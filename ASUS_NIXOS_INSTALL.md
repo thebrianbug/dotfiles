@@ -731,9 +731,11 @@ fileSystems = {
 
 ### Swap Configuration
 
-For optimal performance, especially if you plan to use hibernation, configure a swap partition or file:
+For optimal performance, especially if you plan to use hibernation, configure a swap partition (recommended) or file:
 
-**Option A: Swap Partition**
+**Option A: Swap Partition (Recommended)**
+
+This option provides better performance and more reliable hibernation support:
 
 ```bash
 # Format and enable swap partition
@@ -741,7 +743,9 @@ mkswap /dev/nvme0n1p8
 swapon /dev/nvme0n1p8
 ```
 
-**Option B: Swap File**
+**Option B: Swap File (More Flexible)**
+
+Use this if you don't want to create a separate partition:
 
 ```bash
 # Create swap file on BTRFS
