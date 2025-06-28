@@ -520,33 +520,17 @@ hardware.bluetooth.powerOnBoot = true;
 
 ## Verification and Testing
 
-After installation, verify that all hardware components are working properly:
+### Hardware Checklist
+- Graphics: `supergfxctl -g`
+- Power: `asusctl profile -p` 
+- Keyboard: `asusctl -k high`
+- WiFi, Bluetooth, Function keys, Suspend/Resume
 
-### Hardware Functionality Checklist
-
-- [ ] **Graphics Switching**: `supergfxctl -g` shows the correct mode
-- [ ] **Power Profiles**: `asusctl profile -p` displays available profiles
-- [ ] **Keyboard Backlight**: `asusctl -k high` changes keyboard brightness
-- [ ] **Function Keys**: Volume, brightness, and keyboard lighting keys work
-- [ ] **WiFi Connectivity**: Can connect to wireless networks
-- [ ] **Bluetooth**: Can discover and connect to devices
-- [ ] **Suspend/Resume**: System properly sleeps and wakes
-- [ ] **External Displays**: If needed, test external monitor connections
-
-### Diagnostic Commands
-
+### Quick Diagnostics
 ```bash
-# Check if ASUS services are running
-systemctl status asusd
-systemctl status supergfxd
-
-# View kernel modules for graphics
+systemctl status asusd supergfxd
 lsmod | grep -E 'nvidia|amdgpu'
-
-# Check for any errors
 dmesg | grep -i -E 'error|fail'
-
-# Verify GPU information
 glxinfo | grep "OpenGL renderer"
 ```
 
@@ -719,17 +703,10 @@ systemctl --user status asusd-user
 
 BTRFS is strongly recommended for NixOS installations on modern hardware due to these benefits:
 
-- **Snapshots and rollbacks** - Works excellently with NixOS generations
-- **Data integrity** - Built-in checksumming to prevent silent data corruption
-- **Space efficiency** - Transparent compression and deduplication
-- **Subvolumes** - Flexible organization of your filesystem
-
-### BTRFS in NixOS Configuration
-
-After installation with BTRFS, add these options to your `configuration.nix` to optimize your filesystem:
+Recommended layout for isolation between system and user data:
 
 ```nix
-# Add this to your NixOS configuration
+# Add to configuration.nix
 fileSystems = {
   "/" = {
     device = "/dev/nvme0n1p7";
@@ -753,37 +730,9 @@ fileSystems = {
 
 For optimal performance, especially if you plan to use hibernation, configure a swap partition or file:
 
-**Option A: Swap Partition** (during partitioning)
-
-```bash
-# Create a swap partition during partitioning (e.g., /dev/nvme0n1p8)
-# Then format and enable it:
-mkswap /dev/nvme0n1p8
-swapon /dev/nvme0n1p8
-```
-
-**Option B: Swap File on BTRFS** (after installation)
-
-```bash
-# Create a dedicated subvolume for swap file
-btrfs subvolume create /swap
-
-# Create swap file (adjust size as needed, e.g., 16GB)
-cd /swap
-btrfs filesystem mkswapfile --size 16g --uuid clear swapfile
-
-# Enable the swap file
-swapon /swap/swapfile
-```
-
-Then add to your NixOS configuration:
-
 ```nix
 swapDevices = [
-  # For partition
-  # { device = "/dev/nvme0n1p8"; }
-  # OR for file
-  { device = "/swap/swapfile"; }
+  { device = "/dev/nvme0n1p8"; } # Or "/swap/swapfile"
 ];
 ```
 
@@ -885,41 +834,11 @@ If your system fails to boot:
    mount -o subvol=@home,compress=zstd /dev/nvme0n1p7 /mnt/home
    mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
    mount /dev/nvme0n1p1 /mnt/boot/efi
-   ```
-3. Chroot into your system:
-   ```bash
-   nixos-enter
-   ```
-4. Fix configuration or roll back to previous generation:
-
-   ```bash
-   # List generations
-   nix-env --list-generations --profile /nix/var/nix/profiles/system
-
-   # Switch to previous generation
-   nixos-rebuild switch --rollback
-   # OR specify generation
-   nix-env --switch-generation X --profile /nix/var/nix/profiles/system
-   ```
-
-### Accessing BTRFS Snapshots
-
-To restore from a BTRFS snapshot:
 
 1. Boot from installation media
-2. Mount your BTRFS partition:
-   ```bash
-   mount /dev/nvme0n1p7 /mnt
-   ```
-3. List available snapshots:
-   ```bash
-   ls -la /mnt/.snapshots
-   ```
-4. Mount the snapshot you want to restore:
-   ```bash
-   mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1p7 /recovery
-   ```
-5. Copy files from `/recovery` to your mounted system as needed
+2. Mount your root partition: `mount /dev/nvme0n1p7 /mnt`
+3. Mount snapshot: `mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1p7 /recovery`
+4. Copy files from `/recovery` as needed
 
 ## References
 
