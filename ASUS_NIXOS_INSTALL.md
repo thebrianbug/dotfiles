@@ -225,6 +225,67 @@ Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll
    systemd.services.supergfxd.path = [ pkgs.pciutils ];
    ```
 
+## ASUS Hardware Management
+
+### Graphics Switching
+
+With the ASUS-specific services enabled, you can manage your GPU configuration using `supergfxctl`:
+
+```bash
+# Check current graphics mode
+supergfxctl -g
+
+# List available modes
+supergfxctl -m
+
+# Set graphics mode (integrated, hybrid, compute, vfio, or dedicated)
+supergfxctl -m MODE
+
+# Examples:
+supergfxctl -m integrated  # Power-saving mode, uses AMD/Intel GPU only
+supergfxctl -m hybrid      # Uses both GPUs, enabling Nvidia on-demand
+supergfxctl -m dedicated   # Maximum performance, uses Nvidia GPU exclusively
+```
+
+Note: After changing graphics modes, a logout or reboot is typically required.
+
+### Keyboard Lighting
+
+Manage your keyboard lighting using `asusctl`:
+
+```bash
+# Set keyboard brightness level (0-3)
+asusctl -k low|med|high|off
+
+# Set keyboard RGB mode (if supported)
+asusctl led-mode static     # Single color
+asusctl led-mode breathe    # Breathing effect
+asusctl led-mode rainbow    # Rainbow effect
+```
+
+### Power Profiles
+
+Manage power profiles for better performance or battery life:
+
+```bash
+# Show current profile
+asusctl profile -p
+
+# List available profiles
+asusctl profile -l
+
+# Set profile
+asusctl profile -P quiet|balanced|performance
+```
+
+### Known Limitations
+
+- If keyboard backlight doesn't work automatically, set a mode with `asusctl led-mode static`
+- On 2020 models of ROG laptops, the Nvidia GPU may have issues entering low-power state
+- For optimal battery life, use integrated graphics mode when not gaming
+- If the laptop has booted in Nvidia mode, switching to AMD integrated graphics requires a reboot or logout
+- When using external displays via USB-C DisplayPort, you may need to use X11 instead of Wayland
+
 ## Step 4: Update Flake Configuration
 
 1. Edit the flake.nix file:
