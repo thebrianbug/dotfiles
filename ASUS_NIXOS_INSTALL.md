@@ -76,9 +76,34 @@ Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be 
    # mkfs.ext4 /dev/nvme0n1p7
    ```
 7. Mount the partitions:
+   
+   **For standard ext4 partitions:**
    ```bash
    mount /dev/nvme0n1p7 /mnt     # Root partition
    mkdir -p /mnt/boot
+   mount /dev/nvme0n1p6 /mnt/boot # If you created a separate boot partition
+   mkdir -p /mnt/boot/efi
+   mount /dev/nvme0n1p1 /mnt/boot/efi # Mount existing EFI partition (DO NOT format!)
+   ```
+   
+   **For BTRFS with subvolumes (recommended):**
+   ```bash
+   # After formatting with mkfs.btrfs
+   mount /dev/nvme0n1p7 /mnt
+   
+   # Create subvolumes
+   btrfs subvolume create /mnt/@
+   btrfs subvolume create /mnt/@home
+   btrfs subvolume create /mnt/@nix
+   
+   # Remount with subvolumes
+   umount /mnt
+   mount -o subvol=@,compress=zstd /dev/nvme0n1p7 /mnt
+   mkdir -p /mnt/{home,nix,boot}
+   mount -o subvol=@home,compress=zstd /dev/nvme0n1p7 /mnt/home
+   mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
+   
+   # Mount boot partitions
    mount /dev/nvme0n1p6 /mnt/boot # If you created a separate boot partition
    mkdir -p /mnt/boot/efi
    mount /dev/nvme0n1p1 /mnt/boot/efi # Mount existing EFI partition (DO NOT format!)
@@ -208,6 +233,17 @@ Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be 
    sudo nixos-rebuild switch --flake .#asus-linux
    ```
 
+5. System updates with BTRFS:
+   ```bash
+   # Before major system updates, consider creating a BTRFS snapshot
+   sudo btrfs subvolume snapshot -r / /.snapshots/pre-update-$(date +%Y%m%d)
+   
+   # Then proceed with the update
+   sudo nixos-rebuild switch --flake .#asus-linux
+   ```
+   
+   This creates a read-only snapshot before updates that you can recover from if needed.
+
 ## Dual-Boot Considerations
 
 If dual-booting with Windows:
@@ -252,7 +288,7 @@ The ROG Control Center should be available in your applications menu. If not:
 systemctl --user status asusd-user
 ```
 
-## BTRFS Configuration (Recommended)
+## BTRFS Advanced Configuration
 
 BTRFS is strongly recommended for NixOS installations on modern hardware due to these benefits:
 
@@ -261,27 +297,29 @@ BTRFS is strongly recommended for NixOS installations on modern hardware due to 
 - **Space efficiency** - Transparent compression and deduplication
 - **Subvolumes** - Flexible organization of your filesystem
 
-If using BTRFS, it's recommended to create proper subvolumes rather than a flat layout:
+### BTRFS in NixOS Configuration
 
-```bash
-# After formatting the partition with mkfs.btrfs
-mount /dev/nvme0n1p7 /mnt
+After installation with BTRFS, add these options to your `configuration.nix` to optimize your filesystem:
 
-# Create subvolumes
-btrfs subvolume create /mnt/@
-btrfs subvolume create /mnt/@home
-btrfs subvolume create /mnt/@nix
-
-# Remount with subvolumes
-umount /mnt
-mount -o subvol=@,compress=zstd /dev/nvme0n1p7 /mnt
-mkdir -p /mnt/{home,nix}
-mount -o subvol=@home,compress=zstd /dev/nvme0n1p7 /mnt/home
-mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
-
-# Continue with boot/EFI mounting as above
-mkdir -p /mnt/boot/efi
-mount /dev/nvme0n1p1 /mnt/boot/efi
+```nix
+# Add this to your NixOS configuration
+fileSystems = {
+  "/" = { 
+    device = "/dev/nvme0n1p7"; 
+    fsType = "btrfs";
+    options = [ "subvol=@" "compress=zstd" "noatime" ];
+  };
+  "/home" = { 
+    device = "/dev/nvme0n1p7"; 
+    fsType = "btrfs";
+    options = [ "subvol=@home" "compress=zstd" "noatime" ];
+  };
+  "/nix" = { 
+    device = "/dev/nvme0n1p7"; 
+    fsType = "btrfs";
+    options = [ "subvol=@nix" "compress=zstd" "noatime" ];
+  };
+};
 ```
 
 ### Swap Configuration
