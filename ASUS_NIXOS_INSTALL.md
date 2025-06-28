@@ -411,6 +411,14 @@ If your system is stable and you want to re-enable Secure Boot:
 boot.bootloader.secureBoot.enable = true;
 ```
 
+**Important Warning**: Re-enabling Secure Boot may introduce boot issues if not configured correctly. After enabling this option:
+
+1. Rebuild your system: `sudo nixos-rebuild switch`
+2. Test thoroughly after re-enabling to ensure compatibility with your ASUS model's UEFI firmware
+3. Have a recovery plan in place in case your system fails to boot (like a live USB)
+
+If you encounter boot issues after re-enabling Secure Boot, you may need to disable it again through the UEFI setup menu (DEL key during boot).
+
 #### Hide Unnecessary Boot Messages
 
 To hide the "Nvidia kernel module not found. Falling back to Nouveau" message when booting in integrated mode:
