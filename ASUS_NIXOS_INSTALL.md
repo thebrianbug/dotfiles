@@ -131,6 +131,7 @@ During the manual installation, after creating partitions but before formatting:
    - Delete any existing Linux partitions (like Fedora's partitions)
    - Create the following NixOS partitions:
      - If needed, a new `/boot` partition (ext4, ~512MB)
+     - A **swap partition** (recommended: 16-32GB for hibernation support)
      - A root partition (`/`) using the remaining space (**recommended: btrfs** or ext4)
      - **Important:** Calamares only formats partitions as BTRFS but **does not** create any subvolumes (a key limitation). You'll need to set these up manually after installation (see Post-Installation BTRFS Setup below)
    - Mount `nvme0n1p1` (the existing EFI partition) at `/boot/efi` but **do NOT format it**
