@@ -167,7 +167,7 @@ If your ProArt P16 has a TPM 2.0 chip (common in 2024/2025 models), you can conf
    - Delete any existing Linux partitions (like Fedora's partitions)
    - Create the following NixOS partitions:
      - If needed, a new `/boot` partition (ext4, ~512MB)
-     - A **swap partition** (recommended: 8-16GB; hibernation not recommended on ProArt P16 due to firmware limitations)
+     - A **swap partition** (recommended: equal to RAM size, e.g., 16GB for 16GB RAM or 32GB for 32GB RAM, to handle memory pressure; hibernation not recommended due to firmware limitations)
      - A root partition (`/`) using the remaining space (**recommended: btrfs** or ext4)
      - **Important:** Calamares only formats partitions as BTRFS but **does not** create any subvolumes (a key limitation). You'll need to set these up manually after installation (see Post-Installation BTRFS Setup below)
    - Mount `nvme0n1p1` (the existing EFI partition) at `/boot/efi` but **do NOT format it**
