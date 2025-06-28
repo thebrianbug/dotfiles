@@ -8,6 +8,32 @@ This guide walks you through installing NixOS on an ASUS laptop with all necessa
 - Internet connection
 - Basic knowledge of NixOS and the command line
 
+## Pre-Installation Steps
+
+### Backup Proprietary eSupport Drivers
+
+If you have Windows installed, back up the proprietary ASUS drivers before removing Windows partitions:
+
+1. In Windows, copy the entire `C:\eSupport` folder to external storage
+2. These drivers may be needed if you ever reinstall Windows or use Windows in a VM
+
+### Disable Secure Boot
+
+**IMPORTANT FOR DUAL BOOT USERS:** Disable Windows BitLocker before doing this or your data will be inaccessible!
+
+1. Press DEL repeatedly during boot to enter UEFI setup
+2. Press F7 for advanced mode
+3. Security → Secure Boot Control → Disable
+4. Save and exit
+
+### Use the Laptop Screen
+
+During installation, disconnect external displays to avoid unpredictable behavior with graphics switching.
+
+### Switch to Hybrid Mode on Windows (2022+ Models)
+
+For 2022 or newer ASUS models, switch to Hybrid graphics mode in Windows before installing NixOS to prevent potential issues.
+
 ## Partition Overview
 
 Before beginning installation, here's a breakdown of disk partitions and what to keep if dual-booting with Windows:
@@ -285,6 +311,69 @@ asusctl profile -P quiet|balanced|performance
 - For optimal battery life, use integrated graphics mode when not gaming
 - If the laptop has booted in Nvidia mode, switching to AMD integrated graphics requires a reboot or logout
 - When using external displays via USB-C DisplayPort, you may need to use X11 instead of Wayland
+
+### Desktop Environment Integration
+
+If using GNOME with NixOS, add these useful extensions to your configuration:
+
+```nix
+environment.systemPackages = with pkgs; [
+  gnomeExtensions.supergfxctl-gex  # GPU mode indicator
+  gnomeExtensions.power-profile-switcher  # Power profile controls
+];
+```
+
+### Additional Configuration
+
+#### Re-enabling Secure Boot (Optional)
+
+If your system is stable and you want to re-enable Secure Boot:
+
+```nix
+# Add to your configuration.nix
+boot.bootloader.secureBoot.enable = true;
+```
+
+#### Hide Unnecessary Boot Messages
+
+To hide the "Nvidia kernel module not found. Falling back to Nouveau" message when booting in integrated mode:
+
+```nix
+systemd.services.nvidia-fallback.enable = false;
+```
+
+### Troubleshooting
+
+#### Display Issues
+
+1. **External Displays**: If external displays aren't working:
+   - Try setting the GPU mode to dedicated or hybrid: `supergfxctl -m dedicated`
+   - For USB-C/DisplayPort connections, use X11 instead of Wayland
+
+2. **Black Screen After Login**: This might be related to GPU mode switching
+   - Switch to a TTY console (Ctrl+Alt+F3)
+   - Run `supergfxctl -g` to check current mode
+   - Try changing to a different mode: `supergfxctl -m integrated`
+
+3. **Screen Brightness Control Not Working**:
+   - Ensure you're using the latest kernel
+   - Add `acpi_osi=Linux` to your boot parameters:
+     ```nix
+     boot.kernelParams = [ "acpi_osi=Linux" ];
+     ```
+
+#### Power Management Issues
+
+1. **Poor Battery Life**: 
+   - Set graphics to integrated mode when not gaming
+   - Enable power management services:
+     ```nix
+     services.power-profiles-daemon.enable = true; 
+     ```
+   - Install TLP for advanced power management:
+     ```nix
+     services.tlp.enable = true;
+     ```
 
 ## Step 4: Update Flake Configuration
 
