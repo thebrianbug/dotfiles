@@ -826,6 +826,8 @@ systemd.timers.btrbk = {
 
 ## System Recovery
 
+### Method 1: Standard Recovery
+
 If your system fails to boot:
 
 1. Boot from NixOS installation media
@@ -837,13 +839,21 @@ If your system fails to boot:
    mount -o subvol=@home,compress=zstd /dev/nvme0n1p7 /mnt/home
    mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
    mount /dev/nvme0n1p1 /mnt/boot/efi
-
    ```
 
-3. Boot from installation media
-4. Mount your root partition: `mount /dev/nvme0n1p7 /mnt`
-5. Mount snapshot: `mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1p7 /recovery`
-6. Copy files from `/recovery` as needed
+3. Chroot into your system and fix issues:
+   ```bash
+   nixos-enter
+   ```
+
+### Method 2: Snapshot Recovery
+
+To restore from a BTRFS snapshot:
+
+1. Boot from installation media
+2. Mount your root partition: `mount /dev/nvme0n1p7 /mnt`
+3. Mount snapshot: `mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1p7 /recovery`
+4. Copy files from `/recovery` as needed
 
 ## References
 
