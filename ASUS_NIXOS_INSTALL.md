@@ -70,15 +70,17 @@ The Calamares installer offers an encryption checkbox during the partitioning st
 
 During the manual installation, after creating partitions but before formatting:
 
-1. Set up LUKS encryption on your root partition:
+1. Set up LUKS2 encryption on your root partition:
 
    ```bash
-   # Create encrypted partition - you\'ll be asked to set a passphrase
-   cryptsetup luksFormat /dev/nvme0n1p7
+   # Create encrypted partition with LUKS2 (default in modern Linux) - you\'ll be asked to set a passphrase
+   cryptsetup luksFormat --type luks2 /dev/nvme0n1p7
 
    # Open the encrypted partition
    cryptsetup luksOpen /dev/nvme0n1p7 cryptroot
    ```
+
+   > **Note:** LUKS2 offers better security features and is the standard in modern Linux distributions in 2025.
 
 2. Format the opened LUKS device instead of the raw partition:
 
@@ -111,6 +113,40 @@ During the manual installation, after creating partitions but before formatting:
    ```bash
    ls -la /dev/disk/by-uuid/
    ```
+
+#### TPM-Based Encryption (Optional)
+
+If your ProArt P16 has a TPM 2.0 chip (common in 2024/2025 models), you can configure it to unlock your LUKS partition automatically during boot:
+
+1. Ensure TPM is enabled in your UEFI setup (BIOS)
+
+2. Install required tools by adding to your `configuration.nix`:
+
+   ```nix
+   environment.systemPackages = with pkgs; [
+     clevis
+     tpm2-tools
+   ];
+   ```
+
+3. After rebuilding and booting into your system, bind your LUKS partition to the TPM:
+
+   ```bash
+   sudo clevis luks bind -d /dev/nvme0n1p7 tpm2 '{"pcr_bank":"sha256","pcr_ids":"7"}'
+   ```
+
+4. Update your `configuration.nix` to enable Clevis for automatic unlocking:
+
+   ```nix
+   boot.initrd.luks.devices."cryptroot" = {
+     device = "/dev/disk/by-uuid/YOUR-UUID-HERE";
+     preLVM = true;
+   };
+   boot.initrd.systemd.enable = true;
+   boot.initrd.clevis.enable = true;
+   ```
+
+**Important Warning**: Always test the TPM unlocking thoroughly before relying on it, and maintain a backup method (passphrase) to access your data. System updates or firmware changes may occasionally require re-binding the TPM to your LUKS partition.
 
 ### Notes on Encryption and Dual-Boot
 
