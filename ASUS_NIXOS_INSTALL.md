@@ -379,33 +379,44 @@ systemd.services.nvidia-fallback.enable = false;
 
 ### WiFi Setup
 
-Newer ASUS laptops (including ProArt series) often use Intel or MediaTek WiFi adapters that may require additional firmware or kernel modules.
+Most modern ASUS laptops (including ProArt series) have WiFi that works out of the box with recent NixOS versions. Always try the default configuration first:
 
-1. **Identify Your WiFi Hardware**:
+1. **Basic NetworkManager Setup**:
+   ```nix
+   networking.networkmanager.enable = true;
+   ```
+
+2. **First Test**: After installing NixOS, check if WiFi works with the default setup
    ```bash
+   # List available wifi networks
+   nmcli device wifi list
+   ```
+
+3. **Only If WiFi Doesn't Work**: Identify your hardware and apply specific fixes
+   ```bash
+   # Identify your WiFi adapter
    lspci | grep -i network
    ```
 
-2. **Intel WiFi Modules** (common in ASUS laptops):
-   Add to your configuration.nix:
-   ```nix
-   hardware.enableAllFirmware = true;
-   networking.networkmanager.enable = true;
+4. **Troubleshooting Options** (only if needed):
    
-   # For problematic Intel AX cards
+   For Intel WiFi (common in ASUS laptops):
+   ```nix
+   # These parameters help with problematic Intel AX cards
    boot.kernelParams = [ 
-     "iwlwifi.disable_11ax=Y"
-     "iwlmvm.power_scheme=1" 
+     "iwlwifi.disable_11ax=Y"  # Disable WiFi 6 which can cause issues
+     "iwlmvm.power_scheme=1"   # Better power management
    ];
    ```
 
-3. **MediaTek Cards** (found in some newer models):
+   For MediaTek or other cards:
    ```nix
+   hardware.enableAllFirmware = true;
    hardware.firmware = [ pkgs.linux-firmware ];
    ```
 
-4. **Temporary Internet During Setup**:
-   - Use USB tethering from your phone
+5. **Temporary Internet During Setup**:
+   - Use USB tethering from your phone if WiFi isn't working
    - Connect via Ethernet if available
 
 ### Bluetooth Configuration
