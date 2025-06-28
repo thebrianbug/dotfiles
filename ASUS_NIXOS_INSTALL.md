@@ -50,6 +50,74 @@ Before beginning installation, here's a breakdown of disk partitions and what to
 
 Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be safely removed and replaced with NixOS partitions.
 
+## Disk Encryption Considerations
+
+Encrypting your NixOS installation is strongly recommended for laptop security. This is separate from Secure Boot and won't cause conflicts with the ASUS hardware requirements.
+
+### Encryption Options
+
+1. **Full Disk Encryption**: Encrypts everything except the boot partition
+2. **Home-Only Encryption**: Encrypts just your personal data
+
+This guide will cover Full Disk Encryption using LUKS. Note that you'll need to enter a passphrase at boot time.
+
+### Implementing Disk Encryption
+
+#### With Calamares Installer
+
+The Calamares installer offers an encryption checkbox during the partitioning step. Simply:
+
+1. Check "Encrypt system" when creating the root partition
+2. Set a strong encryption passphrase
+3. The installer will handle the LUKS setup automatically
+
+#### With Manual Installation
+
+During the manual installation, after creating partitions but before formatting:
+
+1. Set up LUKS encryption on your root partition:
+   ```bash
+   # Create encrypted partition - you'll be asked to set a passphrase
+   cryptsetup luksFormat /dev/nvme0n1p7
+   
+   # Open the encrypted partition
+   cryptsetup luksOpen /dev/nvme0n1p7 cryptroot
+   ```
+
+2. Format the opened LUKS device instead of the raw partition:
+   ```bash
+   # For BTRFS (recommended)
+   mkfs.btrfs /dev/mapper/cryptroot
+   # OR for ext4
+   # mkfs.ext4 /dev/mapper/cryptroot
+   ```
+
+3. Mount the opened LUKS device:
+   ```bash
+   mount /dev/mapper/cryptroot /mnt
+   ```
+
+4. Add this to your `configuration.nix` after installation:
+   ```nix
+   boot.initrd.luks.devices = {
+     "cryptroot" = {
+       device = "/dev/disk/by-uuid/YOUR-UUID-HERE"; # Replace with actual UUID
+       preLVM = true;
+     };
+   };
+   ```
+   
+   To get the UUID of your encrypted partition:
+   ```bash
+   ls -la /dev/disk/by-uuid/
+   ```
+
+### Notes on Encryption and Dual-Boot
+
+- Encryption is independent of the Windows BitLocker issue mentioned earlier
+- You can encrypt your NixOS partitions regardless of whether Secure Boot is enabled or disabled
+- For maximum security, consider encrypting both your Windows (using BitLocker) and NixOS partitions
+
 ## Step 1: Base NixOS Installation
 
 ### Option A: Using Calamares Installer (Graphical)
