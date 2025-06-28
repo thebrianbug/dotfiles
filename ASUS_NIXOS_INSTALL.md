@@ -36,12 +36,46 @@ Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be 
    - Create the following NixOS partitions:
      - If needed, a new `/boot` partition (ext4, ~512MB)
      - A root partition (`/`) using the remaining space (**recommended: btrfs** or ext4)
+     - **Note:** When selecting BTRFS, Calamares may not provide options for subvolume setup. You'll set up subvolumes after installation (see Post-Installation BTRFS Setup below)
    - Mount `nvme0n1p1` (the existing EFI partition) at `/boot/efi` but **do NOT format it**
 5. Continue with the installer:
    - Create your user account
    - Set passwords
    - Review and confirm installation settings
 6. Complete the installation and reboot
+
+### Post-Installation BTRFS Setup (Calamares)
+
+If you installed with BTRFS using Calamares but couldn't set up subvolumes during installation:
+
+1. Boot into your new NixOS system
+2. Create proper BTRFS subvolumes and move your data:
+   ```bash
+   # Login as root or use sudo for these commands
+   sudo -i
+   
+   # Create a temporary mount point
+   mkdir /mnt/btrfs-root
+   
+   # Mount the BTRFS partition (adjust device as needed)
+   mount -o subvolid=0 /dev/nvme0n1p7 /mnt/btrfs-root
+   
+   # Create subvolumes
+   btrfs subvolume create /mnt/btrfs-root/@
+   btrfs subvolume create /mnt/btrfs-root/@home
+   btrfs subvolume create /mnt/btrfs-root/@nix
+   
+   # Copy data to subvolumes (this will take some time)
+   cp -a --reflink=auto /home/* /mnt/btrfs-root/@home/
+   cp -a --reflink=auto /nix/* /mnt/btrfs-root/@nix/
+   cp -a --reflink=auto --one-file-system /* /mnt/btrfs-root/@/
+   
+   # Update your configuration.nix to use these subvolumes (see BTRFS Advanced Configuration section)
+   # Then rebuild and switch to apply the changes:
+   # nixos-rebuild switch
+   ```
+
+3. After setting up subvolumes, continue with Step 2 (Clone Dotfiles Repository)
 
 ### Option B: Manual Installation
 
