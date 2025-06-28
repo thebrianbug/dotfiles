@@ -40,13 +40,13 @@ For 2022 or newer ASUS models, switch to Hybrid graphics mode in Windows before 
 
 Before beginning installation, here's a breakdown of disk partitions and what to keep if dual-booting with Windows:
 
-| Partition   | Filesystem | Label    | Type                           | Purpose                              | Keep?       |
-| ----------- | ---------- | -------- | ------------------------------ | ------------------------------------ | ----------- |
-| `nvme0n1p1` | vfat       | SYSTEM   | EFI System Partition           | Bootloader (shared Fedora + Windows) | ✅ Yes      |
-| `nvme0n1p2` | _(none)_   | _(none)_ | Microsoft Reserved Partition   | Required for Windows (no FS)         | ✅ Yes      |
-| `nvme0n1p3` | ntfs       | OS       | Windows System                 | Main Windows installation            | ✅ Yes      |
-| `nvme0n1p4` | ntfs       | RECOVERY | Windows Recovery Environment   | Recovery tools/partition             | ✅ Yes (for dual-boot) |
-| `nvme0n1p5` | vfat       | MYASUS   | ASUS preinstalled tools        | Manufacturer apps/drivers            | ✅ Yes (for dual-boot) |
+| Partition   | Filesystem | Label    | Type                         | Purpose                              | Keep?                  |
+| ----------- | ---------- | -------- | ---------------------------- | ------------------------------------ | ---------------------- |
+| `nvme0n1p1` | vfat       | SYSTEM   | EFI System Partition         | Bootloader (shared Fedora + Windows) | ✅ Yes                 |
+| `nvme0n1p2` | _(none)_   | _(none)_ | Microsoft Reserved Partition | Required for Windows (no FS)         | ✅ Yes                 |
+| `nvme0n1p3` | ntfs       | OS       | Windows System               | Main Windows installation            | ✅ Yes                 |
+| `nvme0n1p4` | ntfs       | RECOVERY | Windows Recovery Environment | Recovery tools/partition             | ✅ Yes (for dual-boot) |
+| `nvme0n1p5` | vfat       | MYASUS   | ASUS preinstalled tools      | Manufacturer apps/drivers            | ✅ Yes (for dual-boot) |
 
 Any existing Linux partitions (like Fedora's `/boot` or root partitions) can be safely removed and replaced with NixOS partitions.
 
@@ -76,15 +76,17 @@ The Calamares installer offers an encryption checkbox during the partitioning st
 During the manual installation, after creating partitions but before formatting:
 
 1. Set up LUKS encryption on your root partition:
+
    ```bash
-   # Create encrypted partition - you'll be asked to set a passphrase
+   # Create encrypted partition - you\'ll be asked to set a passphrase
    cryptsetup luksFormat /dev/nvme0n1p7
-   
+
    # Open the encrypted partition
    cryptsetup luksOpen /dev/nvme0n1p7 cryptroot
    ```
 
 2. Format the opened LUKS device instead of the raw partition:
+
    ```bash
    # For BTRFS (recommended)
    mkfs.btrfs /dev/mapper/cryptroot
@@ -93,11 +95,13 @@ During the manual installation, after creating partitions but before formatting:
    ```
 
 3. Mount the opened LUKS device:
+
    ```bash
    mount /dev/mapper/cryptroot /mnt
    ```
 
 4. Add this to your `configuration.nix` after installation:
+
    ```nix
    boot.initrd.luks.devices = {
      "cryptroot" = {
@@ -106,8 +110,9 @@ During the manual installation, after creating partitions but before formatting:
      };
    };
    ```
-   
+
    To get the UUID of your encrypted partition:
+
    ```bash
    ls -la /dev/disk/by-uuid/
    ```
@@ -146,56 +151,59 @@ Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll
 
 1. Boot into your new NixOS system
 2. Create proper BTRFS subvolumes and move your data:
+
    ```bash
    # Login as root or use sudo for these commands
    sudo -i
-   
+
    # Create a temporary mount point
    mkdir /mnt/btrfs-root
-   
+
    # Mount the BTRFS partition (adjust device as needed)
    mount -o subvolid=0 /dev/nvme0n1p7 /mnt/btrfs-root
-   
+
    # Create subvolumes
    btrfs subvolume create /mnt/btrfs-root/@
    btrfs subvolume create /mnt/btrfs-root/@home
    btrfs subvolume create /mnt/btrfs-root/@nix
-   
+
    # Copy data to subvolumes (this will take some time)
    cp -a --reflink=auto /home/* /mnt/btrfs-root/@home/
    cp -a --reflink=auto /nix/* /mnt/btrfs-root/@nix/
    cp -a --reflink=auto --one-file-system /* /mnt/btrfs-root/@/
-   
+
    # Update your configuration.nix to use these subvolumes
    nano /etc/nixos/configuration.nix
    ```
-   
+
    Add the following to your configuration.nix:
+
    ```nix
    fileSystems = {
-     "/" = { 
-       device = "/dev/nvme0n1p7"; 
+     "/" = {
+       device = "/dev/nvme0n1p7";
        fsType = "btrfs";
        options = [ "subvol=@" "compress=zstd" "noatime" ];
      };
-     "/home" = { 
-       device = "/dev/nvme0n1p7"; 
+     "/home" = {
+       device = "/dev/nvme0n1p7";
        fsType = "btrfs";
        options = [ "subvol=@home" "compress=zstd" "noatime" ];
      };
-     "/nix" = { 
-       device = "/dev/nvme0n1p7"; 
+     "/nix" = {
+       device = "/dev/nvme0n1p7";
        fsType = "btrfs";
        options = [ "subvol=@nix" "compress=zstd" "noatime" ];
      };
    };
    ```
-   
+
    Then rebuild and switch to apply the changes:
+
    ```bash
    nixos-rebuild switch
    ```
-   
+
    After rebooting, you'll be using your new BTRFS subvolume structure.
 
 3. After setting up subvolumes, continue with Step 2 (Clone Dotfiles Repository)
@@ -233,8 +241,9 @@ Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll
    # mkfs.ext4 /dev/nvme0n1p7
    ```
 7. Mount the partitions:
-   
+
    **For standard ext4 partitions:**
+
    ```bash
    mount /dev/nvme0n1p7 /mnt     # Root partition
    mkdir -p /mnt/boot
@@ -242,29 +251,31 @@ Since Calamares doesn't create any subvolumes when formatting with BTRFS, you'll
    mkdir -p /mnt/boot/efi
    mount /dev/nvme0n1p1 /mnt/boot/efi # Mount existing EFI partition (DO NOT format!)
    ```
-   
+
    **For BTRFS with subvolumes (recommended):**
+
    ```bash
    # After formatting with mkfs.btrfs
    mount /dev/nvme0n1p7 /mnt
-   
+
    # Create subvolumes
    btrfs subvolume create /mnt/@
    btrfs subvolume create /mnt/@home
    btrfs subvolume create /mnt/@nix
-   
+
    # Remount with subvolumes
    umount /mnt
    mount -o subvol=@,compress=zstd /dev/nvme0n1p7 /mnt
    mkdir -p /mnt/{home,nix,boot}
    mount -o subvol=@home,compress=zstd /dev/nvme0n1p7 /mnt/home
    mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
-   
+
    # Mount boot partitions
    mount /dev/nvme0n1p6 /mnt/boot # If you created a separate boot partition
    mkdir -p /mnt/boot/efi
    mount /dev/nvme0n1p1 /mnt/boot/efi # Mount existing EFI partition (DO NOT format!)
    ```
+
 8. Generate initial configuration:
    ```bash
    nixos-generate-config --root /mnt
@@ -417,10 +428,12 @@ systemd.services.nvidia-fallback.enable = false;
 #### Display Issues
 
 1. **External Displays**: If external displays aren't working:
+
    - Try setting the GPU mode to dedicated or hybrid: `supergfxctl -m dedicated`
    - For USB-C/DisplayPort connections, use X11 instead of Wayland
 
 2. **Black Screen After Login**: This might be related to GPU mode switching
+
    - Switch to a TTY console (Ctrl+Alt+F3)
    - Run `supergfxctl -g` to check current mode
    - Try changing to a different mode: `supergfxctl -m integrated`
@@ -434,11 +447,11 @@ systemd.services.nvidia-fallback.enable = false;
 
 #### Power Management Issues
 
-1. **Poor Battery Life**: 
+1. **Poor Battery Life**:
    - Set graphics to integrated mode when not gaming
    - Enable power management services:
      ```nix
-     services.power-profiles-daemon.enable = true; 
+     services.power-profiles-daemon.enable = true;
      ```
    - Install TLP for advanced power management:
      ```nix
@@ -452,44 +465,49 @@ systemd.services.nvidia-fallback.enable = false;
 Most modern ASUS laptops (including ProArt series) have WiFi that works out of the box with recent NixOS versions. Always try the default configuration first:
 
 1. **Basic NetworkManager Setup**:
+
    ```nix
    networking.networkmanager.enable = true;
    ```
 
 2. **First Test**: After installing NixOS, check if WiFi works with the default setup
+
    ```bash
    # List available wifi networks
    nmcli device wifi list
    ```
 
 3. **Only If WiFi Doesn't Work**: Identify your hardware and apply specific fixes
+
    ```bash
    # Identify your WiFi adapter
    lspci | grep -i network
    ```
 
 4. **Troubleshooting Options** (only if needed):
-   
+
    For Intel WiFi (common in ASUS laptops):
+
    ```nix
    # These parameters help with problematic Intel AX cards
-   boot.kernelParams = [ 
+   boot.kernelParams = [
      "iwlwifi.disable_11ax=Y"  # Disable WiFi 6 which can cause issues
      "iwlmvm.power_scheme=1"   # Better power management
    ];
    ```
 
    For MediaTek cards (common in ProArt series):
+
    ```nix
    # Basic support for MediaTek cards
    hardware.enableAllFirmware = true;
    hardware.firmware = [ pkgs.linux-firmware ];
-   
+
    # If experiencing poor performance or connection issues
    boot.kernelModules = [ "mt7921e" ]; # Adjust module name if using a different MediaTek chip
    networking.networkmanager.wifi.powersave = false; # Disable power saving for better stability
    ```
-   
+
    > **Note for ProArt P16 Users**: The MediaTek cards in these laptops should work with basic configurations but may have performance limitations similar to Fedora.
 
 5. **Temporary Internet During Setup**:
@@ -552,11 +570,13 @@ If you're not dual-booting, consider these options:
 ### Using fwupd in NixOS
 
 Add to your configuration.nix:
+
 ```nix
 services.fwupd.enable = true;
 ```
 
 Then refresh and check for updates:
+
 ```bash
 sudo fwupdmgr refresh
 sudo fwupdmgr get-updates
@@ -637,6 +657,7 @@ For major BIOS updates when fwupd doesn't work:
    ```
 
 4. If you need to update your configuration in the future:
+
    ```bash
    cd ~/source/dotfiles
    git pull
@@ -644,14 +665,15 @@ For major BIOS updates when fwupd doesn't work:
    ```
 
 5. System updates with BTRFS:
+
    ```bash
    # Before major system updates, consider creating a BTRFS snapshot
    sudo btrfs subvolume snapshot -r / /.snapshots/pre-update-$(date +%Y%m%d)
-   
+
    # Then proceed with the update
    sudo nixos-rebuild switch --flake .#asus-linux
    ```
-   
+
    This creates a read-only snapshot before updates that you can recover from if needed.
 
 ## Dual-Boot Considerations
@@ -714,18 +736,18 @@ After installation with BTRFS, add these options to your `configuration.nix` to 
 ```nix
 # Add this to your NixOS configuration
 fileSystems = {
-  "/" = { 
-    device = "/dev/nvme0n1p7"; 
+  "/" = {
+    device = "/dev/nvme0n1p7";
     fsType = "btrfs";
     options = [ "subvol=@" "compress=zstd" "noatime" ];
   };
-  "/home" = { 
-    device = "/dev/nvme0n1p7"; 
+  "/home" = {
+    device = "/dev/nvme0n1p7";
     fsType = "btrfs";
     options = [ "subvol=@home" "compress=zstd" "noatime" ];
   };
-  "/nix" = { 
-    device = "/dev/nvme0n1p7"; 
+  "/nix" = {
+    device = "/dev/nvme0n1p7";
     fsType = "btrfs";
     options = [ "subvol=@nix" "compress=zstd" "noatime" ];
   };
@@ -737,6 +759,7 @@ fileSystems = {
 For optimal performance, especially if you plan to use hibernation, configure a swap partition or file:
 
 **Option A: Swap Partition** (during partitioning)
+
 ```bash
 # Create a swap partition during partitioning (e.g., /dev/nvme0n1p8)
 # Then format and enable it:
@@ -745,6 +768,7 @@ swapon /dev/nvme0n1p8
 ```
 
 **Option B: Swap File on BTRFS** (after installation)
+
 ```bash
 # Create a dedicated subvolume for swap file
 btrfs subvolume create /swap
@@ -758,6 +782,7 @@ swapon /swap/swapfile
 ```
 
 Then add to your NixOS configuration:
+
 ```nix
 swapDevices = [
   # For partition
@@ -791,6 +816,7 @@ systemd.timers.btrfs-scrub = {
 ```
 
 Manual maintenance commands:
+
 ```bash
 # Check filesystem status
 sudo btrfs filesystem usage /
@@ -813,6 +839,7 @@ time.hardwareClockInLocalTime = true;
 ```
 
 Alternatively, configure Windows to use UTC time:
+
 1. Run Registry Editor (regedit) in Windows
 2. Navigate to `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation`
 3. Create a new DWORD value named `RealTimeIsUniversal`
@@ -827,6 +854,7 @@ While BTRFS snapshots provide protection against system configuration errors, th
 3. **Offsite Backups**: Use restic, borg, or rclone to back up important data to an external drive or cloud service
 
 Add `btrbk` to your NixOS configuration:
+
 ```nix
 environment.systemPackages = with pkgs; [
   btrbk
@@ -868,10 +896,11 @@ If your system fails to boot:
    nixos-enter
    ```
 4. Fix configuration or roll back to previous generation:
+
    ```bash
    # List generations
    nix-env --list-generations --profile /nix/var/nix/profiles/system
-   
+
    # Switch to previous generation
    nixos-rebuild switch --rollback
    # OR specify generation
@@ -920,24 +949,26 @@ Once you have your ASUS ProArt P16 working well with NixOS, consider contributin
 1. Fork the nixos-hardware repository
 
 2. Create a directory structure for your model:
+
    ```bash
    mkdir -p asus/proart/p16
    ```
 
 3. Create a basic configuration file at `asus/proart/p16/default.nix`:
+
    ```nix
    { lib, pkgs, ... }:
-   
+
    {
      imports = [
        ../../../common/cpu/amd
        ../../../common/gpu/amd
        # Or ../../../common/gpu/nvidia if you have the Nvidia variant
      ];
-     
+
      # Use latest kernel for best support of ProArt hardware
      boot.kernelPackages = pkgs.linuxPackages_latest;
-     
+
      # Enable ASUS-specific services
      services = {
        supergfxd.enable = true;
@@ -946,10 +977,10 @@ Once you have your ASUS ProArt P16 working well with NixOS, consider contributin
          enableUserService = true;
        };
      };
-     
+
      # Fix for supergfxctl
      systemd.services.supergfxd.path = [ pkgs.pciutils ];
-     
+
      # Add any other ProArt P16-specific configurations here
    };
    ```
