@@ -284,6 +284,171 @@ mkdir -p /mnt/boot/efi
 mount /dev/nvme0n1p1 /mnt/boot/efi
 ```
 
+### Swap Configuration
+
+For optimal performance, especially if you plan to use hibernation, configure a swap partition or file:
+
+**Option A: Swap Partition** (during partitioning)
+```bash
+# Create a swap partition during partitioning (e.g., /dev/nvme0n1p8)
+# Then format and enable it:
+mkswap /dev/nvme0n1p8
+swapon /dev/nvme0n1p8
+```
+
+**Option B: Swap File on BTRFS** (after installation)
+```bash
+# Create a dedicated subvolume for swap file
+btrfs subvolume create /swap
+
+# Create swap file (adjust size as needed, e.g., 16GB)
+cd /swap
+btrfs filesystem mkswapfile --size 16g --uuid clear swapfile
+
+# Enable the swap file
+swapon /swap/swapfile
+```
+
+Then add to your NixOS configuration:
+```nix
+swapDevices = [
+  # For partition
+  # { device = "/dev/nvme0n1p8"; }
+  # OR for file
+  { device = "/swap/swapfile"; }
+];
+```
+
+### BTRFS Maintenance
+
+To maintain BTRFS health and performance, add these periodic tasks to your NixOS configuration:
+
+```nix
+systemd.services.btrfs-scrub = {
+  description = "BTRFS scrub";
+  serviceConfig = {
+    Type = "oneshot";
+    ExecStart = "${pkgs.btrfs-progs}/bin/btrfs scrub start -B /";
+  };
+};
+
+systemd.timers.btrfs-scrub = {
+  description = "Monthly BTRFS scrub";
+  wantedBy = [ "timers.target" ];
+  timerConfig = {
+    OnCalendar = "monthly";
+    Persistent = true;
+  };
+};
+```
+
+Manual maintenance commands:
+```bash
+# Check filesystem status
+sudo btrfs filesystem usage /
+
+# Balance filesystem (redistribute data)
+sudo btrfs balance start -dusage=85 /
+
+# Scrub to detect and repair errors
+sudo btrfs scrub start /
+# Check progress
+sudo btrfs scrub status /
+```
+
+## Time Synchronization for Dual-Boot
+
+When dual-booting with Windows, time synchronization issues can occur. Add this to your NixOS configuration to make NixOS compatible with Windows' time handling:
+
+```nix
+time.hardwareClockInLocalTime = true;
+```
+
+Alternatively, configure Windows to use UTC time:
+1. Run Registry Editor (regedit) in Windows
+2. Navigate to `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation`
+3. Create a new DWORD value named `RealTimeIsUniversal`
+4. Set its value to 1
+
+## Backup Strategy
+
+While BTRFS snapshots provide protection against system configuration errors, they're not a complete backup solution. For comprehensive data protection:
+
+1. **System Configuration**: Already covered by NixOS generations
+2. **Data Snapshots**: Use `btrbk` or `snapper` to manage BTRFS snapshots
+3. **Offsite Backups**: Use restic, borg, or rclone to back up important data to an external drive or cloud service
+
+Add `btrbk` to your NixOS configuration:
+```nix
+environment.systemPackages = with pkgs; [
+  btrbk
+];
+
+systemd.services.btrbk = {
+  description = "BTRBK periodic snapshot";
+  serviceConfig = {
+    Type = "oneshot";
+    ExecStart = "${pkgs.btrbk}/bin/btrbk run";
+  };
+};
+
+systemd.timers.btrbk = {
+  description = "Daily BTRBK snapshots";
+  wantedBy = [ "timers.target" ];
+  timerConfig = {
+    OnCalendar = "daily";
+    Persistent = true;
+  };
+};
+```
+
+## System Recovery
+
+If your system fails to boot:
+
+1. Boot from NixOS installation media
+2. Mount your BTRFS root partition:
+   ```bash
+   mount -o subvol=@,compress=zstd /dev/nvme0n1p7 /mnt
+   mkdir -p /mnt/{home,nix,boot/efi}
+   mount -o subvol=@home,compress=zstd /dev/nvme0n1p7 /mnt/home
+   mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
+   mount /dev/nvme0n1p1 /mnt/boot/efi
+   ```
+3. Chroot into your system:
+   ```bash
+   nixos-enter
+   ```
+4. Fix configuration or roll back to previous generation:
+   ```bash
+   # List generations
+   nix-env --list-generations --profile /nix/var/nix/profiles/system
+   
+   # Switch to previous generation
+   nixos-rebuild switch --rollback
+   # OR specify generation
+   nix-env --switch-generation X --profile /nix/var/nix/profiles/system
+   ```
+
+### Accessing BTRFS Snapshots
+
+To restore from a BTRFS snapshot:
+
+1. Boot from installation media
+2. Mount your BTRFS partition:
+   ```bash
+   mount /dev/nvme0n1p7 /mnt
+   ```
+3. List available snapshots:
+   ```bash
+   ls -la /mnt/.snapshots
+   ```
+4. Mount the snapshot you want to restore:
+   ```bash
+   mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1p7 /recovery
+   ```
+5. Copy files from `/recovery` to your mounted system as needed
+
 ## References
 
 - [NixOS Manual](https://nixos.org/manual/nixos/stable/)
