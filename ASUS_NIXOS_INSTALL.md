@@ -522,10 +522,13 @@ hardware.bluetooth.powerOnBoot = true;
 
 ### Hardware Checklist
 
-- Graphics: `supergfxctl -g`
-- Power: `asusctl profile -p`
-- Keyboard: `asusctl -k high`
-- WiFi, Bluetooth, Function keys, Suspend/Resume
+- Graphics switching: `supergfxctl -g` (should show current mode)
+- Power profiles: `asusctl profile -p` (should list available profiles)
+- Keyboard backlight: `asusctl -k high` (should change keyboard brightness)
+- WiFi: Connect to your network
+- Bluetooth: Pair a device if available
+- Function keys: Test volume, brightness, and keyboard lighting keys
+- Suspend/Resume: Close lid or use power menu to test sleep/wake
 
 ### Quick Diagnostics
 
@@ -701,11 +704,9 @@ The ROG Control Center should be available in your applications menu. If not:
 systemctl --user status asusd-user
 ```
 
-## BTRFS Advanced Configuration
+## BTRFS Configuration
 
-BTRFS is strongly recommended for NixOS installations on modern hardware due to these benefits:
-
-Recommended layout for isolation between system and user data:
+BTRFS offers benefits like snapshots, compression, and subvolumes. Recommended layout for isolation between system and user data:
 
 ```nix
 # Add to configuration.nix
@@ -731,6 +732,28 @@ fileSystems = {
 ### Swap Configuration
 
 For optimal performance, especially if you plan to use hibernation, configure a swap partition or file:
+
+**Option A: Swap Partition**
+
+```bash
+# Format and enable swap partition
+mkswap /dev/nvme0n1p8
+swapon /dev/nvme0n1p8
+```
+
+**Option B: Swap File**
+
+```bash
+# Create swap file on BTRFS
+btrfs subvolume create /swap
+chattr +C /swap
+dd if=/dev/zero of=/swap/swapfile bs=1M count=16384 # 16GB
+chmod 600 /swap/swapfile
+mkswap /swap/swapfile
+swapon /swap/swapfile
+```
+
+Add to configuration:
 
 ```nix
 swapDevices = [
