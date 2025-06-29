@@ -1,4 +1,4 @@
-# NixOS Installation Guide: ASUS Linux Setup
+# NixOS Installation Guide: ASUS ProArt P16 Setup
 
 This guide provides step-by-step instructions for installing NixOS on an ASUS laptop, using configurations from this dotfiles repository. It covers both manual installation and the Calamares installer.
 
