@@ -6,7 +6,7 @@ This guide has been tested with the ASUS ProArt P16 (H7606 series, including H76
 
 ## For New Users
 
-If you’re new to NixOS, use the Calamares graphical installer for simplicity. Refer to the [Zero-to-Nix Guide](https://zero-to-nix.com/) for basics. If errors occur during commands like `nixos-rebuild switch`, check `/etc/nix/configuration.nix` for syntax errors and run `journalctl -p 3 -xb` for logs.
+If you’re new to NixOS, use the Calamares graphical installer for simplicity. Refer to the [Zero-to-Nix Guide](https://zero-to-nix.com/) for basics. If errors occur during commands like `nixos-rebuild switch`, check `/etc/nixos/configuration.nix` for syntax errors and run `journalctl -p 3 -xb` for logs.
 
 ## Prerequisites
 
@@ -95,6 +95,8 @@ NixOS generally recommends a 1 GB EFI System Partition (ESP), but it's often pos
 
 Now that you have a backup, you can safely remove old, unused Linux boot entries from your EFI partition using `efibootmgr`. This frees up space and keeps your boot menu clean.
 
+**Note on ASUS EFI Entries:** Your `efibootmgr` output indicates a remarkably clean setup, with **no direct ASUS-specific boot entries** visible in the firmware (like `MyASUS_Booter`). The `MYASUS` partition (`nvme0n1p5`) exists, but its functionality is likely invoked by other means (e.g., specific function keys, or it contains tools not meant to be directly bootable via UEFI entry). This simplifies the cleanup, as you only need to consider Windows and old Linux entries.
+
 1.  **List current boot entries:**
 
     ```bash
@@ -103,41 +105,33 @@ Now that you have a backup, you can safely remove old, unused Linux boot entries
 
     This command will show you a list of boot entries, including their BootOrder (order of booting) and BootXXXX (individual entries). The `-v` flag shows full paths, which helps identify the OS.
 
-    _Example Output:_
+    _Based on your provided output, you currently have only two entries:_
 
-    ```
-    BootCurrent: 0001
-    Timeout: 1 seconds
-    BootOrder: 0000,0002,0001,0003,0004
-    Boot0000* Windows Boot Manager  HD(1,GPT,a1b2c3d4-e5f6-7890-abcd-ef1234567890,0x800,0x82000)/File(\EFI\Microsoft\Boot\bootmgfw.efi)
-    Boot0001* UEFI: SanDisk Ext USB Device  PciRoot(0x0)/Pci(0x1,0x0)/Usb(1,0)/HD(1,MBR,0x12345678,0x800,0x75d000)RC
-    Boot0002* Fedora        HD(1,GPT,a1b2c3d4-e5f6-7890-abcd-ef1234567890,0x800,0x82000)/File(\EFI\Fedora\shimx64.efi)
-    Boot0003* MyASUS_Booter HD(1,GPT,a1b2c3d4-e5f6-7890-abcd-ef1234567890,0x800,0x82000)/File(\EFI\MyASUS\MyASUS.efi)
-    Boot0004* Hard Drive    BBS(HD,,0x0)..GO
-    ```
+    - `Boot0000* Fedora`: Your current Linux installation.
+    - `Boot0002* Windows Boot Manager`: Your Windows installation.
 
-2.  **Identify Linux-related entries to delete:**
-    Look for entries that correspond to your old Linux installations. Common names include:
+    _If you had other old Linux entries (e.g., Ubuntu, Arch, or old Fedora entries), they would appear here._
 
-    - `Fedora` (as in the example above)
+2.  **Identify Linux-related entries to delete (if any):**
+    If your `efibootmgr -v` output had other `BootXXXX` entries besides your current Fedora and Windows Boot Manager, look for entries that correspond to old Linux installations. Common names include:
+
     - `Ubuntu`
     - `Arch`
     - `GRUB`
-    - Any entry whose file path ends with `shimx64.efi` or `grubx64.efi` within a directory named after a Linux distribution (e.g., `\EFI\Fedora\shimx64.efi`).
+    - Any entry whose file path ends with `shimx64.efi` or `grubx64.efi` within a directory named after a Linux distribution (e.g., `\EFI\old_distro_name\shimx64.efi`).
 
-    **\!\!\! WARNING: DO NOT DELETE WINDOWS OR OEM ENTRIES \!\!\!**
+    **\!\!\! CRITICAL WARNING: DO NOT DELETE WINDOWS OR OEM ENTRIES \!\!\!**
 
     - **Always keep `Windows Boot Manager`**: This entry is crucial for booting Windows. Its path typically points to `\EFI\Microsoft\Boot\bootmgfw.efi`.
-    - **Leave ASUS-specific entries alone**: These might be labeled `MyASUS_Booter`, `Recovery`, `Diagnostics`, `eSupport`, or similar. Deleting them could affect system recovery or manufacturer tools. Their paths often point to `\EFI\ASUS\`, `\EFI\Boot\`, or `\EFI\Recovery\`.
-    - If you are unsure about an entry, **do not delete it**. When in doubt, leave it.
+    - **Leave any recognized ASUS/OEM/Firmware entries alone** (if they appear). While your specific `efibootmgr` output doesn't show them, other systems might. These might be labeled `MyASUS_Booter`, `Recovery`, `Diagnostics`, `eSupport`, or similar. Deleting them could affect system recovery or manufacturer tools. Their paths often point to `\EFI\ASUS\`, `\EFI\Boot\`, or `\EFI\Recovery\`.
+    - **If you are unsure about an entry, DO NOT DELETE IT.** When in doubt, leave it.
 
-3.  **Delete the identified Linux entries:**
-    Use the `efibootmgr -b XXXX -B` command, where `XXXX` is the 4-digit Boot entry number you want to delete (e.g., `0002` for Fedora in the example above).
-
-    _Example (to delete the "Fedora" entry from the example above):_
+3.  **Delete the identified old Linux entries (if any):**
+    Use the `efibootmgr -b XXXX -B` command, where `XXXX` is the 4-digit Boot entry number you want to delete.
+    _Example (if you had an old "Ubuntu" entry at `Boot0001`):_
 
     ```bash
-    sudo efibootmgr -b 0002 -B
+    sudo efibootmgr -b 0001 -B
     ```
 
     Repeat this command for each old Linux entry you want to remove.
@@ -155,13 +149,13 @@ When installing NixOS alongside Windows, it's critical to **avoid formatting or 
 
 Your ASUS ProArt P16 likely has the following partition layout. You must **identify and keep all of them**:
 
-| Partition   | Filesystem | Label      | Type                         | Purpose                                   | Keep?      |
-| :---------- | :--------- | :--------- | :--------------------------- | :---------------------------------------- | :--------- |
-| `nvme0n1p1` | `vfat`     | `SYSTEM`   | EFI System Partition         | **Shared Bootloader for Windows & NixOS** | ✅ **Yes** |
-| `nvme0n1p2` | _(none)_   | _(none)_   | Microsoft Reserved Partition | Required for Windows (no filesystem)      | ✅ **Yes** |
-| `nvme0n1p3` | `ntfs`     | `OS`       | Windows System               | Main Windows installation                 | ✅ **Yes** |
-| `nvme0n1p4` | `ntfs`     | `RECOVERY` | Windows Recovery Environment | Recovery tools/partition                  | ✅ **Yes** |
-| `nvme0n1p5` | `vfat`     | `MYASUS`   | ASUS Preinstalled Tools      | Manufacturer apps/drivers                 | ✅ **Yes** |
+| Partition   | Filesystem | Label      | Type                         | Purpose                                        | Keep?      |
+| :---------- | :--------- | :--------- | :--------------------------- | :--------------------------------------------- | :--------- |
+| `nvme0n1p1` | `vfat`     | `SYSTEM`   | EFI System Partition         | **Shared Bootloader for Windows & NixOS**      | ✅ **Yes** |
+| `nvme0n1p2` | _(none)_   | _(none)_   | Microsoft Reserved Partition | Required for Windows (no filesystem)           | ✅ **Yes** |
+| `nvme0n1p3` | `ntfs`     | `OS`       | Windows System               | Main Windows installation                      | ✅ **Yes** |
+| `nvme0n1p4` | `ntfs`     | `RECOVERY` | Windows Recovery Environment | Recovery tools/partition                       | ✅ **Yes** |
+| `nvme0n1p5` | `vfat`     | `MYASUS`   | ASUS Preinstalled Tools      | Manufacturer apps/drivers (separate partition) | ✅ **Yes** |
 
 _Note: Partition numbers (e.g., `nvme0n1p1`) are examples and might vary. Always verify with `lsblk -f` during installation._
 
@@ -178,12 +172,17 @@ Here's the recommended layout for your new NixOS partitions, **especially if you
     - **Size**: Typically **260 MiB to 500 MiB** (already existing).
     - **Action**: **DO NOT FORMAT\!** Simply mount this partition at `/boot/efi` during NixOS installation. This allows both Windows and NixOS to share the same bootloader.
 
+    **--- IMPORTANT CONSIDERATION FOR 260 MiB EFI PARTITION ---**
+    **If you choose to re-use an existing 260 MiB EFI partition (`nvme0n1p1`) without resizing it, you will typically be limited to keeping only 1 NixOS generation at a time.** This is due to the combined size of Windows boot files, the necessary generic EFI files, and NixOS's kernels/initramfs files (which can easily be 80-120 MiB per generation). **Sacrificing additional generations means you lose NixOS's powerful rollback capability**, making system updates riskier.
+
+    **For robust dual-booting with multiple NixOS generations (recommended), expanding your EFI partition to at least 512 MiB or ideally 1 GiB is strongly advised.** This typically requires shrinking your Windows partition and moving partitions, which is a complex and high-risk operation best performed with full data backups.
+
 2.  **Separate `/boot` Partition (`/boot`)**:
 
-    - **Recommendation**: **Strongly recommended for manual installations** when dual-booting with Windows and using BTRFS for your root filesystem. A small, dedicated `/boot` partition (e.g., `ext4`) simplifies bootloader configuration (especially with GRUB) and increases robustness by keeping kernel images and initramfs files on a simpler filesystem, separate from the complex BTRFS root.
+    - **Recommendation**: **Strongly recommended for manual installations** when dual-booting with Windows and using BTRFS for your root filesystem. A small, dedicated `/boot` partition (e.g., `ext4`) simplifies bootloader configuration (especially with GRUB) and increases robustness by keeping kernel images and initramfs files on a simpler filesystem, separate from the complex BTRFS root. Your current Fedora setup already uses this robust approach with `nvme0n1p6`.
     - **Size**: **512 MiB**
     - **Filesystem**: `ext4`
-    - **Action**: Create a new `/boot` partition in the freed space.
+    - **Action**: Create a new `/boot` partition in the freed space (you can reuse/reformat your existing `nvme0n1p6` for this if it's currently used by Fedora and you plan to replace Fedora).
     - _Note_: While BTRFS can technically house `/boot` within its subvolumes, a dedicated `ext4` `/boot` partition reduces complexity for bootloader setup and maintenance in a dual-boot environment with GRUB. **The Calamares installer may not easily support this specific setup; manual installation is generally preferred for this layout.**
 
 3.  **Swap Partition (`swap`)**:
@@ -207,7 +206,7 @@ Here's the recommended layout for your new NixOS partitions, **especially if you
 
 ### Summary of New NixOS Partitions
 
-Assuming you've freed up space, your new NixOS partitions (for a **manual installation**) should look like this:
+Assuming you've freed up space (by removing your old Fedora partitions), your new NixOS partitions (for a **manual installation**) should look like this:
 
 | Partition   | Filesystem | Mount Point | Size          | Purpose                              |
 | :---------- | :--------- | :---------- | :------------ | :----------------------------------- |
@@ -217,9 +216,11 @@ Assuming you've freed up space, your new NixOS partitions (for a **manual instal
 | _subvolume_ | `btrfs`    | `/home`     | (part of `/`) | User Home Directories                |
 | _subvolume_ | `btrfs`    | `/nix`      | (part of `/`) | Nix Store (packages, configurations) |
 
-_(Replace `nvme0n1pX`, `nvme0n1pY`, `nvme0n1pZ` with the actual partition numbers you create.)_
+_(Replace `nvme0n1pX`, `nvme0n1pY`, `nvme0n1pZ` with the actual partition numbers you create. For your system, `nvme0n1p6` will likely be your new `/boot`, and `nvme0n1p7` your new root.)_
 
 This scheme provides a robust foundation for NixOS while preserving your Windows installation. Refer to the "Manual Installation" steps for creating and mounting these partitions.
+
+---
 
 ## Disk Encryption (Optional)
 
@@ -330,7 +331,9 @@ Your ProArt P16 H7606WI has a TPM 2.0 chip, which can automatically unlock the L
 
 ### Option A: Using Calamares Installer (Graphical)
 
-The Calamares installer simplifies the process but has limitations with advanced partitioning layouts, especially for a separate `/boot` partition combined with BTRFS subvolumes. If you want the most robust and flexible partitioning as outlined above (with the separate `ext4` `/boot` partition), **manual installation (Option B) is highly recommended.**
+The Calamares installer simplifies the process but has limitations with advanced partitioning layouts, especially for a separate `/boot` partition combined with BTRFS subvolumes. If you want the most robust and flexible partitioning as outlined above (with the separate `ext4` `/boot` partition and multiple NixOS generations), **manual installation (Option B) is highly recommended.**
+
+**Important Note on EFI Partition Size (260 MiB):** If you reuse your existing 260 MiB EFI partition (`nvme0n1p1`) with Calamares, you will likely be **limited to installing only 1 NixOS generation** due to space constraints after accounting for Windows boot files. This compromises NixOS's rollback capabilities. For more generations, you must expand the EFI partition (a complex manual process) or use manual installation with a larger EFI.
 
 If you proceed with Calamares, you will likely need to adjust to its supported partitioning options. Calamares typically expects `/boot` to be a directory on your root filesystem or to merge with `/boot/efi` for `systemd-boot`. For BTRFS, it often creates default `@` and `@home` subvolumes.
 
@@ -340,7 +343,7 @@ If you proceed with Calamares, you will likely need to adjust to its supported p
 4.  In the **partitioning section**:
     - Select **Manual partitioning**.
     - **Do NOT format or delete** `nvme0n1p1` through `nvme0n1p5` (your Windows partitions).
-    - Delete any existing Linux partitions to free up space.
+    - Delete any existing Linux partitions to free up space (e.g., your old Fedora partitions `nvme0n1p6` and `nvme0n1p7`).
     - Create your new NixOS partitions in the freed space:
       - An **existing EFI partition (`nvme0n1p1`)** mounted at `/boot/efi` (**do NOT format it**).
       - A **swap partition**: Create a new partition, select "swap" for its filesystem type. Set its size to **32 GiB**.
@@ -422,7 +425,9 @@ If Calamares installed your NixOS onto a BTRFS partition without creating the sp
 
 ### Option B: Manual Installation
 
-This method gives you full control over partitioning and BTRFS subvolume creation, allowing you to implement the **recommended separate `/boot` partition** setup.
+This method gives you full control over partitioning and BTRFS subvolume creation, allowing you to implement the **recommended separate `/boot` partition** setup and manage EFI space precisely.
+
+**Important Note on EFI Partition Size (260 MiB):** If you reuse your existing 260 MiB EFI partition (`nvme0n1p1`) for manual installation, you will typically be **limited to keeping only 1 NixOS generation** due to space constraints after accounting for Windows boot files. This compromises NixOS's rollback capabilities. For more generations, **expanding the EFI partition to at least 512 MiB or ideally 1 GiB is strongly advised** as the preferred solution. This requires shrinking your Windows partition and moving partitions, which is a complex and high-risk operation best performed with full data backups.
 
 1.  Boot from the NixOS installation media.
 
@@ -444,7 +449,7 @@ This method gives you full control over partitioning and BTRFS subvolume creatio
 
 3.  **Preserve Windows partitions**: **Do NOT** format or delete `nvme0n1p1` through `nvme0n1p5`. `nvme0n1p1` is your shared EFI partition.
 
-4.  **Delete existing Linux partitions** (e.g., `nvme0n1p6` and `nvme0n1p7` if they were from a previous Linux install) to free up space. Use `fdisk`, `cfdisk`, or `gparted`. When using `fdisk` or `cfdisk`, you will specify sizes in sectors or GiB/MiB. When using `gparted`, you can input sizes directly in MiB/GiB.
+4.  **Delete existing Linux partitions** (e.g., your Fedora partitions `nvme0n1p6` and `nvme0n1p7`) to free up space. Use `fdisk`, `cfdisk`, or `gparted`. When using `fdisk` or `cfdisk`, you will specify sizes in sectors or GiB/MiB. When using `gparted`, you can input sizes directly in MiB/GiB.
 
     ```bash
     fdisk /dev/nvme0n1 # Use 'd' to delete partitions, then 'n' to create new ones, and 'w' to write changes
