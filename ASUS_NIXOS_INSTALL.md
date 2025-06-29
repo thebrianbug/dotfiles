@@ -44,13 +44,11 @@ For 2022 or newer ASUS models, including the H7606WI, switch to Hybrid graphics 
 
 ## Partitioning Your ASUS ProArt P16 for NixOS (Dual Boot with Windows)
 
-This section outlines the recommended partition scheme for installing NixOS alongside an existing Windows installation on your ASUS ProArt P16. The goal is to preserve your Windows system while setting up NixOS for optimal performance and flexibility.
+When installing NixOS alongside Windows, it's critical to **avoid formatting or deleting any existing Windows partitions**. These typically include `nvme0n1p1` through `nvme0n1p5`.
 
-**Critical Note for Dual Boot Users:** **Do NOT format or delete** any of your existing Windows partitions (`nvme0n1p1` through `nvme0n1p5` as typically observed). These are essential for Windows to function correctly.
+### Understanding Existing Windows Partitions
 
-### Understanding Your Existing Windows Partitions
-
-Your ASUS ProArt P16, like most pre-installed Windows systems, likely has the following partition layout. You'll need to **identify and keep all of these**:
+Your ASUS ProArt P16 likely has the following partition layout. You must **identify and keep all of them**:
 
 | Partition   | Filesystem | Label      | Type                         | Purpose                                   | Keep?      |
 | :---------- | :--------- | :--------- | :--------------------------- | :---------------------------------------- | :--------- |
@@ -60,53 +58,54 @@ Your ASUS ProArt P16, like most pre-installed Windows systems, likely has the fo
 | `nvme0n1p4` | `ntfs`     | `RECOVERY` | Windows Recovery Environment | Recovery tools/partition                  | ✅ **Yes** |
 | `nvme0n1p5` | `vfat`     | `MYASUS`   | ASUS Preinstalled Tools      | Manufacturer apps/drivers                 | ✅ **Yes** |
 
-_Note: The exact partition numbers (e.g., `nvme0n1p1`, `nvme0n1p5`) are examples and might vary slightly on your specific system. Always verify with `lsblk -f` during installation._
+_Note: Partition numbers (e.g., `nvme0n1p1`) are examples and might vary. Always verify with `lsblk -f` during installation._
 
-### Recommended NixOS Partition Scheme
+## Recommended NixOS Partition Scheme
 
-You'll install NixOS into the **free space** on your drive. If you have a previous Linux installation (like Fedora) occupying partitions, you can safely delete those to make room.
+You'll install NixOS into **free space** on your drive. If you have an existing Linux installation, you can delete its partitions to make room.
 
-Here's the recommended layout for your NixOS partitions:
+Here's the recommended layout for your new NixOS partitions:
 
 1.  **Shared EFI System Partition (`/boot/efi`)**:
 
-    - **Existing Partition**: `nvme0n1p1` (identified above).
+    - **Existing Partition**: `nvme0n1p1` (from the table above).
     - **Filesystem**: `vfat`
-    - **Size**: Typically ~100-500MB (already existing).
-    - **Action**: **DO NOT FORMAT!** Simply mount this partition at `/boot/efi` during the NixOS installation process. This allows both Windows and NixOS to share the same bootloader.
+    - **Size**: Typically \~100-500MB (already existing).
+    - **Action**: **DO NOT FORMAT\!** Simply mount this partition at `/boot/efi` during NixOS installation. This allows both Windows and NixOS to share the same bootloader.
 
 2.  **Swap Partition (`swap`)**:
 
-    - **Recommendation**: Essential for system stability and performance, especially with 32GB RAM on the H7606WI.
-    - **Size**: **32GB** (matching your RAM) is highly recommended. This provides ample space for memory-intensive tasks like video editing or 3D rendering. While full hibernation might be unreliable on this model, a large swap partition still benefits system responsiveness and suspend-to-disk capabilities.
+    - **Recommendation**: Essential for system stability, especially with 32GB RAM.
+    - **Size**: **32GB** (matching your RAM) is highly recommended for memory-intensive tasks.
     - **Filesystem**: `swap` (no traditional filesystem).
     - **Action**: Create a new swap partition in the freed space.
 
 3.  **NixOS Root Partition (`/`) with BTRFS Subvolumes**:
 
-    - **Recommendation**: BTRFS is highly recommended for its advanced features like snapshots, data integrity, and efficient space management. Utilizing subvolumes from the start provides a cleaner and more flexible setup.
-    - **Size**: **Remaining disk space**. This will house your NixOS operating system, applications, and user data.
+    - **Recommendation**: **BTRFS** is highly recommended for its advanced features like snapshots, data integrity, and efficient space management.
+    - **Size**: **Remaining disk space**. This will hold your NixOS, applications, and user data.
     - **Filesystem**: `btrfs`
     - **Recommended Subvolumes**:
       - `@`: For the root filesystem (`/`)
       - `@home`: For user home directories (`/home`)
-      - `@nix`: For the Nix store (`/nix`), which contains all system packages and configurations.
+      - `@nix`: For the Nix store (`/nix`), containing all system packages and configurations.
 
-    _Alternative (ext4)_: If you prefer `ext4`, you can use it for your root partition without subvolumes. However, BTRFS is generally preferred for new NixOS installations for its flexibility.
+    _Alternative_: If you prefer, you can use `ext4` for your root partition without subvolumes, though BTRFS is generally preferred for new NixOS installations.
 
 4.  **Separate `/boot` Partition (Optional but Recommended for BTRFS)**:
-    - **Recommendation**: While BTRFS can technically house `/boot`, having a small, separate `/boot` partition (e.g., `ext4`) can simplify bootloader configuration, especially with dual-booting and encryption.
-    - **Size**: **~512MB**
+
+    - **Recommendation**: A small, separate `/boot` partition can simplify bootloader configuration, especially with dual-booting and encryption.
+    - **Size**: **\~512MB**
     - **Filesystem**: `ext4`
     - **Action**: Create a new `/boot` partition in the freed space.
 
-### Summary of New NixOS Partitions (in freed space):
+### Summary of New NixOS Partitions
 
-Assuming you delete previous Linux partitions or shrink your Windows partition to create free space, your new NixOS partitions should look something like this:
+Assuming you've freed up space, your new NixOS partitions should look like this:
 
 | Partition   | Filesystem | Mount Point | Size          | Purpose                              |
 | :---------- | :--------- | :---------- | :------------ | :----------------------------------- |
-| `nvme0n1pX` | `ext4`     | `/boot`     | ~512MB        | Linux Kernel and Bootloader files    |
+| `nvme0n1pX` | `ext4`     | `/boot`     | \~512MB       | Linux Kernel and Bootloader files    |
 | `nvme0n1pY` | `swap`     | `swap`      | 32GB          | Swap space for 32GB RAM              |
 | `nvme0n1pZ` | `btrfs`    | `/`         | Remaining     | Main NixOS system with subvolumes    |
 | _subvolume_ | `btrfs`    | `/home`     | (part of `/`) | User Home Directories                |
@@ -114,40 +113,39 @@ Assuming you delete previous Linux partitions or shrink your Windows partition t
 
 _(Replace `nvme0n1pX`, `nvme0n1pY`, `nvme0n1pZ` with the actual partition numbers you create.)_
 
-This partition scheme provides a robust and well-organized foundation for your NixOS installation while ensuring Windows remains fully functional. When proceeding with the installation, refer to the "Manual Installation" steps for creating and mounting these partitions correctly.
+This scheme provides a robust foundation for NixOS while preserving your Windows installation. Refer to the "Manual Installation" steps for creating and mounting these partitions.
 
 ## Disk Encryption (Optional)
 
-> **Note**: Skip this section if you don’t need encryption. Proceed to standard installation.
-
-This guide covers LUKS Full Disk Encryption, requiring a passphrase at boot.
+You can encrypt your NixOS installation using LUKS. Skip this section if you don't need encryption.
 
 ### Implementing Disk Encryption
 
-#### With Calamares Installer
+#### Using the Calamares Installer
 
-The Calamares installer offers an encryption option during partitioning:
+If you're using the Calamares graphical installer:
 
-1.  Check "Encrypt system" when creating the root partition.
+1.  During partitioning, check **"Encrypt system"** when creating your root partition.
 2.  Set a strong encryption passphrase.
-3.  The installer handles LUKS setup automatically.
+3.  Calamares will automatically handle the LUKS setup.
 
-#### With Manual Installation
+#### Manual Installation
 
-After creating partitions but before formatting:
+If you're performing a manual installation, follow these steps _after_ creating your partitions but _before_ formatting:
 
-1.  Set up LUKS2 encryption on your root partition (e.g., `/dev/nvme0n1p7`). You’ll be asked to set a passphrase.
+1.  **Set up LUKS2 encryption** on your root partition (e.g., `/dev/nvme0n1p7`). You'll be prompted to set a passphrase.
 
     ```bash
     cryptsetup luksFormat --type luks2 /dev/nvme0n1p7
+    ```
 
-    # Open the encrypted partition
+2.  **Open the encrypted partition**:
+
+    ```bash
     cryptsetup luksOpen /dev/nvme0n1p7 cryptroot
     ```
 
-    > **Note**: LUKS2 offers better security and is standard.
-
-2.  Format the opened LUKS device:
+3.  **Format the opened LUKS device**:
 
     ```bash
     # For BTRFS (recommended)
@@ -156,43 +154,38 @@ After creating partitions but before formatting:
     # mkfs.ext4 /dev/mapper/cryptroot
     ```
 
-3.  Mount the opened LUKS device:
+4.  **Mount the opened LUKS device**:
 
     ```bash
     mount /dev/mapper/cryptroot /mnt
     ```
 
-4.  After installing NixOS and generating your `hardware-configuration.nix`, add the following to your main `configuration.nix`:
+5.  After installing NixOS and generating your `hardware-configuration.nix`, **add the following to your `configuration.nix`**:
 
     ```nix
     boot.initrd.luks.devices = {
       "cryptroot" = {
-        device = "/dev/disk/by-uuid/YOUR-LUKS-PARTITION-UUID"; # Replace with the actual UUID of /dev/nvme0n1p7
+        device = "/dev/disk/by-uuid/YOUR-LUKS-PARTITION-UUID"; # Replace with the actual UUID of your LUKS partition
         preLVM = true;
       };
     };
     ```
 
-    To get the UUID of your LUKS-formatted partition (`/dev/nvme0n1p7` in this example):
+    To find the UUID of your LUKS-formatted partition (e.g., `/dev/nvme0n1p7`):
 
     ```bash
     ls -la /dev/disk/by-uuid/
     ```
 
-    Example output, where `9abc-1234` would be the UUID for `/dev/nvme0n1p7`:
-
-    ```
-    lrwxrwxrwx 1 root root 10 Jun 28 13:00 1234-ABCD -> ../../nvme0n1p1
-    lrwxrwxrwx 1 root 10 Jun 28 13:00 9abc-1234 -> ../../nvme0n1p7
-    ```
+    Look for the UUID corresponding to your LUKS device (e.g., `9abc-1234` for `../../nvme0n1p7`).
 
 #### TPM-Based Encryption (Optional)
 
-The ProArt P16 H7606WI has a TPM 2.0 chip, which can be used to unlock the LUKS partition automatically during boot without manual passphrase entry:
+Your ProArt P16 H7606WI has a TPM 2.0 chip, which can automatically unlock the LUKS partition at boot without a passphrase.
 
-1.  Ensure TPM is enabled in UEFI setup (BIOS).
+1.  **Enable TPM** in your UEFI (BIOS) settings.
 
-2.  Install required tools in your `configuration.nix`:
+2.  **Install required tools** in your `configuration.nix`:
 
     ```nix
     environment.systemPackages = with pkgs; [
@@ -201,13 +194,13 @@ The ProArt P16 H7606WI has a TPM 2.0 chip, which can be used to unlock the LUKS 
     ];
     ```
 
-3.  After rebuilding and booting into your system, bind the LUKS partition to TPM. Use the _raw device path_ here, not the UUID or opened mapper device:
+3.  After rebuilding and booting into your system, **bind the LUKS partition to TPM**. Use the _raw device path_:
 
     ```bash
     sudo clevis luks bind -d /dev/nvme0n1p7 tpm2 '{"pcr_bank":"sha256","pcr_ids":"7"}'
     ```
 
-4.  Update your `configuration.nix` for automatic unlocking:
+4.  **Update your `configuration.nix`** for automatic unlocking:
 
     ```nix
     boot.initrd.luks.devices."cryptroot" = {
@@ -218,11 +211,11 @@ The ProArt P16 H7606WI has a TPM 2.0 chip, which can be used to unlock the LUKS 
     boot.initrd.clevis.enable = true;
     ```
 
-    **Warning**: TPM unlocking is an advanced feature. Test it thoroughly after setup and **always maintain a passphrase as a backup**. System updates, especially firmware changes, or changes to the boot environment (e.g., adding/removing boot entries) may require re-binding the TPM.
+    **Warning**: TPM unlocking is an advanced feature. Test it thoroughly and **always keep your passphrase as a backup**. Firmware updates or changes to the boot environment may require re-binding the TPM.
 
-### Notes on Encryption and Dual-Boot
+### Encryption and Dual-Boot Considerations
 
-- NixOS encryption is independent of Windows BitLocker.
+- NixOS encryption is separate from Windows BitLocker.
 - You can encrypt NixOS partitions with or without Secure Boot enabled.
 - For maximum security, consider encrypting both Windows (BitLocker) and NixOS partitions.
 
@@ -230,32 +223,29 @@ The ProArt P16 H7606WI has a TPM 2.0 chip, which can be used to unlock the LUKS 
 
 ### Option A: Using Calamares Installer (Graphical)
 
-1.  Boot from the NixOS installation media (**25.05 "Warbler"**).
-2.  Open the Calamares installer via the "Install System" icon.
+1.  Boot from the **NixOS 25.05 "Warbler"** installation media.
+2.  Launch the Calamares installer ("Install System" icon).
 3.  Follow initial setup steps (language, location, keyboard).
-4.  In the partitioning section:
-    - Select **Manual partitioning** for precise control.
-    - **Do NOT format or delete** `nvme0n1p1` through `nvme0n1p5` if preserving Windows.
-    - Delete existing Linux partitions (e.g., Fedora’s) to free up space.
-    - Create new NixOS partitions in the freed space:
-      - If needed, a separate `/boot` partition (ext4, \~512MB).
-      - A **swap partition** (recommended: 32GB for the H7606WI’s 32GB RAM to handle memory-intensive tasks like video editing or 3D rendering). Note that full hibernation may be unreliable on this model due to firmware limitations; prioritize suspend-to-idle.
+4.  In the **partitioning section**:
+    - Select **Manual partitioning**.
+    - **Do NOT format or delete** `nvme0n1p1` through `nvme0n1p5` (your Windows partitions).
+    - Delete any existing Linux partitions to free up space.
+    - Create your new NixOS partitions:
+      - An optional `/boot` partition (ext4, \~512MB).
+      - A **swap partition** (recommended: 32GB for 32GB RAM). Note that full hibernation may be unreliable on this model; prioritize suspend-to-idle.
       - A root partition (`/`) using the remaining space (recommended: BTRFS or ext4).
-      - **Important for BTRFS**: Calamares formats BTRFS but does not create subvolumes. It's highly recommended to perform a manual installation if you prefer BTRFS subvolumes from the start, or follow the post-installation steps below to set them up.
+      - **Important for BTRFS**: Calamares formats BTRFS but doesn't create subvolumes. For a fully optimized BTRFS setup with subvolumes, a manual installation is recommended, or follow the post-installation steps below.
     - Mount `nvme0n1p1` (your existing EFI partition) at `/boot/efi` but **do NOT format it**.
-5.  Continue with the installer:
-    - Create your user account.
-    - Set passwords.
-    - Review and confirm settings.
-6.  Complete installation and reboot.
+5.  Continue the installer, create your user account, set passwords, and confirm settings.
+6.  Complete the installation and reboot.
 
 ### Post-Installation BTRFS Setup (Calamares)
 
-Calamares installs directly to the BTRFS root (`subvolid=0`) and doesn’t create separate subvolumes for `/home` or `/nix`. To leverage BTRFS features like snapshots more effectively, you can set up subvolumes manually. This process involves moving existing data, so ensure you have a backup if this is a critical system.
+Calamares installs directly to the BTRFS root (`subvolid=0`). To benefit from BTRFS features like snapshots, you can manually create subvolumes after installation. This involves moving data, so ensure you have backups.
 
 1.  Boot into your new NixOS system.
 
-2.  Create subvolumes and move data (this process takes time and disk space):
+2.  Create subvolumes and move data (this can take time and disk space):
 
     ```bash
     # Login as root or use sudo
@@ -272,7 +262,7 @@ Calamares installs directly to the BTRFS root (`subvolid=0`) and doesn’t creat
     btrfs subvolume create /mnt/btrfs-root/@home
     btrfs subvolume create /mnt/btrfs-root/@nix
 
-    # Copy data to subvolumes. The rsync command is safer than cp for this purpose.
+    # Copy data to subvolumes (rsync is safer than cp for this)
     # Exclude temporary and special filesystems, and the destination itself.
     rsync -qaHAX --info=progress2 --exclude=/mnt/btrfs-root --exclude=/dev --exclude=/proc --exclude=/sys --exclude=/tmp --exclude=/run --exclude=/var/tmp --exclude=/var/run /home/ /mnt/btrfs-root/@home/
     rsync -qaHAX --info=progress2 --exclude=/mnt/btrfs-root --exclude=/dev --exclude=/proc --exclude=/sys --exclude=/tmp --exclude=/run --exclude=/var/tmp --exclude=/var/run /nix/ /mnt/btrfs-root/@nix/
@@ -282,7 +272,7 @@ Calamares installs directly to the BTRFS root (`subvolid=0`) and doesn’t creat
     nano /etc/nixos/configuration.nix
     ```
 
-    Add or modify the `fileSystems` block in `configuration.nix` to point to the new subvolumes (replace `/dev/nvme0n1p7` with your actual BTRFS partition):
+    Modify the `fileSystems` block in `configuration.nix` to point to the new subvolumes (replace `/dev/nvme0n1p7` with your actual BTRFS partition):
 
     ```nix
     fileSystems = {
@@ -304,23 +294,21 @@ Calamares installs directly to the BTRFS root (`subvolid=0`) and doesn’t creat
     };
     ```
 
-    Rebuild and switch to the new configuration:
+    Rebuild and activate the new configuration:
 
     ```bash
     nixos-rebuild switch
     ```
 
-3.  Reboot to ensure the system uses the new BTRFS subvolume structure correctly.
-
-4.  Proceed to Step 2 (Clone Dotfiles Repository).
+3.  Reboot to ensure the system uses the new BTRFS subvolume structure.
 
 ### Option B: Manual Installation
 
-This method gives you full control over partitioning and BTRFS subvolume creation from the start.
+This method gives you full control over partitioning and BTRFS subvolume creation.
 
-1.  Boot from NixOS installation media.
+1.  Boot from the NixOS installation media.
 
-2.  Check the current partition layout to identify existing partitions and their device paths. Note that partition numbers (e.g., `nvme0n1p1`, `nvme0n1p7`) are examples and may vary on your system.
+2.  **Identify existing partitions** and their device paths:
 
     ```bash
     lsblk -f
@@ -336,40 +324,32 @@ This method gives you full control over partitioning and BTRFS subvolume creatio
     └─nvme0n1p7 btrfs          9abc-1234
     ```
 
-3.  **Preserve** Windows partitions (if dual-booting):
+3.  **Preserve Windows partitions**: **Do NOT** format or delete `nvme0n1p1` through `nvme0n1p5`. `nvme0n1p1` is your shared EFI partition.
 
-    - **Do NOT** format or delete `nvme0n1p1` through `nvme0n1p5`.
-    - `nvme0n1p1` is the shared EFI partition.
-
-4.  Delete existing Linux partitions (e.g., `nvme0n1p6` and `nvme0n1p7` if they were Fedora partitions) to free up space. You can use `fdisk`, `cfdisk`, or `gparted`.
+4.  **Delete existing Linux partitions** (e.g., `nvme0n1p6` and `nvme0n1p7` if they were from a previous Linux install) to free up space. Use `fdisk`, `cfdisk`, or `gparted`:
 
     ```bash
-    fdisk /dev/nvme0n1  # Use 'd' to delete partitions
+    fdisk /dev/nvme0n1 # Use 'd' to delete partitions
     # Or use cfdisk or gparted for a more user-friendly interface
     ```
 
-5.  Create new NixOS partitions in the freed space. Use `fdisk`, `cfdisk`, or `gparted`.
+5.  **Create new NixOS partitions** in the freed space using `fdisk`, `cfdisk`, or `gparted`.
 
-    ```bash
-    fdisk /dev/nvme0n1  # Use 'n' to create new partitions
-    # Or use cfdisk or gparted
-    ```
-
-    - A `/boot` partition (if desired, \~512MB, ext4 filesystem type).
-    - A **swap partition** (recommended: 32GB for the H7606WI’s 32GB RAM).
+    - A `/boot` partition (optional, \~512MB, `ext4`).
+    - A **swap partition** (recommended: 32GB).
     - A root partition (`/`) using the remaining space.
 
-6.  Format new NixOS partitions:
+6.  **Format new NixOS partitions**:
 
     ```bash
-    mkfs.ext4 /dev/nvme0n1p6     # Example: Your new /boot partition (if created)
+    mkfs.ext4 /dev/nvme0n1p6   # Example: Your new /boot partition (if created)
     # Recommended: Use BTRFS for root
-    mkfs.btrfs /dev/nvme0n1p7     # Example: Your new root partition
+    mkfs.btrfs /dev/nvme0n1p7   # Example: Your new root partition
     # OR use ext4
     # mkfs.ext4 /dev/nvme0n1p7
     ```
 
-7.  Mount partitions.
+7.  **Mount partitions**:
 
     **For ext4**:
 
@@ -378,10 +358,10 @@ This method gives you full control over partitioning and BTRFS subvolume creatio
     mkdir -p /mnt/boot
     mount /dev/nvme0n1p6 /mnt/boot
     mkdir -p /mnt/boot/efi
-    mount /dev/nvme0n1p1 /mnt/boot/efi  # Do NOT format this existing EFI partition!
+    mount /dev/nvme0n1p1 /mnt/boot/efi # Do NOT format this existing EFI partition!
     ```
 
-    **For BTRFS with subvolumes**: This is the recommended approach for BTRFS.
+    **For BTRFS with subvolumes (recommended)**:
 
     ```bash
     # Mount the raw BTRFS partition
@@ -410,10 +390,10 @@ This method gives you full control over partitioning and BTRFS subvolume creatio
 
     # Mount the existing EFI partition
     mkdir -p /mnt/boot/efi
-    mount /dev/nvme0n1p1 /mnt/boot/efi  # Do NOT format!
+    mount /dev/nvme0n1p1 /mnt/boot/efi # Do NOT format!
     ```
 
-8.  Generate initial NixOS configuration files based on the mounted partitions:
+8.  **Generate initial NixOS configuration files**:
 
     ```bash
     nixos-generate-config --root /mnt
