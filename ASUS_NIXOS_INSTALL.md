@@ -4,6 +4,10 @@ This guide provides step-by-step instructions for installing NixOS on an ASUS la
 
 This guide has been tested with the ASUS ProArt P16 (H7606 series, including H7606WI with AMD Ryzen AI 9 HX 370, NVIDIA RTX 4070, MediaTek MT7922 WiFi, and 4K OLED touchscreen) but should work for most ASUS laptops, including ROG series. Verify compatibility for other models in the [NixOS Hardware Configuration Database](https://github.com/NixOS/nixos-hardware).
 
+## For New Users
+
+If you’re new to NixOS, use the Calamares graphical installer for simplicity. Refer to the [NixOS Manual Getting Started](https://nixos.org/manual/nixos/stable/#sec-installation) for basics. If errors occur during commands like `nixos-rebuild switch`, check `/etc/nixos/configuration.nix` for syntax errors and run `journalctl -p 3 -xb` for logs.
+
 ## Prerequisites
 
 - NixOS installation media (24.11 or newer recommended for 2024 ProArt P16 H7606WI)
@@ -454,14 +458,58 @@ asusctl profile -l
 asusctl profile -P quiet|balanced|performance
 ```
 
-**Note**: Hibernation is not recommended due to H7606WI firmware limitations. Use suspend-to-idle:
+**Note**: Hibernation may fail due to H7606WI firmware limitations (e.g., UEFI or GPU driver issues). Test hibernation:
+
+```bash
+systemctl hibernate
+```
+
+If it fails, check `dmesg` for errors and verify swap size (32GB recommended). Use suspend-to-idle as a fallback:
 
 ```nix
 services.logind.lidSwitch = "suspend-then-hibernate";
 services.logind.lidSwitchExternalPower = "suspend";
 ```
 
+Add kernel parameter for better suspend support:
+
+```nix
+boot.kernelParams = [ "amd_pstate=active" ];
+```
+
 Test: `systemctl suspend`
+
+### Performance Optimization
+
+Optimize the H7606WI for creative workloads (e.g., 4K video editing, 3D rendering):
+
+- **CPU Frequency Scaling**:
+
+  ```nix
+  environment.systemPackages = with pkgs; [ cpupower ];
+  powerManagement.powertop.enable = true;
+  ```
+
+  Set performance governor:
+
+  ```bash
+  sudo cpupower frequency-set -g performance
+  ```
+
+- **NVIDIA Settings**: Install `nvidia-settings` for fan control or overclocking:
+
+  ```nix
+  environment.systemPackages = with pkgs; [ nvidia-settings ];
+  ```
+
+  Run: `nvidia-settings` for GUI adjustments.
+
+- **Verify Performance**: Check CPU/GPU usage:
+
+  ```bash
+  htop
+  nvidia-smi
+  ```
 
 ### Known Limitations
 
@@ -533,6 +581,14 @@ boot.loader.secureBoot = {
 
 **Warning**: Keep a NixOS live USB for recovery if boot fails.
 
+**Recovery**: If Secure Boot fails (e.g., system doesn’t boot):
+
+1. Boot from NixOS live USB.
+2. Disable Secure Boot in UEFI (DEL key, Security → Secure Boot Control → Disable).
+3. Reset keys if needed: `sudo sbctl reset`.
+4. Rebuild: `sudo nixos-rebuild switch`.
+   Keep a live USB and backup keys (`/path/to/secure-boot-key`, `/path/to/secure-boot-cert`).
+
 #### Hide Unnecessary Boot Messages
 
 Hide "Nvidia kernel module not found" message:
@@ -598,7 +654,31 @@ systemd.services.nvidia-fallback.enable = false;
   libinput list-devices
   ```
 
-  Test stylus input in applications like Xournal++ or Krita.
+##### Touchscreen Calibration
+
+For the H7606WI’s 4K OLED touchscreen, calibrate if input is inaccurate:
+
+- **X11**: Install `xinput_calibrator`:
+
+  ```nix
+  environment.systemPackages = with pkgs; [ xinput_calibrator ];
+  ```
+
+  Run: `xinput_calibrator` and follow prompts.
+
+- **Wayland**: Use desktop environment settings (e.g., GNOME Settings → Devices → Touchscreen).
+
+For ASUS Pen 2.0 stylus, test pressure sensitivity in Xournal++ or Krita. If issues occur, check kernel logs:
+
+```bash
+dmesg | grep -i input
+```
+
+Ensure `i2c_hid_acpi` module is loaded:
+
+```nix
+boot.kernelModules = [ "i2c_hid_acpi" ];
+```
 
 ## Networking Configuration
 
@@ -637,15 +717,16 @@ The H7606WI’s MediaTek MT7922 WiFi card works out of the box with NixOS 24.11.
 
 #### WiFi 6E/7 Support
 
-The H7606WI’s MT7922 supports WiFi 6E/7. Test without `iwlwifi.disable_11ax=Y` to enable full performance:
+The H7606WI’s MT7922 supports WiFi 6E/7. Test without `iwlwifi.disable_11ax=Y`:
 
 ```nix
 boot.kernelParams = [ "iwlmvm.power_scheme=1" ]; # Remove disable_11ax
 ```
 
-Verify performance:
+Verify performance and connection details:
 
 ```bash
+iw dev wlan0 link
 iperf3 -c <server>
 ```
 
@@ -653,6 +734,13 @@ If unstable, add:
 
 ```nix
 boot.kernelParams = [ "iwlwifi.disable_11ax=Y" ];
+```
+
+Check for MT7922 firmware updates:
+
+```bash
+sudo fwupdmgr refresh
+sudo fwupdmgr update
 ```
 
 5. **Temporary Internet**:
@@ -692,11 +780,7 @@ glxinfo | grep "OpenGL renderer"
 
 ### ASUS BIOS Updates
 
-Perform updates in Windows if dual-booting:
-
-1. Boot into Windows.
-2. Use MyASUS to apply updates.
-3. Reboot to NixOS.
+Download BIOS updates from [ASUS Support](https://www.asus.com/support/) for the ProArt P16 H7606WI. Save to a USB drive and follow ASUS’s BIOS update instructions in Windows. If dual-booting isn’t available, use the Windows USB method below.
 
 ### Using fwupd in NixOS
 
@@ -722,7 +806,7 @@ For BIOS updates if `fwupd` fails:
 
 1. Create a Windows installation USB.
 2. Boot to Windows setup, open Command Prompt (Shift+F10).
-3. Run the BIOS update from a USB with update files.
+3. Run the BIOS update from a USB with update files from ASUS Support.
 
 **Note**: The H7606WI’s hardware is well-supported in recent kernels (6.10+), reducing firmware update frequency.
 
@@ -1077,7 +1161,7 @@ Contribute your configuration to [nixos-hardware](https://github.com/NixOS/nixos
      };
      hardware.enableAllFirmware = true;
      hardware.firmware = [ pkgs.linux-firmware ];
-     boot.kernelModules = [ "mt7921e" "mt7922e" ];
+     boot.kernelModules = [ "mt7921e" "mt7922e" "i2c_hid_acpi" ];
      services.power-profiles-daemon.enable = true;
      services.tlp.enable = lib.mkDefault true;
      services.libinput.enable = true;
