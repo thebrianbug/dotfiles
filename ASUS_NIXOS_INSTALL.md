@@ -45,7 +45,7 @@ For 2022 or newer ASUS models, including the H7606WI, switch to Hybrid graphics 
 
 ### Backup the EFI Partition (CRUCIAL FOR DUAL BOOT)
 
-NixOS generally recommends a 1 GB EFI System Partition (ESP), but it's often possible to use an existing, smaller partition, even one as small as 260 MB like Windows commonly creates. While this approach carries a slight risk due to the limited space, it helps avoid repartitioning issues. Because of this, and especially if you have existing EFI entries from other operating systems like Fedora or Windows, **it's highly recommended to back up your current EFI partition before proceeding with the NixOS installation**. You'll perform this essential backup step from the NixOS live USB environment.
+NixOS generally recommends a 1 GB EFI System Partition (ESP). While it's often possible to use an existing, smaller partition (like your 260 MB Windows-created ESP), this carries a significant space limitation. Because of this, and especially if you have existing EFI entries from other operating systems like Fedora or Windows, **it's highly recommended to back up your current EFI partition before proceeding with the NixOS installation**. You'll perform this essential backup step from the NixOS live USB environment.
 
 1.  **Boot from NixOS Live USB:** Start your laptop and boot from the NixOS installation media. Select the "NixOS graphical installer" or "NixOS (Live)" option.
 2.  **Open a Terminal:** Once the live environment loads, open a terminal. You can usually find it in the applications menu or by pressing `Ctrl+Alt+T`.
@@ -169,13 +169,13 @@ Here's the recommended layout for your new NixOS partitions, **especially if you
 
     - **Existing Partition**: `nvme0n1p1` (from the table above).
     - **Filesystem**: `vfat`
-    - **Size**: Typically **260 MiB to 500 MiB** (already existing).
+    - **Size**: Typically **260 MiB** (your current size) or **1 GB (1024 MiB)** if you perform the optional expansion.
     - **Action**: **DO NOT FORMAT\!** Simply mount this partition at `/boot/efi` during NixOS installation. This allows both Windows and NixOS to share the same bootloader.
 
     **--- IMPORTANT CONSIDERATION FOR 260 MiB EFI PARTITION ---**
-    **If you choose to re-use an existing 260 MiB EFI partition (`nvme0n1p1`) without resizing it, you will typically be limited to keeping only 1 NixOS generation at a time.** This is due to the combined size of Windows boot files, the necessary generic EFI files, and NixOS's kernels/initramfs files (which can easily be 80-120 MiB per generation). **Sacrificing additional generations means you lose NixOS's powerful rollback capability**, making system updates riskier.
+    **If you choose to re-use your existing 260 MiB EFI partition (`nvme0n1p1`) without resizing it, you will typically be limited to keeping only 1 NixOS generation at a time.** This is due to the combined size of Windows boot files, the necessary generic EFI files, and NixOS's kernels/initramfs files (which can easily be 80-120 MiB per generation). **Sacrificing additional generations means you lose NixOS's ability to seamlessly rollback to previous bootable system states directly from the boot menu**, making some system updates riskier.
 
-    **For robust dual-booting with multiple NixOS generations (recommended), expanding your EFI partition to at least 512 MiB or ideally 1 GiB is strongly advised.** This typically requires shrinking your Windows partition and moving partitions, which is a complex and high-risk operation best performed with full data backups.
+    **For new users, proceeding with the 260 MiB EFI initially is a valid strategy.** It reduces complexity for your first NixOS installation. NixOS's declarative nature and the ability to keep your configurations in Git provide a strong recovery mechanism for most NixOS-specific issues. If you later desire full multi-generation rollback capabilities, you can consider expanding the EFI partition as an advanced, post-installation step (see the dedicated section below).
 
 2.  **Separate `/boot` Partition (`/boot`)**:
 
@@ -333,7 +333,7 @@ Your ProArt P16 H7606WI has a TPM 2.0 chip, which can automatically unlock the L
 
 The Calamares installer simplifies the process but has limitations with advanced partitioning layouts, especially for a separate `/boot` partition combined with BTRFS subvolumes. If you want the most robust and flexible partitioning as outlined above (with the separate `ext4` `/boot` partition and multiple NixOS generations), **manual installation (Option B) is highly recommended.**
 
-**Important Note on EFI Partition Size (260 MiB):** If you reuse your existing 260 MiB EFI partition (`nvme0n1p1`) with Calamares, you will likely be **limited to installing only 1 NixOS generation** due to space constraints after accounting for Windows boot files. This compromises NixOS's rollback capabilities. For more generations, you must expand the EFI partition (a complex manual process) or use manual installation with a larger EFI.
+**Important Note on EFI Partition Size (260 MiB):** If you reuse your existing 260 MiB EFI partition (`nvme0n1p1`) with Calamares, you will likely be **limited to installing only 1 NixOS generation** due to space constraints after accounting for Windows boot files. This compromises NixOS's rollback capabilities. For more generations, consider expanding the EFI partition later as an advanced step (see the dedicated section below).
 
 If you proceed with Calamares, you will likely need to adjust to its supported partitioning options. Calamares typically expects `/boot` to be a directory on your root filesystem or to merge with `/boot/efi` for `systemd-boot`. For BTRFS, it often creates default `@` and `@home` subvolumes.
 
@@ -368,7 +368,7 @@ If Calamares installed your NixOS onto a BTRFS partition without creating the sp
     # Create a temporary mount point
     mkdir /mnt/btrfs-root
 
-    # Mount the BTRFS partition (replace /dev/nvme0n1p7 with your actual BTRFS partition)
+    # Mount the raw BTRFS partition (replace /dev/nvme0n1p7 with your actual BTRFS partition)
     mount -o subvolid=0 /dev/nvme0n1p7 /mnt/btrfs-root
 
     # Create desired subvolumes (if they don't already exist from Calamares)
@@ -427,7 +427,7 @@ If Calamares installed your NixOS onto a BTRFS partition without creating the sp
 
 This method gives you full control over partitioning and BTRFS subvolume creation, allowing you to implement the **recommended separate `/boot` partition** setup and manage EFI space precisely.
 
-**Important Note on EFI Partition Size (260 MiB):** If you reuse your existing 260 MiB EFI partition (`nvme0n1p1`) for manual installation, you will typically be **limited to keeping only 1 NixOS generation** due to space constraints after accounting for Windows boot files. This compromises NixOS's rollback capabilities. For more generations, **expanding the EFI partition to at least 512 MiB or ideally 1 GiB is strongly advised** as the preferred solution. This requires shrinking your Windows partition and moving partitions, which is a complex and high-risk operation best performed with full data backups.
+**Important Note on EFI Partition Size (260 MiB):** If you reuse your existing 260 MiB EFI partition (`nvme0n1p1`) for manual installation, you will typically be **limited to keeping only 1 NixOS generation** due to space constraints after accounting for Windows boot files. This compromises NixOS's rollback capabilities. For more generations, consider expanding the EFI partition later as an advanced step (see the dedicated section below).
 
 1.  Boot from the NixOS installation media.
 
