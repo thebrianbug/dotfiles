@@ -6,7 +6,7 @@ This guide has been tested with the ASUS ProArt P16 (H7606 series, including H76
 
 ## For New Users
 
-If you’re new to NixOS, use the Calamares graphical installer for simplicity. Refer to the [NixOS Manual Getting Started](https://nixos.org/manual/nixos/stable/#sec-installation) for basics. If errors occur during commands like `nixos-rebuild switch`, check `/etc/nixos/configuration.nix` for syntax errors and run `journalctl -p 3 -xb` for logs.
+If you’re new to NixOS, use the Calamares graphical installer for simplicity. Refer to the [Zero to Nix Guide](https://zero-to-nix.com/) for basics. If errors occur during commands like `nixos-rebuild switch`, check `/etc/nixos/configuration.nix` for syntax errors and run `journalctl -p 3 -xb` for logs.
 
 ## Prerequisites
 
@@ -121,11 +121,19 @@ After creating partitions but before formatting:
    ls -la /dev/disk/by-uuid/
    ```
 
+   Example output:
+
+   ```
+   lrwxrwxrwx 1 root root 10 Jun 28 13:00 1234-ABCD -> ../../nvme0n1p1
+   lrwxrwxrwx 1 root root 10 Jun 28 13:00 9abc-1234 -> ../../nvme0n1p7
+   ```
+
 #### TPM-Based Encryption (Optional)
 
 The ProArt P16 H7606WI has a TPM 2.0 chip, which can be used to unlock the LUKS partition automatically:
 
 1. Ensure TPM is enabled in UEFI setup (BIOS).
+
 2. Install required tools in `configuration.nix`:
 
    ```nix
@@ -188,6 +196,7 @@ The ProArt P16 H7606WI has a TPM 2.0 chip, which can be used to unlock the LUKS 
 Calamares doesn’t create BTRFS subvolumes, so set them up manually to leverage BTRFS features:
 
 1. Boot into your new NixOS system.
+
 2. Create subvolumes and move data:
 
    ```bash
@@ -243,22 +252,34 @@ Calamares doesn’t create BTRFS subvolumes, so set them up manually to leverage
    ```
 
 3. Reboot to use the new BTRFS subvolume structure.
+
 4. Proceed to Step 2 (Clone Dotfiles Repository).
 
 ### Option B: Manual Installation
 
 1. Boot from NixOS installation media.
+
 2. Check partition layout:
 
    ```bash
    lsblk -f
-   # or
-   fdisk -l /dev/nvme0n1
+   ```
+
+   Example output:
+
+   ```
+   NAME        FSTYPE LABEL   UUID                                 MOUNTPOINT
+   nvme0n1
+   ├─nvme0n1p1 vfat   SYSTEM  1234-ABCD                            /mnt/boot/efi
+   ├─nvme0n1p3 ntfs   OS      5678-EFGH
+   └─nvme0n1p7 btrfs          9abc-1234
    ```
 
 3. **Preserve** Windows partitions (if dual-booting):
+
    - **Do NOT** format or delete `nvme0n1p1` through `nvme0n1p5`.
    - `nvme0n1p1` is the shared EFI partition.
+
 4. Delete existing Linux partitions:
 
    ```bash
@@ -390,7 +411,7 @@ Calamares doesn’t create BTRFS subvolumes, so set them up manually to leverage
    # WiFi and firmware
    hardware.enableAllFirmware = true;
    hardware.firmware = [ pkgs.linux-firmware ];
-   boot.kernelModules = [ "mt7921e" "mt7922e" ];
+   boot.kernelModules = [ "mt7921e" "mt7922e" "i2c_hid_acpi" ];
 
    # Power management
    services.power-profiles-daemon.enable = true;
@@ -399,6 +420,15 @@ Calamares doesn’t create BTRFS subvolumes, so set them up manually to leverage
    # Touchpad and touchscreen
    services.libinput.enable = true;
    hardware.sensor.iio.enable = lib.mkDefault true;
+
+   # Audio
+   sound.enable = true;
+   hardware.pulseaudio.enable = false;
+   services.pipewire = {
+     enable = true;
+     alsa.enable = true;
+     pulse.enable = true;
+   };
    ```
 
 ## ASUS Hardware Management
@@ -511,6 +541,81 @@ Optimize the H7606WI for creative workloads (e.g., 4K video editing, 3D renderin
   nvidia-smi
   ```
 
+### HDR Support
+
+The H7606WI’s 4K OLED supports HDR. Enable in Wayland (e.g., GNOME):
+
+```nix
+environment.systemPackages = with pkgs; [ gnome.gnome-control-center ];
+hardware.nvidia.modesetting.enable = true;
+```
+
+Test HDR:
+
+```bash
+mpv --vo=gpu --gpu-context=wayland --hdr-compute-peak=yes <hdr-video.mp4>
+```
+
+If HDR fails, verify kernel and NVIDIA driver versions:
+
+```bash
+uname -r
+nvidia-smi
+```
+
+Fallback to X11 if needed:
+
+```nix
+services.xserver.enable = true;
+services.xserver.displayManager.gdm.wayland = false;
+```
+
+### Audio Configuration
+
+The H7606WI’s audio (e.g., Realtek ALC) works with `pipewire`. Enable:
+
+```nix
+sound.enable = true;
+hardware.pulseaudio.enable = false;
+services.pipewire = {
+  enable = true;
+  alsa.enable = true;
+  pulse.enable = true;
+};
+```
+
+Test audio:
+
+```bash
+speaker-test -c 2
+```
+
+For microphone issues, check:
+
+```bash
+arecord -l
+```
+
+Adjust with `alsamixer` if needed.
+
+### Fan Control
+
+Customize fan curves with `asusctl`:
+
+```bash
+asusctl fan-curve -m balanced
+asusctl fan-curve -e cpu -f balanced
+asusctl fan-curve -e gpu -f balanced
+```
+
+List modes: `asusctl fan-curve --help`.
+
+Monitor temperatures:
+
+```bash
+sensors
+```
+
 ### Known Limitations
 
 - If keyboard backlight fails, set a mode: `asusctl led-mode static`.
@@ -577,6 +682,7 @@ boot.loader.secureBoot = {
    ```
 
 3. Rebuild: `sudo nixos-rebuild switch`
+
 4. Verify in UEFI (DEL key).
 
 **Warning**: Keep a NixOS live USB for recovery if boot fails.
@@ -586,8 +692,7 @@ boot.loader.secureBoot = {
 1. Boot from NixOS live USB.
 2. Disable Secure Boot in UEFI (DEL key, Security → Secure Boot Control → Disable).
 3. Reset keys if needed: `sudo sbctl reset`.
-4. Rebuild: `sudo nixos-rebuild switch`.
-   Keep a live USB and backup keys (`/path/to/secure-boot-key`, `/path/to/secure-boot-cert`).
+4. Rebuild: `sudo nixos-rebuild switch`. Keep a live USB and backup keys (`/path/to/secure-boot-key`, `/path/to/secure-boot-cert`).
 
 #### Hide Unnecessary Boot Messages
 
@@ -615,6 +720,7 @@ systemd.services.nvidia-fallback.enable = false;
 3. **Screen Brightness**:
 
    - Ensure latest kernel.
+
    - Add:
 
      ```nix
@@ -626,6 +732,7 @@ systemd.services.nvidia-fallback.enable = false;
 1. **Poor Battery Life**:
 
    - Use integrated mode.
+
    - Enable:
 
      ```nix
@@ -668,7 +775,19 @@ For the H7606WI’s 4K OLED touchscreen, calibrate if input is inaccurate:
 
 - **Wayland**: Use desktop environment settings (e.g., GNOME Settings → Devices → Touchscreen).
 
-For ASUS Pen 2.0 stylus, test pressure sensitivity in Xournal++ or Krita. If issues occur, check kernel logs:
+For ASUS Pen 2.0, verify pressure sensitivity and tilt in Xournal++ or Krita. If unsupported, install `wacomtablet`:
+
+```nix
+environment.systemPackages = with pkgs; [ wacomtablet ];
+```
+
+Configure via `wacomtablet` GUI or check kernel support:
+
+```bash
+lsmod | grep wacom
+```
+
+If issues occur, check kernel logs:
 
 ```bash
 dmesg | grep -i input
@@ -702,6 +821,12 @@ The H7606WI’s MediaTek MT7922 WiFi card works out of the box with NixOS 24.11.
 
    ```bash
    lspci | grep -i network
+   ```
+
+   Example output:
+
+   ```
+   00:14.3 Network controller: MediaTek Inc. MT7922 802.11ax PCI Express Wireless Network Adapter
    ```
 
 4. Troubleshooting (if needed):
@@ -766,6 +891,8 @@ hardware.bluetooth.powerOnBoot = true;
 - Function keys: Test volume, brightness, and lighting keys.
 - Suspend/Resume: Test with `systemctl suspend`.
 - Touchscreen/Stylus: Test in Xournal++ or Krita.
+- Audio: Test with `speaker-test -c 2`.
+- HDR: Test with `mpv` and an HDR video.
 
 ### Quick Diagnostics
 
@@ -798,7 +925,7 @@ sudo fwupdmgr get-updates
 sudo fwupdmgr update
 ```
 
-**Note**: The H7606WI’s firmware is supported by LVFS. Check [fwupd.org](https://fwupd.org/) for updates specific to this model.
+**Note**: The H7606WI’s firmware is supported by LVFS. If `fwupd` fails or components (e.g., TPM, EC) aren’t supported, check LVFS compatibility at [fwupd.org](https://fwupd.org). Fallback to Windows USB updates with files from [ASUS Support](https://www.asus.com/us/Laptops/ASUS-ProArt-P16-H7606WI/HelpDesk_BIOS/).
 
 ### Creating a Windows USB
 
@@ -849,7 +976,19 @@ For BIOS updates if `fwupd` fails:
    nixos-install --flake .#asus-linux
    ```
 
+   If `nixos-install --flake .#asus-linux` fails, check:
+
+   ```bash
+   nix flake check
+   ```
+
+   Common errors:
+
+   - Missing dependencies: Ensure `flake.nix` includes `home-manager`.
+   - Syntax errors: Validate `configuration.nix` and `flake.nix` with `nix fmt`.
+
 2. Set root password when prompted.
+
 3. Reboot:
 
    ```bash
@@ -859,6 +998,7 @@ For BIOS updates if `fwupd` fails:
 ## Step 6: Post-Installation
 
 1. Log in with your user account.
+
 2. Verify ASUS services:
 
    ```bash
@@ -892,6 +1032,7 @@ For BIOS updates if `fwupd` fails:
 For dual-booting with Windows:
 
 1. The bootloader (GRUB or systemd-boot) should detect Windows.
+
 2. If Windows doesn’t appear, check:
 
    ```nix
@@ -1084,6 +1225,7 @@ systemd.timers.btrbk = {
 ### Method 1: Standard Recovery
 
 1. Boot from NixOS media.
+
 2. Mount BTRFS:
 
    ```bash
@@ -1107,6 +1249,31 @@ systemd.timers.btrbk = {
 3. Mount snapshot: `mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1p7 /recovery`
 4. Copy files from `/recovery`.
 
+### Method 3: Rollback to Previous Generation
+
+If a system update fails, boot into a previous NixOS generation:
+
+1. At the bootloader (systemd-boot), select an older generation.
+
+2. Rebuild to revert:
+
+   ```bash
+   sudo nixos-rebuild switch --rollback
+   ```
+
+## Glossary
+
+- **BTRFS Subvolume**: A way to organize data in BTRFS, like virtual partitions, for snapshots and isolation.
+- **LUKS2**: A disk encryption standard used for securing partitions.
+- **Chroot**: A command to change the root directory for troubleshooting or recovery.
+- **Flake**: A Nix feature for reproducible configurations.
+- **TPM**: Trusted Platform Module, a hardware chip for secure key storage.
+
+## Tested Features
+
+- **Validated**: GPU switching (integrated, hybrid, dedicated), RGB keyboard, WiFi (MT7922), Bluetooth, touchpad, touchscreen (basic input), power profiles, BTRFS snapshots, dual-boot, audio.
+- **Untested**: HDR on 4K OLED, ASUS Pen 2.0 pressure sensitivity/tilt, WiFi 6E/7 full performance, hibernation. Test unverified features and report issues on NixOS Discourse or ASUS Linux Community.
+
 ## References
 
 - [NixOS Manual](https://nixos.org/manual/nixos/latest/)
@@ -1120,13 +1287,14 @@ systemd.timers.btrbk = {
 
 ## Notes
 
-This configuration uses the latest kernel (6.10+) and packages for ASUS laptops, including the H7606WI. Configure WiFi via GUI and use `.env` files for secrets.
+This configuration uses the latest kernel (6.10+) and packages for ASUS laptops, including the H7606WI. Configure WiFi via GUI and use `.env` files for secrets. For H7606 series variants (e.g., different CPUs, GPUs, or WiFi chips), verify hardware with `lspci` and `lsusb`, and adjust `boot.kernelModules` or `hardware.firmware` as needed. Check for kernel updates (e.g., 6.11+) and newer `supergfxctl`/`asusctl` versions at asus-linux.org. If flakes change (e.g., stabilized in NixOS 25.05), verify `flake.nix` compatibility.
 
 ## Bonus: Contributing to nixos-hardware
 
-Contribute your configuration to [nixos-hardware](https://github.com/NixOS/nixos-hardware):
+Contribute your configuration to nixos-hardware:
 
 1. Fork the repository.
+
 2. Create directory:
 
    ```bash
@@ -1169,5 +1337,13 @@ Contribute your configuration to [nixos-hardware](https://github.com/NixOS/nixos
    }
    ```
 
-4. Test thoroughly.
-5. Submit a Pull Request with details about your ProArt P16 H7606WI (AMD Ryzen AI 9 HX 370, NVIDIA RTX 4070, MediaTek MT7922, 4K OLED touchscreen) and test results, referencing this guide.
+4. Test thoroughly:
+
+   - GPU switching: `supergfxctl -m integrated`, `hybrid`, `dedicated`.
+   - WiFi: Connect to 2.4GHz, 5GHz, and 6E/7 networks.
+   - Touchscreen/Stylus: Test input and pressure sensitivity in Xournal++.
+   - Power profiles: `asusctl profile -P quiet|balanced|performance`.
+   - Suspend: `systemctl suspend`.
+   - Firmware: `fwupdmgr get-updates`.
+
+5. Submit a Pull Request following the nixos-hardware contribution guidelines with details about your ProArt P16 H7606WI (AMD Ryzen AI 9 HX 370, NVIDIA RTX 4070, MediaTek MT7922, 4K OLED touchscreen) and test results, referencing this guide.
