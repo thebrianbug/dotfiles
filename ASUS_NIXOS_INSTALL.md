@@ -6,7 +6,7 @@ This guide has been tested with the ASUS ProArt P16 (H7606 series, including H76
 
 ## For New Users
 
-If you’re new to NixOS, use the Calamares graphical installer for simplicity. Refer to the [Zero-to-Nix Guide](https://zero-to-nix.com/) for basics. If errors occur during commands like `nixos-rebuild switch`, check `/etc/nixos/configuration.nix` for syntax errors and run `journalctl -p 3 -xb` for logs.
+If you’re new to NixOS, use the Calamares graphical installer for simplicity. Refer to the [Zero-to-Nix Guide](https://zero-to-nix.com/) for basics. If errors occur during commands like `nixos-rebuild switch`, check `/etc/nix/configuration.nix` for syntax errors and run `journalctl -p 3 -xb` for logs.
 
 ## Prerequisites
 
@@ -89,7 +89,63 @@ NixOS generally recommends a 1 GB EFI System Partition (ESP), but it's often pos
     sudo umount /mnt/efi_to_backup
     sudo umount /mnt/backup_drive
     ```
-    Your EFI partition is now safely backed up. Proceed with the rest of the installation steps.
+    Your EFI partition is now safely backed up.
+
+### Clean Old Linux Boot Entries from EFI Partition
+
+Now that you have a backup, you can safely remove old, unused Linux boot entries from your EFI partition using `efibootmgr`. This frees up space and keeps your boot menu clean.
+
+1.  **List current boot entries:**
+
+    ```bash
+    sudo efibootmgr -v
+    ```
+
+    This command will show you a list of boot entries, including their BootOrder (order of booting) and BootXXXX (individual entries). The `-v` flag shows full paths, which helps identify the OS.
+
+    _Example Output:_
+
+    ```
+    BootCurrent: 0001
+    Timeout: 1 seconds
+    BootOrder: 0000,0002,0001,0003,0004
+    Boot0000* Windows Boot Manager  HD(1,GPT,a1b2c3d4-e5f6-7890-abcd-ef1234567890,0x800,0x82000)/File(\EFI\Microsoft\Boot\bootmgfw.efi)
+    Boot0001* UEFI: SanDisk Ext USB Device  PciRoot(0x0)/Pci(0x1,0x0)/Usb(1,0)/HD(1,MBR,0x12345678,0x800,0x75d000)RC
+    Boot0002* Fedora        HD(1,GPT,a1b2c3d4-e5f6-7890-abcd-ef1234567890,0x800,0x82000)/File(\EFI\Fedora\shimx64.efi)
+    Boot0003* MyASUS_Booter HD(1,GPT,a1b2c3d4-e5f6-7890-abcd-ef1234567890,0x800,0x82000)/File(\EFI\MyASUS\MyASUS.efi)
+    Boot0004* Hard Drive    BBS(HD,,0x0)..GO
+    ```
+
+2.  **Identify Linux-related entries to delete:**
+    Look for entries that correspond to your old Linux installations. Common names include:
+
+    - `Fedora` (as in the example above)
+    - `Ubuntu`
+    - `Arch`
+    - `GRUB`
+    - Any entry whose file path ends with `shimx64.efi` or `grubx64.efi` within a directory named after a Linux distribution (e.g., `\EFI\Fedora\shimx64.efi`).
+
+    **\!\!\! WARNING: DO NOT DELETE WINDOWS OR OEM ENTRIES \!\!\!**
+
+    - **Always keep `Windows Boot Manager`**: This entry is crucial for booting Windows. Its path typically points to `\EFI\Microsoft\Boot\bootmgfw.efi`.
+    - **Leave ASUS-specific entries alone**: These might be labeled `MyASUS_Booter`, `Recovery`, `Diagnostics`, `eSupport`, or similar. Deleting them could affect system recovery or manufacturer tools. Their paths often point to `\EFI\ASUS\`, `\EFI\Boot\`, or `\EFI\Recovery\`.
+    - If you are unsure about an entry, **do not delete it**. When in doubt, leave it.
+
+3.  **Delete the identified Linux entries:**
+    Use the `efibootmgr -b XXXX -B` command, where `XXXX` is the 4-digit Boot entry number you want to delete (e.g., `0002` for Fedora in the example above).
+
+    _Example (to delete the "Fedora" entry from the example above):_
+
+    ```bash
+    sudo efibootmgr -b 0002 -B
+    ```
+
+    Repeat this command for each old Linux entry you want to remove.
+
+4.  **Verify deletion:**
+    Run `sudo efibootmgr -v` again to confirm that the unwanted entries are gone from the list. The `BootOrder` should also update.
+
+    Once cleaned, proceed with the rest of the installation steps.
 
 ## Partitioning Your ASUS ProArt P16 for NixOS (Dual Boot with Windows)
 
