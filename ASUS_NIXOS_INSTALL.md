@@ -13,6 +13,7 @@ If you’re new to NixOS, use the Calamares graphical installer for simplicity. 
 - NixOS installation media (**25.05 "Warbler"** recommended for the 2024 ProArt P16 H7606WI, as it includes a newer kernel and improved hardware support for recent AMD CPUs and NVIDIA GPUs).
 - Internet connection
 - Basic knowledge of NixOS and the command line
+- An external USB drive or storage device to save the EFI backup.
 
 ## Pre-Installation Steps
 
@@ -41,6 +42,54 @@ For 2022 or newer ASUS models, including the H7606WI, switch to Hybrid graphics 
 
 1.  Open the MyASUS app, go to "Customization" → "GPU Settings," and select "Hybrid Mode" (or "Optimus Mode").
 2.  Save changes and reboot before installing NixOS.
+
+### Backup the EFI Partition (CRUCIAL FOR DUAL BOOT)
+
+NixOS generally recommends a 1 GB EFI System Partition (ESP), but it's often possible to use an existing, smaller partition, even one as small as 260 MB like Windows commonly creates. While this approach carries a slight risk due to the limited space, it helps avoid repartitioning issues. Because of this, and especially if you have existing EFI entries from other operating systems like Fedora or Windows, **it's highly recommended to back up your current EFI partition before proceeding with the NixOS installation**. You'll perform this essential backup step from the NixOS live USB environment.
+
+1.  **Boot from NixOS Live USB:** Start your laptop and boot from the NixOS installation media. Select the "NixOS graphical installer" or "NixOS (Live)" option.
+2.  **Open a Terminal:** Once the live environment loads, open a terminal. You can usually find it in the applications menu or by pressing `Ctrl+Alt+T`.
+3.  **Identify your EFI Partition:** Use `lsblk` to list all disks and partitions. Your EFI partition is typically a small FAT32 partition (often around 100-500 MB) with the "esp" or "boot" flag. It's usually mounted at `/boot/efi` if you were booted into Fedora, but in the live environment, it might not be mounted. Look for a partition under a disk (e.g., `/dev/nvme0n1p1` or `/dev/sda1`) with `vfat` filesystem type.
+    ```bash
+    sudo lsblk -f
+    ```
+    _Example Output (look for `vfat` and `TYPE="part"`):_
+    ```
+    NAME        FSTYPE   FSVER LABEL     UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+    nvme0n1
+    ├─nvme0n1p1 vfat     FAT32           XXXX-XXXX                                          /boot/efi # This is your EFI partition
+    ├─nvme0n1p2 ext4     1.0             YYYY-YYYY                            ...
+    └─nvme0n1p3 btrfs              ...
+    ```
+    In this example, `/dev/nvme0n1p1` is the EFI partition. **Make sure you identify the correct partition for your system.**
+4.  **Mount your External Storage:** Connect your external USB drive (or other storage) where you want to save the backup.
+    ```bash
+    sudo mkdir /mnt/backup_drive
+    sudo mount /dev/sdXy /mnt/backup_drive # Replace /dev/sdXy with your external drive's partition (e.g., /dev/sdb1)
+    ```
+    You can use `sudo lsblk -f` again to identify your external drive's partition.
+5.  **Create a Backup Directory:**
+    ```bash
+    sudo mkdir -p /mnt/backup_drive/efi_backup_$(date +%Y%m%d_%H%M)
+    ```
+6.  **Mount the EFI Partition and Copy Contents:**
+    ```bash
+    sudo mkdir /mnt/efi_to_backup
+    sudo mount /dev/nvme0n1p1 /mnt/efi_to_backup # Replace /dev/nvme0n1p1 with your EFI partition
+    sudo cp -rv /mnt/efi_to_backup/* /mnt/backup_drive/efi_backup_$(date +%Y%m%d_%H%M)/
+    ```
+    This will copy all files and directories from your EFI partition to the timestamped backup folder on your external drive.
+7.  **Verify the Backup:**
+    ```bash
+    ls -l /mnt/backup_drive/efi_backup_$(date +%Y%m%d_%H%M)/EFI
+    ```
+    You should see directories like `Microsoft`, `Fedora`, etc., confirming the contents have been copied.
+8.  **Unmount Partitions:**
+    ```bash
+    sudo umount /mnt/efi_to_backup
+    sudo umount /mnt/backup_drive
+    ```
+    Your EFI partition is now safely backed up. Proceed with the rest of the installation steps.
 
 ## Partitioning Your ASUS ProArt P16 for NixOS (Dual Boot with Windows)
 
