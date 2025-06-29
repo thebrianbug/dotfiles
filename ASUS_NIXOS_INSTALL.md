@@ -168,22 +168,37 @@ Here's the recommended layout for your new NixOS partitions, **especially if you
 1.  **Shared EFI System Partition (`/boot/efi`)**:
 
     - **Existing Partition**: `nvme0n1p1` (from the table above).
-    - **Filesystem**: `vfat`
+    - **Filesystem**: `vfat`.
     - **Size**: Typically **260 MiB** (your current size) or **1 GB (1024 MiB)** if you perform the optional expansion.
     - **Action**: **DO NOT FORMAT\!** Simply mount this partition at `/boot/efi` during NixOS installation. This allows both Windows and NixOS to share the same bootloader.
 
     **--- IMPORTANT CONSIDERATION FOR 260 MiB EFI PARTITION ---**
     **If you choose to re-use your existing 260 MiB EFI partition (`nvme0n1p1`) without resizing it, you will typically be limited to keeping only 1 NixOS generation at a time.** This is due to the combined size of Windows boot files, the necessary generic EFI files, and NixOS's kernels/initramfs files (which can easily be 80-120 MiB per generation). **Sacrificing additional generations means you lose NixOS's ability to seamlessly rollback to previous bootable system states directly from the boot menu**, making some system updates riskier.
 
-    **For new users, proceeding with the 260 MiB EFI initially is a valid strategy.** It reduces complexity for your first NixOS installation. NixOS's declarative nature and the ability to keep your configurations in Git provide a strong recovery mechanism for most NixOS-specific issues. If you later desire full multi-generation rollback capabilities, you can consider expanding the EFI partition as an advanced, post-installation step (see the dedicated section below).
+    To enforce a limit of 1 generation due to space constraints, add the following to your `configuration.nix` file, depending on your bootloader:
+
+    - **For `systemd-boot`**:
+      ```nix
+      boot.loader.systemd-boot.enable = true;
+      boot.loader.systemd-boot.configurationLimit = 1; # Limits to 1 generation
+      ```
+    - **For `GRUB`**:
+      ```nix
+      boot.loader.grub.enable = true;
+      boot.loader.grub.efiSupport = true;
+      boot.loader.grub.configurationLimit = 1; # Limits to 1 generation
+      ```
+
+    **For new users, proceeding with the 260 MiB EFI initially is a valid strategy.** It reduces complexity for your first NixOS installation. NixOS's declarative nature and the ability to keep your configurations in Git provide a strong recovery mechanism for most NixOS-specific issues. If you later desire full multi-generation rollback capabilities, you can consider expanding the EFI partition as an advanced, post-installation step in the
+    [Appendix: Advanced EFI Partition Expansion (Optional Post-Installation)](#appendix-advanced-efi-partition-expansion-optional-post-installation).
 
 2.  **Separate `/boot` Partition (`/boot`)**:
 
     - **Recommendation**: **Strongly recommended for manual installations** when dual-booting with Windows and using BTRFS for your root filesystem. A small, dedicated `/boot` partition (e.g., `ext4`) simplifies bootloader configuration (especially with GRUB) and increases robustness by keeping kernel images and initramfs files on a simpler filesystem, separate from the complex BTRFS root. Your current Fedora setup already uses this robust approach with `nvme0n1p6`.
-    - **Size**: **512 MiB**
-    - **Filesystem**: `ext4`
+    - **Size**: **512 MiB**.
+    - **Filesystem**: `ext4`.
     - **Action**: Create a new `/boot` partition in the freed space (you can reuse/reformat your existing `nvme0n1p6` for this if it's currently used by Fedora and you plan to replace Fedora).
-    - _Note_: While BTRFS can technically house `/boot` within its subvolumes, a dedicated `ext4` `/boot` partition reduces complexity for bootloader setup and maintenance in a dual-boot environment with GRUB. **The Calamares installer may not easily support this specific setup; manual installation is generally preferred for this layout.**
+    - _Note_: While BTRFS can technically house `/boot` within its subvolumes, a dedicated `ext4` `/boot` partition reduces complexity for bootloader setup and maintenance in a dual-boot environment with GRUB. **The Calamares installer may not easily support this specific setup; manual installation is generally preferred for this layout**.
 
 3.  **Swap Partition (`swap`)**:
 
@@ -196,13 +211,12 @@ Here's the recommended layout for your new NixOS partitions, **especially if you
 
     - **Recommendation**: **BTRFS** is highly recommended for its advanced features like snapshots, data integrity, and efficient space management.
     - **Size**: **Remaining disk space**. This will hold your NixOS, applications, and user data.
-    - **Filesystem**: `btrfs`
+    - **Filesystem**: `btrfs`.
     - **Recommended Subvolumes**:
       - `@`: For the root filesystem (`/`)
       - `@home`: For user home directories (`/home`)
       - `@nix`: For the Nix store (`/nix`), containing all system packages and configurations.
-
-    _Alternative (ext4)_: If you prefer, you can use `ext4` for your root partition without subvolumes, though BTRFS is generally preferred for new NixOS installations for its flexibility.
+    - _Alternative (ext4)_: If you prefer, you can use `ext4` for your root partition without subvolumes, though BTRFS is generally preferred for new NixOS installations for its flexibility.
 
 ### Summary of New NixOS Partitions
 
