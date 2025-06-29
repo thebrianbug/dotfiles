@@ -13,7 +13,7 @@ If you’re new to NixOS, use the Calamares graphical installer for simplicity. 
 - NixOS installation media (**25.05 "Warbler"** recommended for the 2024 ProArt P16 H7606WI, as it includes a newer kernel and improved hardware support for recent AMD CPUs and NVIDIA GPUs).
 - Internet connection
 - Basic knowledge of NixOS and the command line
-- An external USB drive or storage device to save the EFI backup.
+- An external USB drive or storage device to save backups.
 
 ## Pre-Installation Steps
 
@@ -1469,6 +1469,214 @@ NixOS automatically keeps previous system configurations (generations). If a sys
     ```bash
     sudo nixos-rebuild switch --rollback
     ```
+
+## Appendix: Advanced EFI Partition Expansion (Optional Post-Installation)
+
+This section is for users who have successfully installed NixOS, are comfortable with its basic operation and recovery mechanisms (like Git-backed configs and `nixos-rebuild`), and now wish to enable full multi-generation rollback capabilities by expanding their EFI System Partition (ESP).
+
+**WARNING: This is an advanced and inherently risky procedure.** Incorrect steps can render your system unbootable, including Windows. **Ensure you have full backups of your EFI partition (as performed in "Pre-Installation Steps") and critical data before proceeding.** A NixOS live USB is essential for recovery.
+
+### Why Expand the EFI Partition?
+
+As noted in the "Partitioning" section, a 260 MiB EFI partition, while sufficient for a single NixOS generation alongside Windows, severely limits NixOS's ability to keep multiple bootable generations. Each NixOS generation can consume 80-120 MiB for its kernel and initramfs files within the EFI partition. Expanding the EFI partition to 1 GB (1024 MiB) allows NixOS to store more generations, providing crucial rollback points directly from your bootloader menu, which is one of NixOS's most powerful features.
+
+### Risks Involved
+
+- **Data Loss:** Incorrect partitioning can lead to data loss on any partition, including Windows.
+- **Unbootable System:** Modifying the EFI partition or misconfiguring boot entries can prevent both Windows and NixOS from booting.
+- **Complex Recovery:** Recovery from EFI issues can be challenging, often requiring a live USB and manual bootloader repairs.
+
+### Mitigations
+
+- **Full EFI Backup:** Crucial. You performed this in the "Pre-Installation Steps." Have it readily available on external media.
+- **Data Backups:** Ensure all your critical personal data is backed up before starting.
+- **NixOS Live USB:** Keep your NixOS installation media (or any Linux live USB) handy for emergency booting and repairs.
+- **Patience and Attention:** Follow each step meticulously. Double-check device paths (`/dev/nvme0n1p1`, etc.) and command syntax.
+- **Free Space:** Ensure you have enough unallocated space _immediately adjacent_ to your EFI partition. This typically means shrinking a partition next to it.
+
+### Highly Recommended: Full Disk Backup to External Drive (Crucial for Data Safety)
+
+Before making any changes to your disk partitions, especially for dual-boot installations or EFI partition modifications, it is **extremely important** to create a full image backup of your entire internal SSD. This provides the ultimate safety net, allowing you to restore your system to its exact current state in case of any unforeseen issues.
+
+- **Requirement:** An external drive with storage capacity equal to or greater than your internal SSD (e.g., at least 2 TB for your ProArt P16).
+- **Time:** Be prepared for this process to take several hours, depending on the speed of your drives and connection.
+- **Recommended Tools:**
+  - **Clonezilla:** A free, open-source, and highly reliable disk cloning tool. Boot from a Clonezilla live USB/CD, select disk-to-disk or disk-to-image backup, and follow its guided steps.
+  - **`dd` command:** Available in any Linux live environment (including the NixOS live USB). Use with extreme caution as incorrect usage can lead to data loss. Example: `sudo dd if=/dev/nvme0n1 of=/path/to/external_drive/backup.img status=progress bs=4M` (replace `/dev/nvme0n1` with your internal SSD and `/path/to/external_drive/backup.img` with your external drive and desired backup file name).
+  - **Windows Imaging Tools:** If primarily backing up Windows, commercial tools like Macrium Reflect Free (if still available) or Acronis True Image can create bootable recovery media.
+
+**Do not proceed with partitioning or installation until this critical backup is complete and verified.**
+
+### Step-by-Step Expansion Process
+
+This process assumes your EFI partition (`nvme0n1p1`) is at the beginning of your disk and you will shrink `nvme0n1p2` (Microsoft Reserved) or `nvme0n1p3` (Windows OS) to create contiguous free space. Shrinking `nvme0n1p2` is generally safer as it's a small, reserved partition, but if `nvme0n1p3` is directly adjacent and large, shrinking it is also an option.
+
+We will use `gparted` from the NixOS live environment for its graphical interface, which reduces the risk of typos compared to command-line tools.
+
+1.  **Boot from NixOS Live USB:**
+
+    - Start your laptop and boot from your NixOS installation media.
+    - Select the "NixOS graphical installer" or "NixOS (Live)" option.
+
+2.  **Launch GParted:**
+
+    - Once the live environment loads, open a terminal.
+    - Start GParted:
+      ```bash
+      sudo gparted
+      ```
+
+3.  **Shrink an Adjacent Partition:**
+
+    - In GParted, identify your partitions. You'll see `nvme0n1p1` (your 260 MiB EFI).
+    - Identify the partition _immediately following_ `nvme0n1p1`. This is likely `nvme0n1p2` (Microsoft Reserved) or `nvme0n1p3` (Windows OS).
+    - **Right-click** on the partition you intend to shrink (e.g., `nvme0n1p2` or `nvme0n1p3`).
+    - Select **"Resize/Move."**
+    - **Carefully adjust the "Free space preceding" or "Free space following"** options to create about **750 MiB** of _unallocated space_ **immediately after `nvme0n1p1`**. The goal is to make `nvme0n1p1` and this new unallocated space contiguous.
+      - If shrinking `nvme0n1p2`: Ensure the 750 MiB is created _before_ `nvme0n1p2` by adjusting its starting point.
+      - If shrinking `nvme0n1p3`: This is often easier, as you just shrink from its left edge.
+    - **Do NOT apply changes yet.** Click "Resize/Move" to confirm the operation, but do not click the green checkmark.
+
+4.  **Resize the EFI Partition (`nvme0n1p1`):**
+
+    - **Right-click** on `nvme0n1p1` (your current 260 MiB EFI partition).
+    - Select **"Resize/Move."**
+    - Drag the right edge of `nvme0n1p1` to extend it into the newly created unallocated space until it reaches **1024 MiB (1 GB)**.
+    - Click "Resize/Move" to confirm.
+
+5.  **Apply All Operations:**
+
+    - Now, click the **green checkmark** (Apply All Operations) in GParted's toolbar.
+    - Confirm the warning. GParted will perform the shrinking and resizing operations. This may take some time. **Do not interrupt the process.**
+
+6.  **Verify New Partition Size:**
+
+    - Once GParted finishes, verify that `nvme0n1p1` is now approximately 1 GB.
+    - Close GParted.
+
+7.  **Rebuild NixOS Configuration (from Live USB):**
+
+    - Open a terminal and chroot into your NixOS installation.
+      - First, identify your NixOS root and `/boot` partitions using `lsblk -f`. Assume `/dev/nvme0n1pX` is your NixOS root (e.g., `nvme0n1p8`) and `/dev/nvme0n1pY` is your separate `/boot` (e.g., `nvme0n1p6`).
+      <!-- end list -->
+      ```bash
+      # Mount your BTRFS root (adjust device path)
+      sudo mount -o subvol=@,compress=zstd /dev/nvme0n1p8 /mnt
+      sudo mkdir -p /mnt/{home,nix,boot}
+      sudo mount -o subvol=@home,compress=zstd /dev/nvme0n1p8 /mnt/home
+      sudo mount -o subvol=@nix,compress=zstd /dev/nvme0n1p8 /mnt/nix
+      # Mount your separate /boot partition (adjust device path)
+      sudo mount /dev/nvme0n1p6 /mnt/boot
+      # Mount the now-expanded EFI partition (adjust device path, always nvme0n1p1)
+      sudo mkdir -p /mnt/boot/efi
+      sudo mount /dev/nvme0n1p1 /mnt/boot/efi
+      ```
+    - Chroot into the NixOS environment:
+      ```bash
+      sudo nixos-enter
+      ```
+    - Navigate to your NixOS configuration files. If you followed the guide, your `dotfiles` are likely mounted under `/mnt/home/your_user/source/dotfiles` or `/mnt/source/dotfiles`. You'll need to mount the containing partition and then `cd` into your dotfiles. For `nixos-enter`, your `/mnt` _is_ `/`.
+      ```bash
+      # If your dotfiles are at /home/brianbug/source/dotfiles
+      cd /home/brianbug/source/dotfiles
+      ```
+    - **Crucially, set the `configurationLimit` in your `configuration.nix` (within `hosts/asus-linux/configuration.nix`) to a higher value.** This tells NixOS's bootloader (GRUB or systemd-boot) to keep more generations in the EFI partition.
+
+      ```nix
+      # Example for systemd-boot
+      boot.loader.systemd-boot.enable = true;
+      boot.loader.efi.canTouchEfiVariables = true;
+      boot.loader.systemd-boot.configurationLimit = 10; # Keep up to 10 generations
+
+      # Example for GRUB (if you prefer GRUB)
+      # boot.loader.grub.enable = true;
+      # boot.loader.grub.devices = [ "nodev" ]; # For UEFI systems
+      # boot.loader.grub.efiSupport = true;
+      # boot.loader.grub.configurationLimit = 10; # Keep up to 10 generations
+      ```
+
+    - Rebuild your NixOS system. This will re-install the bootloader files on the now-larger EFI partition.
+      ```bash
+      nixos-rebuild switch --flake .#asus-linux
+      ```
+    - Exit the chroot:
+      ```bash
+      exit
+      ```
+    - Unmount all partitions:
+      ```bash
+      sudo umount -R /mnt
+      ```
+
+8.  **Reboot and Verify:**
+
+    - Reboot your laptop.
+    - Enter the boot menu (usually F8, F10, or F12) or the NixOS bootloader (if systemd-boot) and verify that Windows still appears as a boot option.
+    - Boot into NixOS.
+    - Perform a few `nixos-rebuild switch` operations to create new generations.
+    - Reboot again and check the bootloader menu. You should now see multiple NixOS generations listed.
+
+### Troubleshooting EFI Expansion Issues
+
+If your system fails to boot after EFI partition expansion:
+
+1.  **Boot from NixOS Live USB:** Your live USB is your primary recovery tool.
+
+2.  **Check EFI Partition Health:**
+
+    - Open a terminal and run `sudo fsck.vfat /dev/nvme0n1p1` to check for filesystem errors on the EFI partition.
+    - If errors are found, try `sudo fsck.vfat -a /dev/nvme0n1p1` to automatically fix them.
+
+3.  **Restore EFI Backup:**
+
+    - If the partition is corrupted or Windows/NixOS entries are missing and cannot be restored, consider restoring your EFI backup.
+    - Mount your external drive containing the backup:
+      ```bash
+      sudo mkdir /mnt/backup_drive
+      sudo mount /dev/sdXy /mnt/backup_drive # Your external USB drive
+      ```
+    - **Carefully format the EFI partition (LAST RESORT, only if corrupted beyond repair):**
+      ```bash
+      sudo mkfs.vfat -F 32 /dev/nvme0n1p1
+      ```
+    - Mount the newly formatted (or existing corrupted) EFI partition:
+      ```bash
+      sudo mkdir /mnt/efi_target
+      sudo mount /dev/nvme0n1p1 /mnt/efi_target
+      ```
+    - Copy the backup contents back to the EFI partition:
+      ```bash
+      sudo cp -rv /mnt/backup_drive/efi_backup_YYYYMMDD_HHMM/* /mnt/efi_target/
+      ```
+      (Replace `YYYYMMDD_HHMM` with your backup's timestamp).
+    - Unmount: `sudo umount /mnt/efi_target`
+
+4.  **Reinstall NixOS Bootloader (from Live USB):**
+
+    - Even after restoring the EFI backup, you'll likely need to reinstall the NixOS bootloader.
+    - Follow the chroot steps from "Rebuild NixOS Configuration" above to remount your NixOS partitions and `nixos-enter`.
+    - Re-run `sudo nixos-rebuild switch --flake .#asus-linux`. This will rewrite the NixOS bootloader entries.
+
+5.  **Manually Add Windows Boot Entry (if missing):**
+
+    - If Windows still doesn't appear after restoring the EFI backup and rebuilding NixOS, you might need to add its boot entry manually using `efibootmgr`.
+    - From the live USB, with the EFI partition mounted at `/mnt/boot/efi`:
+      ```bash
+      sudo efibootmgr -c -d /dev/nvme0n1p1 -p 1 -l \\EFI\\Microsoft\\Boot\\bootmgfw.efi -L "Windows Boot Manager"
+      ```
+      This command adds a new boot entry for Windows.
+      - `-c`: Create a new entry.
+      - `-d /dev/nvme0n1p1`: Specify the disk containing the EFI partition.
+      - `-p 1`: Specify the partition number (e.g., `nvme0n1p1`).
+      - `-l \\EFI\\Microsoft\\Boot\\bootmgfw.efi`: The path to the Windows bootloader.
+      - `-L "Windows Boot Manager"`: The label for the boot entry.
+
+6.  **Verify Boot Order:**
+
+    - Check your boot order: `sudo efibootmgr -v`
+    - Adjust if necessary to put your preferred OS first: `sudo efibootmgr -o XXXX,YYYY,ZZZZ` (where XXXX,YYYY,ZZZZ are your desired boot entry numbers).
+
+By following these steps carefully, you can successfully expand your EFI partition and gain the full benefits of NixOS's multi-generation rollback capabilities.
 
 ## Glossary
 
