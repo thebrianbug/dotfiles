@@ -73,14 +73,22 @@ Here's the recommended layout for your new NixOS partitions:
     - **Size**: Typically \~100-500MB (already existing).
     - **Action**: **DO NOT FORMAT\!** Simply mount this partition at `/boot/efi` during NixOS installation. This allows both Windows and NixOS to share the same bootloader.
 
-2.  **Swap Partition (`swap`)**:
+2.  **Separate `/boot` Partition (`/boot`)**:
+
+    - **Recommendation**: **Strongly recommended** for dual-booting with Windows, especially when using BTRFS for your root filesystem. A small, separate `/boot` partition (e.g., `ext4`) simplifies bootloader configuration and increases robustness, particularly with encryption.
+    - **Size**: **\~512MB**
+    - **Filesystem**: `ext4`
+    - **Action**: Create a new `/boot` partition in the freed space.
+    - _Note_: While BTRFS can technically house `/boot` within its subvolumes, a dedicated `ext4` `/boot` partition reduces complexity for bootloader setup and maintenance in a dual-boot environment.
+
+3.  **Swap Partition (`swap`)**:
 
     - **Recommendation**: Essential for system stability, especially with 32GB RAM.
     - **Size**: **32GB** (matching your RAM) is highly recommended for memory-intensive tasks.
     - **Filesystem**: `swap` (no traditional filesystem).
     - **Action**: Create a new swap partition in the freed space.
 
-3.  **NixOS Root Partition (`/`) with BTRFS Subvolumes**:
+4.  **NixOS Root Partition (`/`) with BTRFS Subvolumes**:
 
     - **Recommendation**: **BTRFS** is highly recommended for its advanced features like snapshots, data integrity, and efficient space management.
     - **Size**: **Remaining disk space**. This will hold your NixOS, applications, and user data.
@@ -90,14 +98,7 @@ Here's the recommended layout for your new NixOS partitions:
       - `@home`: For user home directories (`/home`)
       - `@nix`: For the Nix store (`/nix`), containing all system packages and configurations.
 
-    _Alternative_: If you prefer, you can use `ext4` for your root partition without subvolumes, though BTRFS is generally preferred for new NixOS installations.
-
-4.  **Separate `/boot` Partition (Optional but Recommended for BTRFS)**:
-
-    - **Recommendation**: A small, separate `/boot` partition can simplify bootloader configuration, especially with dual-booting and encryption.
-    - **Size**: **\~512MB**
-    - **Filesystem**: `ext4`
-    - **Action**: Create a new `/boot` partition in the freed space.
+    _Alternative (ext4)_: If you prefer, you can use `ext4` for your root partition without subvolumes, though BTRFS is generally preferred for new NixOS installations for its flexibility.
 
 ### Summary of New NixOS Partitions
 
@@ -128,6 +129,7 @@ If you're using the Calamares graphical installer:
 1.  During partitioning, check **"Encrypt system"** when creating your root partition.
 2.  Set a strong encryption passphrase.
 3.  Calamares will automatically handle the LUKS setup.
+    - _Note_: The `/boot` partition (if separate) is typically left unencrypted.
 
 #### Manual Installation
 
@@ -231,7 +233,7 @@ Your ProArt P16 H7606WI has a TPM 2.0 chip, which can automatically unlock the L
     - **Do NOT format or delete** `nvme0n1p1` through `nvme0n1p5` (your Windows partitions).
     - Delete any existing Linux partitions to free up space.
     - Create your new NixOS partitions:
-      - An optional `/boot` partition (ext4, \~512MB).
+      - **Recommended**: Create a separate `/boot` partition (ext4, \~512MB).
       - A **swap partition** (recommended: 32GB for 32GB RAM). Note that full hibernation may be unreliable on this model; prioritize suspend-to-idle.
       - A root partition (`/`) using the remaining space (recommended: BTRFS or ext4).
       - **Important for BTRFS**: Calamares formats BTRFS but doesn't create subvolumes. For a fully optimized BTRFS setup with subvolumes, a manual installation is recommended, or follow the post-installation steps below.
@@ -291,6 +293,11 @@ Calamares installs directly to the BTRFS root (`subvolid=0`). To benefit from BT
         fsType = "btrfs";
         options = [ "subvol=@nix" "compress=zstd" "noatime" ];
       };
+      # If you created a separate /boot partition
+      "/boot" = {
+        device = "/dev/nvme0n1p6"; # Replace with your /boot partition
+        fsType = "ext4";
+      };
     };
     ```
 
@@ -333,33 +340,23 @@ This method gives you full control over partitioning and BTRFS subvolume creatio
     # Or use cfdisk or gparted for a more user-friendly interface
     ```
 
-5.  **Create new NixOS partitions** in the freed space using `fdisk`, `cfdisk`, or `gparted`.
+5.  **Create new NixOS partitions** in the freed space. Use `fdisk`, `cfdisk`, or `gparted`.
 
-    - A `/boot` partition (optional, \~512MB, `ext4`).
-    - A **swap partition** (recommended: 32GB).
+    - **Recommended**: Create a `/boot` partition (\~512MB, `ext4` filesystem type).
+    - A **swap partition** (recommended: 32GB for 32GB RAM).
     - A root partition (`/`) using the remaining space.
 
 6.  **Format new NixOS partitions**:
 
     ```bash
-    mkfs.ext4 /dev/nvme0n1p6   # Example: Your new /boot partition (if created)
+    mkfs.ext4 /dev/nvme0n1p6    # Example: Your new /boot partition
     # Recommended: Use BTRFS for root
-    mkfs.btrfs /dev/nvme0n1p7   # Example: Your new root partition
-    # OR use ext4
+    mkfs.btrfs /dev/nvme0n1p7    # Example: Your new root partition
+    # OR if using ext4 for root
     # mkfs.ext4 /dev/nvme0n1p7
     ```
 
 7.  **Mount partitions**:
-
-    **For ext4**:
-
-    ```bash
-    mount /dev/nvme0n1p7 /mnt
-    mkdir -p /mnt/boot
-    mount /dev/nvme0n1p6 /mnt/boot
-    mkdir -p /mnt/boot/efi
-    mount /dev/nvme0n1p1 /mnt/boot/efi # Do NOT format this existing EFI partition!
-    ```
 
     **For BTRFS with subvolumes (recommended)**:
 
@@ -385,13 +382,15 @@ This method gives you full control over partitioning and BTRFS subvolume creatio
     mount -o subvol=@home,compress=zstd /dev/nvme0n1p7 /mnt/home
     mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
 
-    # Mount the separate /boot partition (if created)
+    # Mount the separate /boot partition (recommended)
     mount /dev/nvme0n1p6 /mnt/boot
 
     # Mount the existing EFI partition
     mkdir -p /mnt/boot/efi
     mount /dev/nvme0n1p1 /mnt/boot/efi # Do NOT format!
     ```
+
+    _Note on omitting separate /boot_: If you choose _not_ to create a separate `/boot` partition and place `/boot` directly on the BTRFS root subvolume (`@`), you would simply omit `mount /dev/nvme0n1p6 /mnt/boot` and ensure your `/mnt/boot/efi` is mounted directly. This is generally less robust for dual-boot.
 
 8.  **Generate initial NixOS configuration files**:
 
