@@ -42,19 +42,79 @@ For 2022 or newer ASUS models, including the H7606WI, switch to Hybrid graphics 
 1.  Open the MyASUS app, go to "Customization" → "GPU Settings," and select "Hybrid Mode" (or "Optimus Mode").
 2.  Save changes and reboot before installing NixOS.
 
-## Partition Overview
+## Partitioning Your ASUS ProArt P16 for NixOS (Dual Boot with Windows)
 
-Before installation, review the disk partitions and what to keep for dual-booting with Windows:
+This section outlines the recommended partition scheme for installing NixOS alongside an existing Windows installation on your ASUS ProArt P16. The goal is to preserve your Windows system while setting up NixOS for optimal performance and flexibility.
 
-| Partition   | Filesystem | Label    | Type                         | Purpose                              | Keep?                  |
-| :---------- | :--------- | :------- | :--------------------------- | :----------------------------------- | :--------------------- |
-| `nvme0n1p1` | vfat       | SYSTEM   | EFI System Partition         | Bootloader (shared Fedora + Windows) | ✅ Yes                 |
-| `nvme0n1p2` | _(none)_   | _(none)_ | Microsoft Reserved Partition | Required for Windows (no FS)         | ✅ Yes                 |
-| `nvme0n1p3` | ntfs       | OS       | Windows System               | Main Windows installation            | ✅ Yes                 |
-| `nvme0n1p4` | ntfs       | RECOVERY | Windows Recovery Environment | Recovery tools/partition             | ✅ Yes (for dual-boot) |
-| `nvme0n1p5` | vfat       | MYASUS   | ASUS preinstalled tools      | Manufacturer apps/drivers            | ✅ Yes (for dual-boot) |
+**Critical Note for Dual Boot Users:** **Do NOT format or delete** any of your existing Windows partitions (`nvme0n1p1` through `nvme0n1p5` as typically observed). These are essential for Windows to function correctly.
 
-Existing Linux partitions (e.g., Fedora’s `/boot` or root) can be safely removed and replaced with NixOS partitions.
+### Understanding Your Existing Windows Partitions
+
+Your ASUS ProArt P16, like most pre-installed Windows systems, likely has the following partition layout. You'll need to **identify and keep all of these**:
+
+| Partition   | Filesystem | Label      | Type                         | Purpose                                   | Keep?      |
+| :---------- | :--------- | :--------- | :--------------------------- | :---------------------------------------- | :--------- |
+| `nvme0n1p1` | `vfat`     | `SYSTEM`   | EFI System Partition         | **Shared Bootloader for Windows & NixOS** | ✅ **Yes** |
+| `nvme0n1p2` | _(none)_   | _(none)_   | Microsoft Reserved Partition | Required for Windows (no filesystem)      | ✅ **Yes** |
+| `nvme0n1p3` | `ntfs`     | `OS`       | Windows System               | Main Windows installation                 | ✅ **Yes** |
+| `nvme0n1p4` | `ntfs`     | `RECOVERY` | Windows Recovery Environment | Recovery tools/partition                  | ✅ **Yes** |
+| `nvme0n1p5` | `vfat`     | `MYASUS`   | ASUS Preinstalled Tools      | Manufacturer apps/drivers                 | ✅ **Yes** |
+
+_Note: The exact partition numbers (e.g., `nvme0n1p1`, `nvme0n1p5`) are examples and might vary slightly on your specific system. Always verify with `lsblk -f` during installation._
+
+### Recommended NixOS Partition Scheme
+
+You'll install NixOS into the **free space** on your drive. If you have a previous Linux installation (like Fedora) occupying partitions, you can safely delete those to make room.
+
+Here's the recommended layout for your NixOS partitions:
+
+1.  **Shared EFI System Partition (`/boot/efi`)**:
+
+    - **Existing Partition**: `nvme0n1p1` (identified above).
+    - **Filesystem**: `vfat`
+    - **Size**: Typically ~100-500MB (already existing).
+    - **Action**: **DO NOT FORMAT!** Simply mount this partition at `/boot/efi` during the NixOS installation process. This allows both Windows and NixOS to share the same bootloader.
+
+2.  **Swap Partition (`swap`)**:
+
+    - **Recommendation**: Essential for system stability and performance, especially with 32GB RAM on the H7606WI.
+    - **Size**: **32GB** (matching your RAM) is highly recommended. This provides ample space for memory-intensive tasks like video editing or 3D rendering. While full hibernation might be unreliable on this model, a large swap partition still benefits system responsiveness and suspend-to-disk capabilities.
+    - **Filesystem**: `swap` (no traditional filesystem).
+    - **Action**: Create a new swap partition in the freed space.
+
+3.  **NixOS Root Partition (`/`) with BTRFS Subvolumes**:
+
+    - **Recommendation**: BTRFS is highly recommended for its advanced features like snapshots, data integrity, and efficient space management. Utilizing subvolumes from the start provides a cleaner and more flexible setup.
+    - **Size**: **Remaining disk space**. This will house your NixOS operating system, applications, and user data.
+    - **Filesystem**: `btrfs`
+    - **Recommended Subvolumes**:
+      - `@`: For the root filesystem (`/`)
+      - `@home`: For user home directories (`/home`)
+      - `@nix`: For the Nix store (`/nix`), which contains all system packages and configurations.
+
+    _Alternative (ext4)_: If you prefer `ext4`, you can use it for your root partition without subvolumes. However, BTRFS is generally preferred for new NixOS installations for its flexibility.
+
+4.  **Separate `/boot` Partition (Optional but Recommended for BTRFS)**:
+    - **Recommendation**: While BTRFS can technically house `/boot`, having a small, separate `/boot` partition (e.g., `ext4`) can simplify bootloader configuration, especially with dual-booting and encryption.
+    - **Size**: **~512MB**
+    - **Filesystem**: `ext4`
+    - **Action**: Create a new `/boot` partition in the freed space.
+
+### Summary of New NixOS Partitions (in freed space):
+
+Assuming you delete previous Linux partitions or shrink your Windows partition to create free space, your new NixOS partitions should look something like this:
+
+| Partition   | Filesystem | Mount Point | Size          | Purpose                              |
+| :---------- | :--------- | :---------- | :------------ | :----------------------------------- |
+| `nvme0n1pX` | `ext4`     | `/boot`     | ~512MB        | Linux Kernel and Bootloader files    |
+| `nvme0n1pY` | `swap`     | `swap`      | 32GB          | Swap space for 32GB RAM              |
+| `nvme0n1pZ` | `btrfs`    | `/`         | Remaining     | Main NixOS system with subvolumes    |
+| _subvolume_ | `btrfs`    | `/home`     | (part of `/`) | User Home Directories                |
+| _subvolume_ | `btrfs`    | `/nix`      | (part of `/`) | Nix Store (packages, configurations) |
+
+_(Replace `nvme0n1pX`, `nvme0n1pY`, `nvme0n1pZ` with the actual partition numbers you create.)_
+
+This partition scheme provides a robust and well-organized foundation for your NixOS installation while ensuring Windows remains fully functional. When proceeding with the installation, refer to the "Manual Installation" steps for creating and mounting these partitions correctly.
 
 ## Disk Encryption (Optional)
 
