@@ -600,6 +600,15 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
 4.  Add the following ASUS-specific settings to `hosts/asus-linux/configuration.nix` (ensure you merge these with any existing content, don't just paste over everything):
 
     ```nix
+    # EFI Partition Management: Limit bootloader generations for small EFI partitions
+    # If your EFI partition is small (e.g., 260 MiB), you might be limited to
+    # keeping only one NixOS generation to avoid running out of space.
+    # This limits your rollback capabilities directly from the bootloader.
+    # For more generations, consider expanding your EFI partition (see Appendix).
+    boot.loader.systemd-boot.configurationLimit = 1; # For systemd-boot
+    # boot.loader.grub.configurationLimit = 1;      # For GRUB, if you are using it instead
+
+
     # Use kernel 6.15.4 (or later) for best ASUS hardware support for this model
     # NixOS 25.05 defaults to kernel 6.12, but 6.15.4 or later is recommended
     # for newer AMD CPUs and NVIDIA GPUs.
