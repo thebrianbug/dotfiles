@@ -666,6 +666,16 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
 
 ## ASUS Hardware Management
 
+**‼️ IMPORTANT NOTE ON COMMAND EXECUTION TIMING ‼️**
+
+Throughout the following sections (and elsewhere in this guide where hardware configurations are discussed), you will encounter two distinct types of commands/code:
+
+1.  **Nix Configuration Snippets (Nix code):** These are the blocks of code that you will add or merge into your `configuration.nix` file (e.g., `hosts/asus-linux/configuration.nix`). **These `.nix` configurations MUST be in place within your configuration file BEFORE you run the `nixos-install --flake .#asus-linux` command.** They define how your system is built.
+
+2.  **Bash Commands (CLI commands):** These are lines starting with `supergfxctl`, `asusctl`, `nvidia-smi`, `htop`, etc. **These commands are ONLY meant to be run AFTER NixOS has been successfully installed on your machine and you have rebooted into your new system.** They are provided for you to verify that the configurations worked, to manage your hardware, and for post-installation troubleshooting.
+
+Please recall this distinction to avoid confusion during the installation process.
+
 ### Graphics Switching
 
 Manage GPU configuration with `supergfxctl`. A logout or reboot is typically required after changing modes. Check the latest `supergfxctl` version (`supergfxctl --version`) at [asus-linux.org](https://asus-linux.org/).
