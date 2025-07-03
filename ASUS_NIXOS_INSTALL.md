@@ -844,20 +844,22 @@ sensors
 - Use integrated graphics for optimal battery life when not gaming or rendering.
 - Switching from NVIDIA to AMD graphics typically requires a logout or reboot.
 
-### Wayland Support
+### Wayland Support (for GNOME)
 
-Wayland (e.g., GNOME, Sway) is increasingly stable for NVIDIA GPUs in 2025, enhancing the H7606WI’s 4K OLED display scaling and HDR.
-
-```nix
-programs.sway.enable = true; # Or GNOME with Wayland enabled
-hardware.nvidia.modesetting.enable = true;
-```
-
-Test with `supergfxctl -m hybrid`. If USB-C displays fail or other issues arise, fall back to X11 by disabling Wayland in your display manager.
+Wayland (e.g., GNOME) is increasingly stable for NVIDIA GPUs in 2025, enhancing the H7606WI’s 4K OLED display scaling and HDR. To enable GNOME with Wayland support:
 
 ```nix
 services.xserver.enable = true;
-services.xserver.displayManager.gdm.wayland = false; # Example for GDM
+services.xserver.displayManager.gdm.enable = true;
+services.gnome.enable = true;
+hardware.nvidia.modesetting.enable = true;
+```
+
+Test with `supergfxctl -m hybrid`. If USB-C displays fail or other issues arise, fall back to X11 by disabling Wayland in your display manager:
+
+```nix
+services.xserver.enable = true; # Ensure X server is enabled
+services.xserver.displayManager.gdm.wayland = false; # Disable Wayland for GDM
 ```
 
 ### Desktop Environment Integration
@@ -866,7 +868,7 @@ For GNOME, add these extensions for better hardware control integration:
 
 ```nix
 environment.systemPackages = with pkgs; [
-  gnomeExtensions.supergfxctl-gex      # GPU mode indicator
+  gnomeExtensions.supergfxctl-gex          # GPU mode indicator
   gnomeExtensions.power-profile-switcher # Power profile controls
 ];
 ```
