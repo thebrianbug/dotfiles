@@ -66,8 +66,6 @@
 
     # Input devices
     libinput.enable = true; # Touchpad support
-    gestures.enable = true; # Enhanced touchpad/touchscreen gesture support
-    iio-sensor-proxy.enable = true; # Auto-rotation, light sensor
 
     # Audio setup (modern replacement for PulseAudio)
     pipewire = {
@@ -187,6 +185,8 @@
   environment.systemPackages = [
     # User packages have been moved to home-manager
     # If you need system-wide packages, add them here
+
+    iio-sensor-proxy # Auto-rotation, light sensor
   ];
 
   # Configure keymap in X11
