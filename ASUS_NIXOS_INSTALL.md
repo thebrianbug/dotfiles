@@ -615,6 +615,10 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
       # ASUS-specific services for fan control, keyboard lighting, etc.
       services = {
         supergfxd.enable = true; # For GPU mode switching
+        supergfxctl = {
+          enable = true;
+          gfx-vfio-enable = true; # Enable VFIO GPU passthrough support for virtualization
+        };
         asusd = { # For asusctl features
           enable = true;
           enableUserService = true;
@@ -657,6 +661,10 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
 
       # Power management daemons
       services.power-profiles-daemon.enable = true;
+      systemd.services.power-profiles-daemon = {
+        enable = true;
+        wantedBy = [ "multi-user.target" ]; # Ensure proper startup sequence
+      };
       services.tlp.enable = lib.mkDefault true; # For advanced power saving
 
       # Touchpad and touchscreen support
