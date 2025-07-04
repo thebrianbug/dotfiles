@@ -143,100 +143,86 @@ Now that you have a backup, you can safely remove old, unused Linux boot entries
 
 ## Partitioning Your ASUS ProArt P16 for NixOS (Dual Boot with Windows)
 
-When installing NixOS alongside Windows, it's critical to **avoid formatting or deleting any existing Windows partitions**. These typically include `nvme0n1p1` through `nvme0n1p5`.
+When installing NixOS alongside Windows, it's critical to **avoid formatting or deleting any existing Windows or vendor partitions**. These typically include `nvme0n1p1` through `nvme0n1p4` and `nvme0n1p7` on your system.
 
-### Understanding Existing Windows Partitions
+### Understanding Existing Partitions
 
-Your ASUS ProArt P16 likely has the following partition layout. You must **identify and keep all of them**:
+Based on your disk’s partition layout (from `sudo lsblk -o NAME,FSTYPE,LABEL,UUID,SIZE,FSAVAIL,FSUSE%,MOUNTPOINTS`), your ASUS ProArt P16 has the following partitions. You must **identify and preserve these** to maintain Windows and vendor functionality:
 
-| Partition   | Filesystem | Label      | Type                         | Purpose                                        | Keep?      |
-| :---------- | :--------- | :--------- | :--------------------------- | :--------------------------------------------- | :--------- |
-| `nvme0n1p1` | `vfat`     | `SYSTEM`   | EFI System Partition         | **Shared Bootloader for Windows & NixOS**      | ✅ **Yes** |
-| `nvme0n1p2` | _(none)_   | _(none)_   | Microsoft Reserved Partition | Required for Windows (no filesystem)           | ✅ **Yes** |
-| `nvme0n1p3` | `ntfs`     | `OS`       | Windows System               | Main Windows installation                      | ✅ **Yes** |
-| `nvme0n1p4` | `ntfs`     | `RECOVERY` | Windows Recovery Environment | Recovery tools/partition                       | ✅ **Yes** |
-| `nvme0n1p5` | `vfat`     | `MYASUS`   | ASUS Preinstalled Tools      | Manufacturer apps/drivers (separate partition) | ✅ **Yes** |
+| Partition   | Filesystem | Label    | UUID                                   | Size      | Type                         | Purpose                                      | Keep?      |
+| :---------- | :--------- | :------- | :------------------------------------- | :-------- | :--------------------------- | :------------------------------------------- | :--------- |
+| `nvme0n1p1` | `vfat`     | `SYSTEM` | `CC14-6473`                            | 260 MiB   | EFI System Partition         | **Shared Bootloader for Windows & NixOS**    | ✅ **Yes** |
+| `nvme0n1p2` | _(none)_   | _(none)_ | _(none)_                               | 16 MiB    | Microsoft Reserved Partition | Required for Windows (no filesystem)         | ✅ **Yes** |
+| `nvme0n1p3` | `ntfs`     | `OS`     | `D678161C7815FC45`                     | 733.4 GiB | Windows System               | Main Windows installation                    | ✅ **Yes** |
+| `nvme0n1p4` | `ntfs`     | _(none)_ | `AAACF0EAACF0B1C5`                     | 1015 MiB  | Windows Recovery Environment | Likely a recovery partition for Windows      | ✅ **Yes** |
+| `nvme0n1p5` | `ext4`     | _(none)_ | `54af068c-599e-4fcf-8e44-fc1922b9f1c9` | 1 GiB     | Linux Boot Partition         | Fedora boot partition (kernel, bootloader)   | ❌ **No**  |
+| `nvme0n1p6` | `btrfs`    | `fedora` | `0a4fa0cb-bf84-47f5-b9a6-06f4e2a8941e` | 1.1 TiB   | Linux Root Filesystem        | Fedora root and home (to be replaced)        | ❌ **No**  |
+| `nvme0n1p7` | `vfat`     | `MYASUS` | `DEB6-CF26`                            | 260 MiB   | ASUS Preinstalled Tools      | Manufacturer apps/drivers (vendor partition) | ✅ **Yes** |
 
-_Note: Partition numbers (e.g., `nvme0n1p1`) are examples and might vary. Always verify with `lsblk -f` during installation._
+_Note: Always verify your partition layout with `sudo lsblk -o NAME,FSTYPE,LABEL,UUID,SIZE,FSAVAIL,FSUSE%,MOUNTPOINTS` during installation to confirm the correct partitions._
 
-## Recommended NixOS Partition Scheme
+### Recommended NixOS Partition Scheme
 
-You'll install NixOS into **free space** on your drive. If you have an existing Linux installation, you can delete its partitions to make room.
+You’ll install NixOS into the **free space** created by deleting or reformatting the existing Fedora partitions (`nvme0n1p5` and `nvme0n1p6`). This will provide ~1.1 TiB of space (1 GiB + 1.1 TiB) for NixOS.
 
-Here's the recommended layout for your new NixOS partitions, **especially if you're performing a manual installation**:
+Here’s the recommended layout for your new NixOS partitions, tailored for a **manual installation**:
 
-1.  **Shared EFI System Partition (`/boot/efi`)**:
+1. **Shared EFI System Partition (`/boot/efi`)**:
 
-    - **Existing Partition**: `nvme0n1p1` (from the table above).
-    - **Filesystem**: `vfat`.
-    - **Size**: Typically **260 MiB** (your current size) or **1 GB (1024 MiB)** if you perform the optional expansion.
-    - **Action**: **DO NOT FORMAT\!** Simply mount this partition at `/boot/efi` during NixOS installation. This allows both Windows and NixOS to share the same bootloader.
+   - **Existing Partition**: `nvme0n1p1` (260 MiB, `vfat`, labeled `SYSTEM`).
+   - **Action**: **DO NOT FORMAT!** Mount this partition at `/boot/efi` during NixOS installation to share the bootloader with Windows.
+   - **Consideration**: The 260 MiB EFI partition may limit you to **1 NixOS generation** due to space constraints (Windows boot files, EFI files, and NixOS kernels/initramfs take ~80-120 MiB per generation). This restricts NixOS’s rollback capability. To enforce 1 generation, add to your `configuration.nix`:
+     - **For `systemd-boot`**:
+       ```nix
+       boot.loader.systemd-boot.enable = true;
+       boot.loader.systemd-boot.configurationLimit = 1; # Limits to 1 generation
+       ```
+     - **For `GRUB`**:
+       ```nix
+       boot.loader.grub.enable = true;
+       boot.loader.grub.efiSupport = true;
+       boot.loader.grub.configurationLimit = 1; # Limits to 1 generation
+       ```
+   - **Optional Expansion**: For multi-generation support, consider expanding `nvme0n1p1` to ~1 GiB post-installation (see _Appendix: Advanced EFI Partition Expansion_).
 
-    **--- IMPORTANT CONSIDERATION FOR 260 MiB EFI PARTITION ---**
-    **If you choose to re-use your existing 260 MiB EFI partition (`nvme0n1p1`) without resizing it, you will typically be limited to keeping only 1 NixOS generation at a time.** This is due to the combined size of Windows boot files, the necessary generic EFI files, and NixOS's kernels/initramfs files (which can easily be 80-120 MiB per generation). **Sacrificing additional generations means you lose NixOS's ability to seamlessly rollback to previous bootable system states directly from the boot menu**, making some system updates riskier.
+2. **Separate `/boot` Partition (`/boot`)**:
 
-    To enforce a limit of 1 generation due to space constraints, add the following to your `configuration.nix` file, depending on your bootloader:
+   - **Recommendation**: Reuse `nvme0n1p5` (currently 1 GiB, `ext4`) or create a new partition. A dedicated `/boot` partition simplifies bootloader setup (especially with GRUB) in a dual-boot environment with BTRFS.
+   - **Size**: Keep at **1 GiB** (current size of `nvme0n1p5` is sufficient).
+   - **Filesystem**: `ext4`.
+   - **Action**: Reformat `nvme0n1p5` as `ext4` and mount at `/boot`. If you prefer a smaller partition, create a new one (~512 MiB) in the freed space.
 
-    - **For `systemd-boot`**:
-      ```nix
-      boot.loader.systemd-boot.enable = true;
-      boot.loader.systemd-boot.configurationLimit = 1; # Limits to 1 generation
-      ```
-    - **For `GRUB`**:
-      ```nix
-      boot.loader.grub.enable = true;
-      boot.loader.grub.efiSupport = true;
-      boot.loader.grub.configurationLimit = 1; # Limits to 1 generation
-      ```
+3. **Swap Partition (`swap`)**:
 
-    **For new users, proceeding with the 260 MiB EFI initially is a valid strategy.** It reduces complexity for your first NixOS installation. NixOS's declarative nature and the ability to keep your configurations in Git provide a strong recovery mechanism for most NixOS-specific issues. If you later desire full multi-generation rollback capabilities, you can consider expanding the EFI partition as an advanced, post-installation step in the
-    [Appendix: Advanced EFI Partition Expansion (Optional Post-Installation)](#appendix-advanced-efi-partition-expansion-optional-post-installation).
+   - **Recommendation**: Essential for system stability, especially with 32 GiB RAM.
+   - **Size**: **32 GiB** (matching your RAM) for memory-intensive tasks.
+   - **Filesystem**: `swap`.
+   - **Action**: Create a new swap partition in the freed space (from `nvme0n1p6`).
 
-2.  **Separate `/boot` Partition (`/boot`)**:
-
-    - **Recommendation**: **Strongly recommended for manual installations** when dual-booting with Windows and using BTRFS for your root filesystem. A small, dedicated `/boot` partition (e.g., `ext4`) simplifies bootloader configuration (especially with GRUB) and increases robustness by keeping kernel images and initramfs files on a simpler filesystem, separate from the complex BTRFS root. Your current Fedora setup already uses this robust approach with `nvme0n1p6`.
-    - **Size**: **512 MiB**.
-    - **Filesystem**: `ext4`.
-    - **Action**: Create a new `/boot` partition in the freed space (you can reuse/reformat your existing `nvme0n1p6` for this if it's currently used by Fedora and you plan to replace Fedora).
-    - _Note_: While BTRFS can technically house `/boot` within its subvolumes, a dedicated `ext4` `/boot` partition reduces complexity for bootloader setup and maintenance in a dual-boot environment with GRUB. **The Calamares installer may not easily support this specific setup; manual installation is generally preferred for this layout**.
-
-3.  **Swap Partition (`swap`)**:
-
-    - **Recommendation**: Essential for system stability, especially with 32GB RAM.
-    - **Size**: **32 GiB** (matching your RAM) is highly recommended for memory-intensive tasks.
-    - **Filesystem**: `swap` (no traditional filesystem).
-    - **Action**: Create a new swap partition in the freed space.
-
-4.  **NixOS Root Partition (`/`) with BTRFS Subvolumes**:
-
-    - **Recommendation**: **BTRFS** is highly recommended for its advanced features like snapshots, data integrity, and efficient space management.
-    - **Size**: **Remaining disk space**. This will hold your NixOS, applications, and user data.
-    - **Filesystem**: `btrfs`.
-    - **Recommended Subvolumes**:
-      - `@`: For the root filesystem (`/`)
-      - `@home`: For user home directories (`/home`)
-      - `@nix`: For the Nix store (`/nix`), containing all system packages and configurations.
-    - _Alternative (ext4)_: If you prefer, you can use `ext4` for your root partition without subvolumes, though BTRFS is generally preferred for new NixOS installations for its flexibility.
+4. **NixOS Root Partition (`/`) with BTRFS Subvolumes**:
+   - **Recommendation**: Reuse the space from `nvme0n1p6` (~1.1 TiB). BTRFS is preferred for its snapshot and data integrity features.
+   - **Size**: ~1.1 TiB (remaining space after swap and `/boot`).
+   - **Filesystem**: `btrfs`.
+   - **Recommended Subvolumes**:
+     - `@`: For the root filesystem (`/`).
+     - `@home`: For user home directories (`/home`).
+     - `@nix`: For the Nix store (`/nix`).
+   - **Action**: Delete `nvme0n1p6`, create a new BTRFS partition, and set up subvolumes.
+   - **Alternative**: Use `ext4` if you prefer simplicity, but BTRFS is recommended for NixOS.
 
 ### Summary of New NixOS Partitions
 
-Assuming you've freed up space (by removing your old Fedora partitions), your new NixOS partitions (for a **manual installation**) should look like this:
+After deleting `nvme0n1p5` and `nvme0n1p6`, your new NixOS partitions should look like this:
 
 | Partition   | Filesystem | Mount Point | Size          | Purpose                              |
 | :---------- | :--------- | :---------- | :------------ | :----------------------------------- |
-| `nvme0n1pX` | `ext4`     | `/boot`     | **512 MiB**   | Linux Kernel and Bootloader files    |
-| `nvme0n1pY` | `swap`     | `swap`      | **32 GiB**    | Swap space for 32GB RAM              |
-| `nvme0n1pZ` | `btrfs`    | `/`         | Remaining     | Main NixOS system with subvolumes    |
+| `nvme0n1p5` | `ext4`     | `/boot`     | 1 GiB         | Linux Kernel and Bootloader files    |
+| `nvme0n1p6` | `btrfs`    | `/`         | ~1.1 TiB      | Main NixOS system with subvolumes    |
+| `nvme0n1p8` | `swap`     | `swap`      | 32 GiB        | Swap space for 32 GiB RAM            |
 | _subvolume_ | `btrfs`    | `/home`     | (part of `/`) | User Home Directories                |
 | _subvolume_ | `btrfs`    | `/nix`      | (part of `/`) | Nix Store (packages, configurations) |
 
-_(Replace `nvme0n1pX`, `nvme0n1pY`, `nvme0n1pZ` with the actual partition numbers you create. For your system, `nvme0n1p6` will likely be your new `/boot`, and `nvme0n1p7` your new root.)_
-
-This scheme provides a robust foundation for NixOS while preserving your Windows installation. Refer to the "Manual Installation" steps for creating and mounting these partitions.
-
----
-
-## Disk Encryption (Optional)
+_Note: Partition numbers (`nvme0n1p6`, `nvme0n1p8`) assume you reuse `nvme0n1p5` and create new partitions after deleting `nvme0n1p6`. Adjust numbers based on your partitioning tool’s output._
 
 You can encrypt your NixOS installation using LUKS. Skip this section if you don't need encryption.
 
