@@ -603,25 +603,16 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
       boot.loader.systemd-boot.configurationLimit = 1; # For systemd-boot
       # boot.loader.grub.configurationLimit = 1;      # For GRUB, if you are using it instead
 
-
-      # Use kernel 6.15.4 (or later) for best ASUS hardware support for this model
-      # NixOS 25.05 defaults to kernel 6.12, but 6.15.4 or later is recommended
-      # for newer AMD CPUs and NVIDIA GPUs.
-      boot.kernelPackages = pkgs.linuxPackages_latest; # This will pull the latest stable kernel available in Nixpkgs
-      # If you specifically want 6.15.4 and it's not 'latest', you might need:
-      # boot.kernelPackages = pkgs.linuxPackages_6_15; # (or whatever is the exact package name for 6.15)
-
-      # ASUS-specific kernel modules and parameters
-      boot.extraModulePackages = with config.boot.kernelPackages; [ 
-        asus-wmi
-        asus-nb-wmi 
-      ];
-      boot.kernelModules = [ "asus-wmi" "asus-nb-wmi" ];
-      boot.kernelParams = [ 
-        "amd_pstate=active"
-        "acpi_osi=Linux"
-        "acpi_call"
-      ];
+      boot = {
+        # Use kernel 6.15.4 (or later) for best ASUS hardware support for this model
+        # NixOS 25.05 defaults to kernel 6.12, but 6.15.4 or later is recommended
+        # for newer AMD CPUs and NVIDIA GPUs.
+        # If you specifically want 6.15.4 and it's not 'latest', you might need:
+        # boot.kernelPackages = pkgs.linuxPackages_6_15; # (or whatever is the exact package name for 6.15)
+        kernelPackages = pkgs.linuxPackages_latest;
+        kernelParams = [ "amd_pstate=active" ];
+        kernelModules = [ "mt7921e" "mt7922e" "i2c_hid_acpi" ];
+      };
 
       # ASUS-specific services for fan control, keyboard lighting, etc.
       services = {
