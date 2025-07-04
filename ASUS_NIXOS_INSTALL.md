@@ -633,7 +633,7 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
           enableUserService = true;
         };
 
-        # Power management
+        # Power management (do not use TLP with power-profiles-daemon + asusd)
         power-profiles-daemon.enable = true;
 
         # Input devices
@@ -831,12 +831,6 @@ If `nvidia-smi` shows “no devices found”:
     ```
 
 ## ✅ Optional Enhancements (Add to config if needed)
-
-### Enable TLP for extra power saving:
-
-```nix
-services.tlp.enable = true;
-```
 
 ### Enable Secure Boot (advanced users only):
 
