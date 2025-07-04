@@ -108,6 +108,8 @@
   # System diagnostic and hardware tools
   environment.systemPackages = with pkgs; [
     pciutils usbutils inxi glxinfo
+
+    iio-sensor-proxy # Auto-rotation, light sensor
   ];
 
   # Firmware for hardware components
@@ -178,16 +180,6 @@
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  # System-wide packages (user packages moved to home-manager)
-  environment.systemPackages = [
-    # User packages have been moved to home-manager
-    # If you need system-wide packages, add them here
-
-    iio-sensor-proxy # Auto-rotation, light sensor
-  ];
 
   # Configure keymap in X11
   # services.xserver.xkb.layout = "us";
