@@ -781,6 +781,11 @@ sudo btrfs subvolume snapshot -r / /.snapshots/pre-update-$(date +%Y%m%d)
 
 ### NVIDIA Issues
 
+> ⚠️ **WARNING: Secure Boot and NVIDIA Drivers**  
+> If Secure Boot is enabled in your UEFI settings, the proprietary NVIDIA drivers may silently fail to load. Either:
+> - Disable Secure Boot in UEFI settings (recommended for most users)  
+> - Or set up signed drivers with `sbctl` (advanced users only)  
+
 If `nvidia-smi` fails:
 
 ```bash
