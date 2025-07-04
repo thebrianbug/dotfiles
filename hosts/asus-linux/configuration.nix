@@ -16,9 +16,23 @@
     # keeping only one NixOS generation to avoid running out of space.
     # This limits your rollback capabilities directly from the bootloader.
     # For more generations, consider expanding your EFI partition.
-    loader.systemd-boot = {
-      enable = true; # Allow NixOS to write its bootloader to the EFI partition
-      configurationLimit = 1; # Keep only one generation to save space
+    loader = {
+      grub = {
+        enable = true;
+        efiSupport = true;
+        efiInstallAsRemovable = false;
+        device = "nodev"; # Required for EFI install
+      };
+
+      efi = {
+        efiSysMountPoint = "/boot/efi";
+        canTouchEfiVariables = true;
+      };
+
+      # systemd-boot = {
+      #   enable = true; # Allow NixOS to write its bootloader to the EFI partition
+      #   configurationLimit = 1; # Keep only one generation to save space
+      # };
     };
 
     # Use latest stable kernel for best hardware support
