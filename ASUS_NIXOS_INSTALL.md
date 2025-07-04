@@ -36,12 +36,12 @@ If Windows is installed, consider backing up proprietary ASUS drivers. While thi
 
 Disconnect external displays during installation to avoid unpredictable behavior with graphics switching.
 
-### Switch to Hybrid Mode on Windows (2022+ Models)
+### Switch to **Standard** Mode (Windows Default / MSHybrid) on Windows (2022+ Models)
 
-For 2022 or newer ASUS models, including the H7606WI, switch to Hybrid graphics mode in Windows to prevent potential issues during the NixOS installation:
+For ASUS models from 2022 and newer—including the H7606WI—switch to **Standard** graphics mode (also known as _Windows Default_ or _MSHybrid_) in Windows to avoid potential issues during NixOS installation:
 
-1.  Open the MyASUS app, go to "Customization" → "GPU Settings," and select "Hybrid Mode" (or "Optimus Mode").
-2.  Save changes and reboot before installing NixOS.
+1. Open the **MyASUS** app, navigate to **Customization** → **GPU Settings**, and select **Standard** mode (may also appear as _Optimus Mode_ or _Hybrid Mode_).
+2. Save changes and reboot **before** installing NixOS.
 
 ### Backup the EFI Partition (CRUCIAL FOR DUAL BOOT)
 
