@@ -80,11 +80,9 @@
     geoclue2.enable = true;  # Location-based features
 
     # GNOME desktop with Wayland (for best HDR support)
-    xserver = {
-      enable = true;
-      desktopManager.gnome.enable = true;
-      displayManager.gdm.wayland = true;
-    };
+    desktopManager.gnome.enable = true;
+    displayManager.gdm.wayland = true;
+    xserver.enable = true;
   };
 
   # NVIDIA configuration for RTX 4070
