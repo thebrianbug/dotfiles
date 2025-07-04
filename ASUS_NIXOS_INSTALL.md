@@ -658,6 +658,9 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
           sof-firmware    # Better audio support
         ];
       };
+      
+      # Networking configuration
+      networking.networkmanager.enable = true;
 
       # Power management
       services.power-profiles-daemon.enable = true;
