@@ -677,7 +677,7 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
         __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL vendor selection
         WLR_NO_HARDWARE_CURSORS = "1";     # Fixes cursor issues in Wayland
       };
-      
+
       # System diagnostic and hardware tools
       environment.systemPackages = with pkgs; [
         pciutils usbutils inxi glxinfo
@@ -697,542 +697,155 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
     }
     ```
 
-## ASUS Hardware Management
+## ✅ After Adding `asus-linux/configuration.nix`
 
-**‼️ IMPORTANT NOTE ON COMMAND EXECUTION TIMING ‼️**
+### 1. Update `flake.nix`
 
-Throughout the following sections (and elsewhere in this guide where hardware configurations are discussed), you will encounter two distinct types of commands/code:
-
-1.  **Nix Configuration Snippets (Nix code):** These are the blocks of code that you will add or merge into your `configuration.nix` file (e.g., `hosts/asus-linux/configuration.nix`). **These `.nix` configurations MUST be in place within your configuration file BEFORE you run the `nixos-install --flake .#asus-linux` command.** They define how your system is built.
-
-2.  **Bash Commands (CLI commands):** These are lines starting with `supergfxctl`, `asusctl`, `nvidia-smi`, `htop`, etc. **These commands are ONLY meant to be run AFTER NixOS has been successfully installed on your machine and you have rebooted into your new system.** They are provided for you to verify that the configurations worked, to manage your hardware, and for post-installation troubleshooting.
-
-Please recall this distinction to avoid confusion during the installation process.
-
-### Graphics Switching
-
-Manage GPU configuration with `supergfxctl`. A logout or reboot is typically required after changing modes. Check the latest `supergfxctl` version (`supergfxctl --version`) at [asus-linux.org](https://asus-linux.org/).
-
-```bash
-# Check current graphics mode
-supergfxctl -g
-
-# List available modes
-supergfxctl -m
-
-# Set graphics mode (replace MODE with desired setting)
-supergfxctl -m MODE
-
-# Examples:
-supergfxctl -m integrated  # Power-saving (AMD iGPU only)
-supergfxctl -m hybrid     # Uses both GPUs, NVIDIA on-demand (Optimus)
-supergfxctl -m dedicated  # Maximum performance (NVIDIA RTX 4070 dGPU)
-```
-
-### Keyboard Lighting
-
-Manage the H7606WI’s RGB keyboard with `asusctl`:
-
-```bash
-# Set brightness (0-3: off, low, med, high)
-asusctl -k low|med|high|off
-
-# Set RGB mode
-asusctl led-mode static      # Single color
-asusctl led-mode breathe     # Breathing effect
-asusctl led-mode rainbow     # Rainbow effect
-# Per-key RGB example: (consult asusctl docs for specific key names/syntax)
-asusctl led-mode aura --key red,green,blue
-# List available modes
-asusctl led-mode --help
-```
-
-### Power Profiles
-
-Manage power profiles for performance or battery life using `asusctl`:
-
-```bash
-# Show current profile
-asusctl profile -p
-
-# List available profiles
-asusctl profile -l
-
-# Set profile
-asusctl profile -P quiet|balanced|performance
-```
-
-**Note**: Full hibernation may be unreliable due to H7606WI firmware limitations (e.g., UEFI or GPU driver issues). If `systemctl hibernate` fails, check `dmesg` for errors and verify swap size (32GB recommended for 32GB RAM). As a fallback, configure `suspend-then-hibernate` or prioritize suspend-to-idle for quick power saving:
+Edit your top-level `flake.nix` and add the `asus-linux` entry:
 
 ```nix
-services.logind.lidSwitch = "suspend-then-hibernate"; # Tries suspend, then hibernates on low battery
-services.logind.lidSwitchExternalPower = "suspend";
-```
-
-Add this kernel parameter for better suspend support on AMD systems:
-
-```nix
-boot.kernelParams = [ "amd_pstate=active" ];
-```
-
-Test suspend: `systemctl suspend`
-
-### Performance Optimization
-
-Optimize the H7606WI for creative workloads (e.g., 4K video editing, 3D rendering):
-
-- **CPU Frequency Scaling**: Ensure `cpupower` is available and set the performance governor.
-
-  ```nix
-  environment.systemPackages = with pkgs; [ cpupower ];
-  powerManagement.powertop.enable = true; # For general power optimization
-  ```
-
-  Set the performance governor (can be done manually or via systemd service):
-
-  ```bash
-  sudo cpupower frequency-set -g performance
-  ```
-
-- **NVIDIA Settings**: Install `nvidia-settings` for fan control or overclocking (launches a GUI tool).
-
-  ```nix
-  environment.systemPackages = with pkgs; [ nvidia-settings ];
-  ```
-
-  Run: `nvidia-settings` for GUI adjustments.
-
-- **Verify Performance**: Check CPU/GPU usage:
-
-  ```bash
-  htop
-  nvidia-smi
-  ```
-
-### HDR Support
-
-The H7606WI’s 4K OLED supports HDR. **NixOS 25.05 with GNOME 48 introduces improved HDR support.** Ensure you're on a recent kernel (6.12+ for 25.05, or your tested 6.15.4) and NVIDIA driver for best support.
-
-```nix
-# Included in Step 3 already, but repeated for context:
-environment.systemPackages = with pkgs; [ gnome.gnome-control-center ]; # If using GNOME
-hardware.nvidia.modesetting.enable = true;
-services.xserver.desktopManager.gnome.enable = true;
-services.xserver.displayManager.gdm.wayland = true; # Ensure Wayland is enabled
-```
-
-Test HDR with an HDR-capable video:
-
-```bash
-mpv --vo=gpu --gpu-context=wayland --hdr-compute-peak=yes <hdr-video.mp4>
-```
-
-If HDR fails, verify your kernel and NVIDIA driver versions (`uname -r`, `nvidia-smi`). If Wayland HDR remains problematic, a fallback to X11 might be necessary:
-
-```nix
-services.xserver.enable = true;
-services.xserver.displayManager.gdm.wayland = false; # Or other display manager settings
-```
-
-### Audio Configuration
-
-The H7606WI’s audio (e.g., Realtek ALC codec) works well with `pipewire`.
-
-```nix
-sound.enable = true;
-hardware.pulseaudio.enable = false; # Disable PulseAudio if PipeWire is used
-services.pipewire = {
-  enable = true;
-  alsa.enable = true; # ALSA compatibility
-  pulse.enable = true; # PulseAudio compatibility
+nixosConfigurations = {
+  asus-linux = nixpkgs.lib.nixosSystem {
+    inherit system;
+    modules = [
+      ./hosts/asus-linux/configuration.nix
+      home-manager.nixosModules.home-manager {
+        home-manager.useGlobalPkgs = true;
+        home-manager.useUserPackages = true;
+        home-manager.users.brianbug = import ./home-manager/nixos;
+      }
+    ];
+  };
 };
 ```
 
-Test audio:
+> Replace `brianbug` with your actual username if different.
+
+### 2. Build and Install
+
+Assuming you’re in the root of your flake repo and using a live USB:
 
 ```bash
+sudo nixos-install --flake .#asus-linux
+```
+
+If already installed and you're applying updates:
+
+```bash
+sudo nixos-rebuild switch --flake .#asus-linux
+```
+
+### 3. Post-Reboot Verification
+
+After rebooting into your new system, verify:
+
+```bash
+systemctl status asusd supergfxd
+supergfxctl -g
+nvidia-smi
+glxinfo | grep "OpenGL renderer"
 speaker-test -c 2
 ```
 
-For microphone issues, check detected devices:
+## 🧰 Key Troubleshooting
 
-```bash
-arecord -l
-```
+### 🖥️ Display: Black Screen or No External Display
 
-Adjust levels with `alsamixer` if needed.
+- Use TTY (Ctrl+Alt+F3) if desktop fails.
 
-### Fan Control
+- Try switching GPU mode:
 
-Customize fan curves with `asusctl` for CPU and GPU independently or set a general mode:
+  ```bash
+  supergfxctl -m hybrid
+  supergfxctl -m integrated
+  ```
 
-```bash
-asusctl fan-curve -m balanced # Set a balanced fan curve for both
-asusctl fan-curve -e cpu -f balanced # Set balanced fan curve for CPU only
-asusctl fan-curve -e gpu -f balanced # Set balanced fan curve for GPU only
-```
+- If Wayland fails, fallback to X11:
 
-List available fan modes: `asusctl fan-curve --help`.
+  ```nix
+  services.xserver.displayManager.gdm.wayland = false;
+  ```
 
-Monitor temperatures:
+### 🎮 NVIDIA Issues
 
-```bash
-sensors
-```
+If `nvidia-smi` shows “no devices found”:
 
-### Known Limitations
+- Ensure the NVIDIA module is loaded:
 
-- If the keyboard backlight fails, try explicitly setting a mode: `asusctl led-mode static`.
-- Older ROG models (2020) may have NVIDIA GPU low-power issues; the H7606WI is largely unaffected with recent kernels.
-- Use integrated graphics for optimal battery life when not gaming or rendering.
-- Switching from NVIDIA to AMD graphics typically requires a logout or reboot.
+  ```bash
+  lsmod | grep nvidia
+  dmesg | grep -i nvidia
+  ```
 
-### Wayland Support (for GNOME)
+- Try forcing GPU mode:
 
-Wayland (e.g., GNOME) is increasingly stable for NVIDIA GPUs in 2025, enhancing the H7606WI’s 4K OLED display scaling and HDR. To enable GNOME with Wayland support:
+  ```bash
+  supergfxctl -m dedicated
+  ```
+
+### 🎧 Audio Problems
+
+- Check playback:
+
+  ```bash
+  speaker-test -c 2
+  ```
+
+- Mic/device detection:
+
+  ```bash
+  arecord -l
+  alsamixer
+  ```
+
+### 🌐 WiFi/Bluetooth
+
+- Confirm modules loaded:
+
+  ```bash
+  lspci | grep -i network
+  lsmod | grep mt792
+  ```
+
+- Restart NetworkManager:
+
+  ```bash
+  systemctl restart NetworkManager
+  ```
+
+### 🔋 Suspend / Hibernate
+
+- Test suspend:
+
+  ```bash
+  systemctl suspend
+  ```
+
+- If hibernation fails:
+
+  - Confirm swap is large enough (`free -h`)
+  - Check logs:
+
+    ```bash
+    dmesg | grep -i hibernat
+    ```
+
+## ✅ Optional Enhancements (Add to config if needed)
+
+### Enable TLP for extra power saving:
 
 ```nix
-services.xserver.enable = true;
-services.xserver.displayManager.gdm.enable = true;
-services.gnome.enable = true;
-hardware.nvidia.modesetting.enable = true;
+services.tlp.enable = true;
 ```
 
-Test with `supergfxctl -m hybrid`. If USB-C displays fail or other issues arise, fall back to X11 by disabling Wayland in your display manager:
+### Enable Secure Boot (advanced users only):
 
 ```nix
-services.xserver.enable = true; # Ensure X server is enabled
-services.xserver.displayManager.gdm.wayland = false; # Disable Wayland for GDM
-```
-
-### Desktop Environment Integration
-
-For GNOME, add these extensions for better hardware control integration:
-
-```nix
-environment.systemPackages = with pkgs; [
-  gnomeExtensions.supergfxctl-gex          # GPU mode indicator
-  gnomeExtensions.power-profile-switcher # Power profile controls
-];
-```
-
-### Additional Configuration
-
-#### Re-enabling Secure Boot (Optional)
-
-Re-enabling Secure Boot is an advanced procedure. Proceed with caution and ensure you have a NixOS live USB for recovery.
-
-```nix
-boot.loader.systemd-boot.enable = true;
 boot.loader.efi.canTouchEfiVariables = true;
-boot.loader.secureBoot = {
-  enable = true;
-  keyFile = "/path/to/secure-boot-key"; # Path to your generated Secure Boot key
-  certFile = "/path/to/secure-boot-cert"; # Path to your generated Secure Boot certificate
-};
+boot.loader.secureBoot.enable = true;
 ```
 
-**Steps**:
-
-1.  Install `sbctl`:
-
-    ```nix
-    environment.systemPackages = with pkgs; [ sbctl ];
-    ```
-
-2.  After rebuilding and booting, generate and enroll keys:
-
-    ```bash
-    sudo sbctl create-keys
-    sudo sbctl enroll-keys
-    ```
-
-3.  Rebuild your NixOS system: `sudo nixos-rebuild switch`
-
-4.  Verify Secure Boot status in your UEFI settings (DEL key during boot).
-
-**Warning**: Keep a NixOS live USB for recovery if boot fails. Back up your Secure Boot keys and certificates (`/path/to/secure-boot-key` and `/path/to/secure-boot-cert`).
-
-**Recovery**: If Secure Boot prevents your system from booting:
-
-1.  Boot from your NixOS live USB.
-2.  Disable Secure Boot in UEFI (DEL key, Security → Secure Boot Control → Disable).
-3.  If needed, reset existing keys: `sudo sbctl reset`.
-4.  Rebuild your NixOS system: `sudo nixos-rebuild switch`.
-
-#### Hide Unnecessary Boot Messages
-
-Hide the "Nvidia kernel module not found" message if it appears:
-
-```nix
-systemd.services.nvidia-fallback.enable = false;
-```
-
-### Troubleshooting
-
-#### Display Issues
-
-1.  **External Displays**:
-
-    - Ensure GPU mode is set to `dedicated` for consistent external display output via the NVIDIA GPU: `supergfxctl -m dedicated`.
-    - Use X11 if Wayland encounters issues with external displays.
-
-2.  **Black Screen After Login**:
-
-    - Switch to a TTY (Ctrl+Alt+F3).
-    - Check the current graphics mode: `supergfxctl -g`.
-    - Try switching to integrated graphics: `supergfxctl -m integrated`.
-
-3.  **Screen Brightness**:
-
-    - Ensure you are using the latest kernel (`boot.kernelPackages = pkgs.linuxPackages_latest;`).
-    - Add this kernel parameter for better ACPI support on some laptops:
-
-    <!-- end list -->
-
-    ```nix
-    boot.kernelParams = [ "acpi_osi=Linux" ];
-    ```
-
-#### Power Management Issues
-
-1.  **Poor Battery Life**:
-
-    - Always use `integrated` mode when not performing GPU-intensive tasks.
-    - Ensure power management services are enabled:
-
-    <!-- end list -->
-
-    ```nix
-    services.power-profiles-daemon.enable = true;
-    services.tlp.enable = true;
-    ```
-
-#### Touchpad/Touchscreen Issues
-
-- **Touchpad**: Ensure `services.libinput.enable = true`. Test input:
-
-  ```bash
-  xinput list
-  xinput test <id> # Replace <id> with your touchpad ID from xinput list
-  ```
-
-- **Touchscreen**: The H7606WI’s 4K OLED touchscreen supports stylus input (e.g., ASUS Pen 2.0). Ensure IIO support is enabled:
-
-  ```nix
-  hardware.sensor.iio.enable = true;
-  ```
-
-  Verify device detection:
-
-  ```bash
-  libinput list-devices
-  ```
-
-##### Touchscreen Calibration
-
-For the H7606WI’s 4K OLED touchscreen, calibrate if input is inaccurate:
-
-- **X11**: Install `xinput_calibrator`:
-
-  ```nix
-  environment.systemPackages = with pkgs; [ xinput_calibrator ];
-  ```
-
-  Run: `xinput_calibrator` and follow prompts.
-
-- **Wayland**: Use desktop environment settings (e.g., GNOME Settings → Devices → Touchscreen).
-
-For ASUS Pen 2.0, verify pressure sensitivity and tilt in applications like Xournal++ or Krita. If unsupported, install `wacomtablet` (which often includes drivers for non-Wacom pens that use similar protocols):
-
-```nix
-environment.systemPackages = with pkgs; [ wacomtablet ];
-```
-
-Configure via `wacomtablet` GUI or check kernel support:
-
-```bash
-lsmod | grep wacom
-```
-
-If issues occur, check kernel logs:
-
-```bash
-dmesg | grep -i input
-```
-
-Ensure the `i2c_hid_acpi` module is loaded in your `configuration.nix` (already included in Step 3):
-
-```nix
-boot.kernelModules = [ "i2c_hid_acpi" ];
-```
-
-## Networking Configuration
-
-### WiFi Setup
-
-The H7606WI’s MediaTek MT7922 WiFi card works out of the box with **NixOS 25.05** due to its modern kernel (6.12 by default, or your tested 6.15.4). Try the default NetworkManager setup first:
-
-1.  **Basic NetworkManager Setup**:
-
-    ```nix
-    networking.networkmanager.enable = true;
-    ```
-
-2.  Test WiFi connectivity:
-
-    ```bash
-    nmcli device wifi list
-    ```
-
-3.  If WiFi fails, identify your network hardware:
-
-    ```bash
-    lspci | grep -i network
-    ```
-
-    Example output:
-
-    ```
-    00:14.3 Network controller: MediaTek Inc. MT7922 802.11ax PCI Express Wireless Network Adapter
-    ```
-
-4.  Troubleshooting (if needed for MediaTek MT7922):
-
-    ```nix
-    hardware.enableAllFirmware = true; # Ensures all firmware is available
-    hardware.firmware = [ pkgs.linux-firmware ]; # Specifically for kernel firmware blobs
-    boot.kernelModules = [ "mt7921e" "mt7922e" ]; # Explicitly load MediaTek modules
-    networking.networkmanager.wifi.powersave = false; # May improve stability for some WiFi chips
-    ```
-
-#### WiFi 6E/7 Support
-
-The H7606WI’s MT7922 supports WiFi 6E/7. You should generally not need specific kernel parameters for this chip. Verify performance and connection details:
-
-```bash
-iw dev wlan0 link # Check link speed and details
-iperf3 -c <server> # Test throughput to a local server
-```
-
-Check for MT7922 firmware updates via `fwupd`:
-
-```bash
-sudo fwupdmgr refresh
-sudo fwupdmgr update
-```
-
-5.  **Temporary Internet**: If WiFi is problematic during installation, use USB tethering from a phone or an Ethernet adapter for a temporary connection.
-
-### Bluetooth Configuration
-
-Enable Bluetooth services and ensure they start on boot:
-
-```nix
-services.blueman.enable = true; # A graphical Bluetooth manager
-hardware.bluetooth.enable = true;
-hardware.bluetooth.powerOnBoot = true;
-```
-
-## Verification and Testing
-
-### Hardware Checklist
-
-After installation, verify that all essential hardware components are working:
-
-- Graphics switching: `supergfxctl -g`
-- Power profiles: `asusctl profile -p`
-- Keyboard backlight: `asusctl -k high`
-- WiFi: Connect to a network and browse.
-- Bluetooth: Pair a device (e.g., headphones, mouse).
-- Function keys: Test volume, brightness, and lighting keys.
-- Suspend/Resume: Test with `systemctl suspend`.
-- Touchscreen/Stylus: Test in an application like Xournal++ or Krita.
-- Audio: Test with `speaker-test -c 2`.
-- HDR: Test with `mpv` and an HDR video.
-
-### Quick Diagnostics
-
-Use these commands for quick system health checks:
-
-```bash
-systemctl status asusd supergfxd # Check status of ASUS services
-lsmod | grep -E 'nvidia|amdgpu' # Verify GPU drivers are loaded
-dmesg | grep -i -E 'error|fail' # Check kernel logs for errors
-glxinfo | grep "OpenGL renderer" # Verify correct GPU is in use (for X11)
-```
-
-## Firmware Updates
-
-### ASUS BIOS Updates
-
-Download BIOS updates from [ASUS Support](https://www.asus.com/support/) for the ProArt P16 H7606WI. Save to a USB drive and follow ASUS’s BIOS update instructions. If dual-booting isn't available, or you prefer not to boot into Windows, use the Windows USB method described below.
-
-### Using fwupd in NixOS
-
-`fwupd` allows updating firmware for supported devices directly from Linux, often via the Linux Vendor Firmware Service (LVFS).
-
-```nix
-services.fwupd.enable = true;
-```
-
-Manage updates:
-
-```bash
-systemctl status fwupd # Check fwupd service status
-fwupdmgr get-devices # List detected devices
-sudo fwupdmgr refresh # Check for new updates
-sudo fwupdmgr get-updates # See available updates
-sudo fwupdmgr update # Apply updates
-```
-
-**Note**: The H7606WI’s firmware is generally well-supported by LVFS. If `fwupd` fails or specific components (e.g., TPM, EC) aren’t supported, check LVFS compatibility at [fwupd.org](https://fwupd.org). In such cases, fall back to Windows-based USB updates with files from [ASUS Support](https://www.asus.com/us/Laptops/ASUS-ProArt-P16-H7606WI/HelpDesk_BIOS/).
-
-### Creating a Windows USB for Firmware Updates
-
-For BIOS updates when `fwupd` is not an option or if a full Windows installation is not available:
-
-1.  Create a Windows installation USB drive.
-2.  Boot into the Windows setup environment.
-3.  Press Shift+F10 to open a Command Prompt.
-4.  From the Command Prompt, you can navigate to a separate USB drive containing the BIOS update files downloaded from ASUS Support and run the update utility.
-
-**Note**: The H7606WI’s hardware is well-supported in recent kernels (6.12+ in NixOS 25.05, or your tested 6.15.4), reducing the frequency of critical firmware updates.
-
-## Step 4: Update Flake Configuration
-
-Now that your NixOS configuration files are in your dotfiles repository, you need to tell your `flake.nix` how to build your specific ASUS system.
-
-1.  Edit your `flake.nix` file (located in the root of your dotfiles repository):
-
-    ```bash
-    nano flake.nix
-    ```
-
-2.  Add the following `asus-linux` configuration to the `nixosConfigurations` attribute set within your `flake.nix`. This defines how your system is built, including pulling in your host-specific configuration and enabling Home Manager for your user.
-
-    ```nix
-    # ... (rest of your flake.nix) ...
-
-    nixosConfigurations = {
-      asus-linux = nixpkgs.lib.nixosSystem {
-        inherit system; # Inherits the system architecture (e.g., "x86_64-linux")
-        modules = [
-          # Import your host-specific configuration
-          ./hosts/asus-linux/configuration.nix
-          # Enable and configure Home Manager for your user
-          home-manager.nixosModules.home-manager {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.users.brianbug = import ./home-manager/nixos; # Adjust 'brianbug' to your username
-          }
-        ];
-      };
-      # ... (other configurations if you have them) ...
-    };
-
-    # ... (rest of your flake.nix) ...
-    ```
+You’ll also need `sbctl` and to enroll keys manually.
 
 ## Step 5: Install NixOS with Your Configuration
 
