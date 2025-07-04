@@ -677,6 +677,11 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
         __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL vendor selection
         WLR_NO_HARDWARE_CURSORS = "1";     # Fixes cursor issues in Wayland
       };
+      
+      # System diagnostic and hardware tools
+      environment.systemPackages = with pkgs; [
+        pciutils usbutils inxi glxinfo
+      ];
 
       # Firmware for hardware components
       hardware = {
