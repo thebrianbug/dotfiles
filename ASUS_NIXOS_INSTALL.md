@@ -701,12 +701,12 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
 
 ### 1. Update `flake.nix`
 
-Edit your top-level `flake.nix` and add the `asus-linux` entry:
+Ensure your flake includes the `asus-linux` host like so:
 
 ```nix
 nixosConfigurations = {
   asus-linux = nixpkgs.lib.nixosSystem {
-    inherit system;
+    system = "x86_64-linux";
     modules = [
       ./hosts/asus-linux/configuration.nix
       home-manager.nixosModules.home-manager {
@@ -719,448 +719,174 @@ nixosConfigurations = {
 };
 ```
 
-> Replace `brianbug` with your actual username if different.
+Replace `brianbug` with your actual username if different.
 
-### 2. Build and Install
+### 2. Build and Install NixOS
 
-Assuming you’re in the root of your flake repo and using a live USB:
+From the root of your flake-based dotfiles repository:
 
 ```bash
 sudo nixos-install --flake .#asus-linux
 ```
 
-If already installed and you're applying updates:
+### 3. Reboot into NixOS
 
 ```bash
+reboot
+```
+
+Log in and verify:
+
+```bash
+systemctl status supergfxd asusd
+supergfxctl -g
+nvidia-smi
+```
+
+## 🔁 Keeping Your System Updated
+
+To apply updates or configuration changes:
+
+```bash
+cd ~/source/dotfiles
+git pull
+sudo nix flake update
 sudo nixos-rebuild switch --flake .#asus-linux
 ```
 
-### 3. Post-Reboot Verification
-
-After rebooting into your new system, verify:
+Optionally, create a BTRFS snapshot before updating:
 
 ```bash
-systemctl status asusd supergfxd
-supergfxctl -g
-nvidia-smi
-glxinfo | grep "OpenGL renderer"
-speaker-test -c 2
+sudo btrfs subvolume snapshot -r / /.snapshots/pre-update-$(date +%Y%m%d)
 ```
 
-## 🧰 Key Troubleshooting
+## 🧰 Troubleshooting (Modern Hardware)
 
-### 🖥️ Display: Black Screen or No External Display
+### Display: Black Screen or No External Monitor
 
-- Use TTY (Ctrl+Alt+F3) if desktop fails.
+- Use `Ctrl+Alt+F3` to switch to a TTY
 
-- Try switching GPU mode:
+- Cycle GPU modes:
 
   ```bash
   supergfxctl -m hybrid
   supergfxctl -m integrated
   ```
 
-- If Wayland fails, fallback to X11:
+- Fallback to X11 if Wayland fails:
 
   ```nix
   services.xserver.displayManager.gdm.wayland = false;
   ```
 
-### 🎮 NVIDIA Issues
+### NVIDIA Issues
 
-If `nvidia-smi` shows “no devices found”:
-
-- Ensure the NVIDIA module is loaded:
-
-  ```bash
-  lsmod | grep nvidia
-  dmesg | grep -i nvidia
-  ```
-
-- Try forcing GPU mode:
-
-  ```bash
-  supergfxctl -m dedicated
-  ```
-
-### 🎧 Audio Problems
-
-- Check playback:
-
-  ```bash
-  speaker-test -c 2
-  ```
-
-- Mic/device detection:
-
-  ```bash
-  arecord -l
-  alsamixer
-  ```
-
-### 🌐 WiFi/Bluetooth
-
-- Confirm modules loaded:
-
-  ```bash
-  lspci | grep -i network
-  lsmod | grep mt792
-  ```
-
-- Restart NetworkManager:
-
-  ```bash
-  systemctl restart NetworkManager
-  ```
-
-### 🔋 Suspend / Hibernate
-
-- Test suspend:
-
-  ```bash
-  systemctl suspend
-  ```
-
-- If hibernation fails:
-
-  - Confirm swap is large enough (`free -h`)
-  - Check logs:
-
-    ```bash
-    dmesg | grep -i hibernat
-    ```
-
-## ✅ Optional Enhancements (Add to config if needed)
-
-### Enable Secure Boot (advanced users only):
-
-```nix
-boot.loader.efi.canTouchEfiVariables = true;
-boot.loader.secureBoot.enable = true;
-```
-
-You’ll also need `sbctl` and to enroll keys manually.
-
-## Step 5: Install NixOS with Your Configuration
-
-### If Using Calamares
-
-If you used the Calamares installer, you have already completed the base installation. Proceed to Step 2 (Clone Dotfiles Repository) and follow the subsequent steps to apply your dotfiles configuration.
-
-### If Using Manual Installation
-
-For manual installations, execute the `nixos-install` command, pointing it to your new flake configuration. Ensure you are in the root directory of your `dotfiles` repository.
-
-1.  Install NixOS:
-
-    ```bash
-    nixos-install --flake .#asus-linux
-    ```
-
-    If `nixos-install` fails, use `nix flake check` to diagnose potential issues:
-
-    ```bash
-    nix flake check
-    ```
-
-    Common errors include:
-
-    - Missing dependencies: Ensure `flake.nix` includes `home-manager` and any other required inputs.
-    - Syntax errors: Validate your `configuration.nix` and `flake.nix` files using `nix fmt` (a Nix formatter).
-
-2.  Set the root password when prompted during the installation process.
-
-3.  Reboot your system:
-
-    ```bash
-    reboot
-    ```
-
-## Step 6: Post-Installation
-
-After logging into your newly installed NixOS system:
-
-1.  Log in with your user account.
-
-2.  Verify that the ASUS-specific services are running correctly:
-
-    ```bash
-    systemctl status asusd
-    systemctl status supergfxd
-    ```
-
-3.  Check your current graphics mode:
-
-    ```bash
-    supergfxctl -g
-    ```
-
-4.  Keep your configuration updated. Navigate to your dotfiles directory, pull any new changes, and rebuild your system:
-
-    ```bash
-    cd ~/source/dotfiles
-    git pull
-    sudo nixos-rebuild switch --flake .#asus-linux
-    ```
-
-5.  For system updates with BTRFS, it's a good practice to create a snapshot before rebuilding:
-
-    ```bash
-    sudo btrfs subvolume snapshot -r / /.snapshots/pre-update-$(date +%Y%m%d)
-    sudo nixos-rebuild switch --flake .#asus-linux
-    ```
-
-## Dual-Boot Considerations
-
-For successful dual-booting with Windows:
-
-1.  The bootloader (GRUB or systemd-boot) should automatically detect your Windows installation.
-
-2.  If Windows does not appear in the boot menu, ensure your `bootloader` configuration in `configuration.nix` allows for detection. For `systemd-boot`, these are typical settings:
-
-    ```nix
-    boot.loader.systemd-boot.enable = true;
-    boot.loader.efi.canTouchEfiVariables = true;
-    boot.loader.systemd-boot.configurationLimit = 10; # Keep more boot entries
-    ```
-
-3.  Enable NTFS filesystem support in NixOS to read and write to Windows partitions (if needed):
-
-    ```nix
-    boot.supportedFilesystems = [ "ntfs" ];
-    ```
-
-## Troubleshooting (Advanced)
-
-### NVIDIA Driver Configuration
-
-Confirm your NVIDIA configuration (as included in Step 3):
-
-```nix
-hardware.nvidia = {
-  modesetting.enable = true;
-  powerManagement.enable = true;
-  package = config.boot.kernelPackages.nvidiaPackages.stable;
-};
-```
-
-### Supergfxctl Issues
-
-If `supergfxctl -g` (or other `supergfxctl` commands) fails, ensure `pciutils` is correctly in its path:
-
-```nix
-systemd.services.supergfxd.path = [ pkgs.pciutils ];
-```
-
-### Graphics Switching (Recap)
+If `nvidia-smi` fails:
 
 ```bash
-supergfxctl -m integrated
-supergfxctl -m hybrid
+lsmod | grep nvidia
+dmesg | grep -i nvidia
+```
+
+Try forcing dedicated GPU:
+
+```bash
 supergfxctl -m dedicated
 ```
 
-### ROG Control Center (`asusd-user`)
-
-If the `asusctl` user service is not working (e.g., keyboard lighting issues for your user), check its status:
+### Audio Problems
 
 ```bash
-systemctl --user status asusd-user
+speaker-test -c 2
+arecord -l
+alsamixer
 ```
 
-## BTRFS Configuration (Recap)
+### Wi-Fi / Bluetooth
 
-Recommended BTRFS subvolume layout for better snapshot management and system resilience:
-
-```nix
-fileSystems = {
-  "/" = {
-    device = "/dev/nvme0n1p7"; # Your BTRFS root partition
-    fsType = "btrfs";
-    options = [ "subvol=@" "compress=zstd" "noatime" ];
-  };
-  "/home" = {
-    device = "/dev/nvme0n1p7"; # Same partition
-    fsType = "btrfs";
-    options = [ "subvol=@home" "compress=zstd" "noatime" ];
-  };
-  "/nix" = {
-    device = "/dev/nvme0n1p7"; # Same partition
-    fsType = "btrfs";
-    options = [ "subvol=@nix" "compress=zstd" "noatime" ];
-  };
-};
-```
-
-### Swap Configuration (Recap)
-
-**Option A: Swap Partition (Recommended)**
+Check module loading:
 
 ```bash
-mkswap /dev/nvme0n1p8 # Format your swap partition
-swapon /dev/nvme0n1p8 # Enable it immediately
+lsmod | grep mt792
 ```
 
-**Option B: Swap File (on BTRFS)**
+Restart NetworkManager:
 
 ```bash
-# Create a dedicated subvolume for swap if you plan to use a swapfile on BTRFS
-btrfs subvolume create /swap
-# Disable copy-on-write for the swapfile to prevent instability
-chattr +C /swap/swapfile # Run this *before* creating the file
-dd if=/dev/zero of=/swap/swapfile bs=1M count=32768 # Create a 32GB swapfile
-chmod 600 /swap/swapfile # Set correct permissions
-mkswap /swap/swapfile # Format the swapfile
-swapon /swap/swapfile # Enable the swapfile
+sudo systemctl restart NetworkManager
 ```
 
-Add your swap device to `configuration.nix`:
+### Suspend / Hibernate
 
-```nix
-swapDevices = [
-  { device = "/dev/nvme0n1p8"; } # For swap partition
-  # Or for a swap file:
-  # { device = "/swap/swapfile"; }
-];
-```
-
-### BTRFS Snapshot Configuration (`btrbk`)
-
-Example configuration for `btrbk` to manage BTRFS snapshots:
-
-```nix
-environment.etc."btrbk/btrbk.conf".text = ''
-  snapshot_dir /.snapshots
-  snapshot_preserve_min 7d
-  snapshot_preserve 30d
-  volume /
-    subvolume @
-    subvolume @home
-    subvolume @nix
-'';
-```
-
-### BTRFS Maintenance
-
-Automate BTRFS scrubbing (checksum verification) with a systemd timer:
-
-```nix
-systemd.services.btrfs-scrub = {
-  description = "BTRFS scrub";
-  serviceConfig = {
-    Type = "oneshot";
-    ExecStart = "${pkgs.btrfs-progs}/bin/btrfs scrub start -B /";
-  };
-};
-
-systemd.timers.btrfs-scrub = {
-  description = "Monthly BTRFS scrub";
-  wantedBy = [ "timers.target" ];
-  timerConfig = {
-    OnCalendar = "monthly";
-    Persistent = true;
-  };
-};
-```
-
-Perform manual maintenance operations:
+Check:
 
 ```bash
-sudo btrfs filesystem usage /       # Check BTRFS space usage
-sudo btrfs balance start -dusage=85 / # Rebalance data if disk usage is uneven (can take a long time)
-sudo btrfs scrub start /            # Manually start a scrub
-sudo btrfs scrub status /           # Check scrub progress
+systemctl suspend
+free -h
+dmesg | grep -i hibernat
 ```
 
-## Time Synchronization for Dual-Boot
+Ensure swap is ≥ RAM.
 
-To prevent time discrepancies when dual-booting Windows and NixOS, configure your hardware clock to use local time (which Windows typically defaults to).
+## 🛠️ System Recovery (Summary)
+
+### A. Chroot Recovery
+
+Boot from NixOS live USB:
+
+```bash
+mount -o subvol=@ /dev/nvme0n1pX /mnt
+mount -o subvol=@home /dev/nvme0n1pX /mnt/home
+mount -o subvol=@nix /dev/nvme0n1pX /mnt/nix
+mount /dev/nvme0n1p1 /mnt/boot/efi
+nixos-enter
+```
+
+Then rebuild:
+
+```bash
+cd ~/source/dotfiles
+sudo nixos-rebuild switch --flake .#asus-linux
+```
+
+### B. Bootloader Recovery
+
+At boot menu, choose an older generation to roll back. Then:
+
+```bash
+sudo nixos-rebuild switch --rollback
+```
+
+### C. Snapshot Recovery
+
+Mount snapshot:
+
+```bash
+mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1pX /recovery
+```
+
+Copy or promote files from `/recovery`.
+
+## 🔋 Power Management Note
+
+In modern setups with:
+
+- `services.asusd.enable = true`
+- `services.power-profiles-daemon.enable = true`
+
+You **should not enable** `services.tlp.enable = true`. These conflict. `power-profiles-daemon` is lighter and works natively with GNOME, `asusd`, and dynamic GPU switching.
+
+Remove or comment out:
 
 ```nix
-time.hardwareClockInLocalTime = true;
+# services.tlp.enable = true
 ```
 
-Alternatively, you can configure Windows to use UTC (recommended if you primarily use Linux):
-
-1.  Open `regedit` in Windows.
-2.  Navigate to `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation`.
-3.  Create a new `DWORD (32-bit) Value` named `RealTimeIsUniversal` and set its value to `1`.
-
-## Backup Strategy
-
-NixOS generations provide built-in system configuration rollback. For data, implement dedicated backup solutions.
-
-1.  **System Configuration**: Managed by NixOS generations.
-2.  **Data Snapshots**: Use `btrbk` (as configured above) or `snapper` for local BTRFS snapshots.
-3.  **Offsite Backups**: Consider tools like `restic`, `borgbackup`, or `rclone` for encrypted, offsite backups of your important data.
-
-To enable `btrbk` as a daily snapshot service:
+Stick with:
 
 ```nix
-environment.systemPackages = with pkgs; [ btrbk ];
-systemd.services.btrbk = {
-  description = "BTRBK periodic snapshot";
-  serviceConfig = {
-    Type = "oneshot";
-    ExecStart = "${pkgs.btrbk}/bin/btrbk run";
-  };
-};
-systemd.timers.btrbk = {
-  description = "Daily BTRBK snapshots";
-  wantedBy = [ "timers.target" ];
-  timerConfig = {
-    OnCalendar = "daily";
-    Persistent = true;
-  };
-};
+services.power-profiles-daemon.enable = true;
 ```
-
-## System Recovery
-
-### Method 1: Standard Recovery (Chroot)
-
-If your system fails to boot, you can chroot into your NixOS installation from a live USB to troubleshoot and rebuild.
-
-1.  Boot from your NixOS installation media.
-
-2.  Mount your BTRFS subvolumes (adjust device paths as necessary):
-
-    ```bash
-    mount -o subvol=@,compress=zstd /dev/nvme0n1p7 /mnt
-    mkdir -p /mnt/{home,nix,boot/efi}
-    mount -o subvol=@home,compress=zstd /dev/nvme0n1p7 /mnt/home
-    mount -o subvol=@nix,compress=zstd /dev/nvme0n1p7 /mnt/nix
-    mount /dev/nvme0n1p1 /mnt/boot/efi
-    ```
-
-3.  Chroot into your installed system:
-
-    ```bash
-    nixos-enter
-    ```
-
-    From here, you can edit `configuration.nix` and run `nixos-rebuild switch` (using `--flake .#asus-linux` if your configuration is flake-based and you copied your dotfiles into the chroot's source directory).
-
-### Method 2: Snapshot Recovery
-
-If you have BTRFS snapshots, you can recover files or even revert your root filesystem to a previous state.
-
-1.  Boot from installation media.
-2.  Mount your BTRFS root partition (the one containing your subvolumes): `mount /dev/nvme0n1p7 /mnt`
-3.  Mount a specific snapshot (replace `123/snapshot` with the path to your desired snapshot, e.g., from `/.snapshots`): `mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1p7 /recovery`
-4.  Copy needed files from `/recovery` back to your main system (`/mnt`) or promote the snapshot.
-
-### Method 3: Rollback to Previous Generation
-
-NixOS automatically keeps previous system configurations (generations). If a system update causes issues, you can easily roll back.
-
-1.  At the bootloader (systemd-boot), select an older NixOS generation from the menu.
-
-2.  Once booted into the stable previous generation, you can then attempt to fix your `configuration.nix` or simply revert to that generation permanently:
-
-    ```bash
-    sudo nixos-rebuild switch --rollback
-    ```
 
 ## Appendix: Advanced EFI Partition Expansion (Optional Post-Installation)
 
