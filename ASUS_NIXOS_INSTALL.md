@@ -592,86 +592,93 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
 4.  Add the following ASUS-specific settings to `hosts/asus-linux/configuration.nix` (ensure you merge these with any existing content, don't just paste over everything):
 
     ```nix
-    # EFI Partition Management: Limit bootloader generations for small EFI partitions
-    # If your EFI partition is small (e.g., 260 MiB), you might be limited to
-    # keeping only one NixOS generation to avoid running out of space.
-    # This limits your rollback capabilities directly from the bootloader.
-    # For more generations, consider expanding your EFI partition (see Appendix).
-    boot.loader.systemd-boot.configurationLimit = 1; # For systemd-boot
-    # boot.loader.grub.configurationLimit = 1;      # For GRUB, if you are using it instead
+    { config, pkgs, lib, ... }:
+
+    {
+      # EFI Partition Management: Limit bootloader generations for small EFI partitions
+      # If your EFI partition is small (e.g., 260 MiB), you might be limited to
+      # keeping only one NixOS generation to avoid running out of space.
+      # This limits your rollback capabilities directly from the bootloader.
+      # For more generations, consider expanding your EFI partition (see Appendix).
+      boot.loader.systemd-boot.configurationLimit = 1; # For systemd-boot
+      # boot.loader.grub.configurationLimit = 1;      # For GRUB, if you are using it instead
 
 
-    # Use kernel 6.15.4 (or later) for best ASUS hardware support for this model
-    # NixOS 25.05 defaults to kernel 6.12, but 6.15.4 or later is recommended
-    # for newer AMD CPUs and NVIDIA GPUs.
-    boot.kernelPackages = pkgs.linuxPackages_latest; # This will pull the latest stable kernel available in Nixpkgs
-    # If you specifically want 6.15.4 and it's not 'latest', you might need:
-    # boot.kernelPackages = pkgs.linuxPackages_6_15; # (or whatever is the exact package name for 6.15)
+      # Use kernel 6.15.4 (or later) for best ASUS hardware support for this model
+      # NixOS 25.05 defaults to kernel 6.12, but 6.15.4 or later is recommended
+      # for newer AMD CPUs and NVIDIA GPUs.
+      boot.kernelPackages = pkgs.linuxPackages_latest; # This will pull the latest stable kernel available in Nixpkgs
+      # If you specifically want 6.15.4 and it's not 'latest', you might need:
+      # boot.kernelPackages = pkgs.linuxPackages_6_15; # (or whatever is the exact package name for 6.15)
 
 
-    # ASUS-specific services for fan control, keyboard lighting, etc.
-    services = {
-      supergfxd.enable = true; # For GPU mode switching
-      asusd = { # For asusctl features
-        enable = true;
-        enableUserService = true;
-        # Enable ROG-specific features - useful for ROG series laptops
-        # For ProArt P16, this can be safely enabled but most features won't apply
-        # Only disable if you experience issues with asusd
-        rog-control = true;
+      # ASUS-specific services for fan control, keyboard lighting, etc.
+      services = {
+        supergfxd.enable = true; # For GPU mode switching
+        asusd = { # For asusctl features
+          enable = true;
+          enableUserService = true;
+          # Enable ROG-specific features - useful for ROG series laptops
+          # For ProArt P16, this can be safely enabled but most features won't apply
+          # Only disable if you experience issues with asusd
+          rog-control = true;
+        };
       };
-    };
 
-    # Fix for supergfxctl (ensures pciutils is in its path)
-    systemd.services.supergfxd.path = [ pkgs.pciutils ];
+      # Fix for supergfxctl (ensures pciutils is in its path)
+      systemd.services.supergfxd.path = [ pkgs.pciutils ];
 
-    # NVIDIA configuration for RTX 4070
-    hardware.nvidia = {
-      modesetting.enable = true;
-      powerManagement.enable = true;
-      forceFullCompositionPipeline = true; # Prevents screen tearing, important for creative work
-      nvidiaPersistenced = true; # Keeps the NVIDIA driver loaded, reduces startup latency for creative apps
-      package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable NVIDIA drivers
-    };
+      # NVIDIA configuration for RTX 4070
+      hardware.nvidia = {
+        modesetting.enable = true;
+        powerManagement.enable = true;
+        forceFullCompositionPipeline = true; # Prevents screen tearing, important for creative work
+        nvidiaPersistenced = true; # Keeps the NVIDIA driver loaded, reduces startup latency for creative apps
+        package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable NVIDIA drivers
+      };
 
-    # Environment variables for NVIDIA-Wayland compatibility
-    environment.variables = {
-      GBM_BACKEND = "nvidia-drm";
-      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-      WLR_NO_HARDWARE_CURSORS = "1";
-    };
+      # Environment variables for NVIDIA-Wayland compatibility
+      environment.variables = {
+        GBM_BACKEND = "nvidia-drm";
+        __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+        WLR_NO_HARDWARE_CURSORS = "1";
+      };
 
-    # WiFi and firmware for MediaTek MT7922 and other devices
-    hardware.enableAllFirmware = true;
-    hardware.firmware = with pkgs; [ 
-      linux-firmware  # Essential for many devices, including WiFi
-      sof-firmware    # Sound Open Firmware for better audio support
-    ];
-    boot.kernelModules = [ "mt7921e" "mt7922e" "i2c_hid_acpi" ]; # Load specific modules for WiFi and I2C HID devices
+      # WiFi and firmware for MediaTek MT7922 and other devices
+      hardware.enableAllFirmware = true;
+      hardware.firmware = with pkgs; [
+        linux-firmware  # Essential for many devices, including WiFi
+        sof-firmware    # Sound Open Firmware for better audio support
+      ];
+      boot.kernelModules = [ "mt7921e" "mt7922e" "i2c_hid_acpi" ]; # Load specific modules for WiFi and I2C HID devices
 
-    # Power management daemons
-    services.power-profiles-daemon.enable = true;
-    services.tlp.enable = lib.mkDefault true; # For advanced power saving
-    powerManagement.finegrained = true; # Better control over CPU frequency scaling for AMD processors
+      # Power management daemons
+      services.power-profiles-daemon.enable = true;
+      services.tlp.enable = lib.mkDefault true; # For advanced power saving
+      powerManagement.finegrained = true; # Better control over CPU frequency scaling for AMD processors
 
-    # Touchpad and touchscreen support
-    services.libinput.enable = true; # Essential for touchpad
-    hardware.sensor.iio.enable = lib.mkDefault true; # For IIO devices like touchscreens
-    services.iio-sensor-proxy.enable = true; # Enable auto-rotation and ambient light sensing
+      # Touchpad and touchscreen support
+      services.libinput.enable = true; # Essential for touchpad
+      hardware.sensor.iio.enable = lib.mkDefault true; # For IIO devices like touchscreens
+      services.iio-sensor-proxy.enable = true; # Enable auto-rotation and ambient light sensing
 
-    # Audio configuration using PipeWire (recommended over PulseAudio)
-    sound.enable = true;
-    hardware.pulseaudio.enable = false; # Disable PulseAudio if PipeWire is used
-    services.pipewire = {
-      enable = true;
-      alsa.enable = true;
-      pulse.enable = true; # For PulseAudio compatibility layer
-    };
+      # Audio configuration using PipeWire (recommended over PulseAudio)
+      sound.enable = true;
+      hardware.pulseaudio.enable = false; # Disable PulseAudio if PipeWire is used
+      services.pipewire = {
+        enable = true;
+        alsa.enable = true;
+        pulse.enable = true; # For PulseAudio compatibility layer
+      };
 
-    # GNOME 48 features, including HDR support
-    services.xserver.desktopManager.gnome.enable = true;
-    # Ensure Wayland is enabled for full HDR support with GNOME 48
-    services.xserver.displayManager.gdm.wayland = true;
+      # GNOME 48 features, including HDR support
+      services.xserver.desktopManager.gnome.enable = true;
+      # Ensure Wayland is enabled for full HDR support with GNOME 48
+      services.xserver.displayManager.gdm.wayland = true;
+
+      # Uncomment this line only if experiencing issues with Wayland:
+      # services.xserver.displayManager.gdm.wayland = false; # Fall back to X11
+    }
     ```
 
 ## ASUS Hardware Management
