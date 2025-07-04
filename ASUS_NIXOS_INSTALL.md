@@ -620,8 +620,9 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
         ];
       };
 
-      # ASUS hardware control
+      # Services configuration
       services = {
+        # ASUS hardware control
         # Unified GPU control (replaces older solutions)
         supergfxd.enable = true;
 
@@ -629,6 +630,32 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
         asusd = {
           enable = true;
           enableUserService = true;
+        };
+        
+        # Power management
+        power-profiles-daemon.enable = true;
+        
+        # Input devices
+        libinput.enable = true; # Touchpad support
+        gestures.enable = true; # Enhanced touchpad/touchscreen gesture support
+        iio-sensor-proxy.enable = true; # Auto-rotation, light sensor
+        
+        # Audio setup (modern replacement for PulseAudio)
+        pipewire = {
+          enable = true;
+          alsa.enable = true;
+          pulse.enable = true; # PulseAudio compatibility
+          jack.enable = true;  # Professional audio support
+        };
+        
+        # Display services
+        colord.enable = true;    # Color management for ProArt display
+        geoclue2.enable = true;  # Location-based features
+        
+        # GNOME desktop with Wayland (for best HDR support)
+        xserver = {
+          desktopManager.gnome.enable = true;
+          displayManager.gdm.wayland = true;
         };
       };
 
@@ -661,34 +688,6 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
       
       # Networking configuration
       networking.networkmanager.enable = true;
-
-      # Power management
-      services.power-profiles-daemon.enable = true;
-
-      # Input devices
-      services.libinput.enable = true; # Touchpad support
-      services.gestures.enable = true; # Enhanced touchpad/touchscreen gesture support
-      services.iio-sensor-proxy.enable = true; # Auto-rotation, light sensor
-
-      # Audio setup (modern replacement for PulseAudio)
-      services.pipewire = {
-        enable = true;
-        alsa.enable = true;
-        pulse.enable = true; # PulseAudio compatibility
-        jack.enable = true;  # Professional audio support
-      };
-
-      # Display services
-      services = {
-        colord.enable = true;    # Color management for ProArt display
-        geoclue2.enable = true;  # Location-based features
-      };
-
-      # GNOME desktop with Wayland (for best HDR support)
-      services.xserver = {
-        desktopManager.gnome.enable = true;
-        displayManager.gdm.wayland = true;
-      };
     }
     ```
 
