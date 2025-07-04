@@ -83,6 +83,7 @@
 
     # GNOME desktop with Wayland (for best HDR support)
     xserver = {
+      enable = true;
       desktopManager.gnome.enable = true;
       displayManager.gdm.wayland = true;
     };
@@ -119,7 +120,6 @@
       sof-firmware    # Better audio support
     ];
   };
-
 
   # Enable flakes
   nix.settings.experimental-features = [
@@ -164,14 +164,6 @@
   #   keyMap = "us";
   #   useXkbConfig = true; # use xkb.options in tty.
   # };
-
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-
-  # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
   
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.brianbug = {
