@@ -34,6 +34,18 @@
             }
           ];
         };
+
+        asus-linux = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = [
+            ./hosts/asus-linux/configuration.nix
+            home-manager.nixosModules.home-manager {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.brianbug = import ./home-manager/nixos;
+            }
+          ];
+        };
       };
 
       # Home Manager configurations
