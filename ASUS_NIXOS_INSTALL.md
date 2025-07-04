@@ -671,6 +671,10 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
         pulse.enable = true; # For PulseAudio compatibility layer
       };
 
+      # Display and location services
+      services.colord.enable = true;   # Color management - essential for creative work on ProArt display
+      services.geoclue2.enable = true; # Location services for Night Light and timezone features
+
       # GNOME 48 features, including HDR support
       services.xserver.desktopManager.gnome.enable = true;
       # Ensure Wayland is enabled for full HDR support with GNOME 48
