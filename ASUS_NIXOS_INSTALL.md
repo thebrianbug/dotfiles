@@ -595,17 +595,18 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
     { config, pkgs, lib, ... }:
 
     {
-      # EFI Partition Management: Limit bootloader generations for small EFI partitions
-      # If your EFI partition is small (e.g., 260 MiB), you might be limited to
-      # keeping only one NixOS generation to avoid running out of space.
-      # This limits your rollback capabilities directly from the bootloader.
-      # For more generations, consider expanding your EFI partition.
-      boot.loader.systemd-boot = {
-        enable = true;
-        configurationLimit = 1; # Keep only one generation to save space
-      };
-
+      # Boot configuration
       boot = {
+        # EFI Partition Management: Limit bootloader generations for small EFI partitions
+        # If your EFI partition is small (e.g., 260 MiB), you might be limited to
+        # keeping only one NixOS generation to avoid running out of space.
+        # This limits your rollback capabilities directly from the bootloader.
+        # For more generations, consider expanding your EFI partition.
+        loader.systemd-boot = {
+          enable = true;
+          configurationLimit = 1; # Keep only one generation to save space
+        };
+
         # Use latest stable kernel for best hardware support
         # Note: Modern kernels auto-load most required modules for ASUS laptops
         kernelPackages = pkgs.linuxPackages_latest;
@@ -631,15 +632,15 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
           enable = true;
           enableUserService = true;
         };
-        
+
         # Power management
         power-profiles-daemon.enable = true;
-        
+
         # Input devices
         libinput.enable = true; # Touchpad support
         gestures.enable = true; # Enhanced touchpad/touchscreen gesture support
         iio-sensor-proxy.enable = true; # Auto-rotation, light sensor
-        
+
         # Audio setup (modern replacement for PulseAudio)
         pipewire = {
           enable = true;
@@ -647,11 +648,11 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
           pulse.enable = true; # PulseAudio compatibility
           jack.enable = true;  # Professional audio support
         };
-        
+
         # Display services
         colord.enable = true;    # Color management for ProArt display
         geoclue2.enable = true;  # Location-based features
-        
+
         # GNOME desktop with Wayland (for best HDR support)
         xserver = {
           desktopManager.gnome.enable = true;
@@ -685,7 +686,7 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
           sof-firmware    # Better audio support
         ];
       };
-      
+
       # Networking configuration
       networking.networkmanager.enable = true;
     }
