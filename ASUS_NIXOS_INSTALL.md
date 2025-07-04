@@ -629,6 +629,7 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
     hardware.nvidia = {
       modesetting.enable = true;
       powerManagement.enable = true;
+      forceFullCompositionPipeline = true; # Prevents screen tearing, important for creative work
       package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable NVIDIA drivers
     };
 
@@ -641,7 +642,10 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
 
     # WiFi and firmware for MediaTek MT7922 and other devices
     hardware.enableAllFirmware = true;
-    hardware.firmware = [ pkgs.linux-firmware ]; # Essential for many devices, including WiFi
+    hardware.firmware = with pkgs; [ 
+      linux-firmware  # Essential for many devices, including WiFi
+      sof-firmware    # Sound Open Firmware for better audio support
+    ];
     boot.kernelModules = [ "mt7921e" "mt7922e" "i2c_hid_acpi" ]; # Load specific modules for WiFi and I2C HID devices
 
     # Power management daemons
