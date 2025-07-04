@@ -611,6 +611,8 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
         # boot.kernelPackages = pkgs.linuxPackages_6_15; # (or whatever is the exact package name for 6.15)
         kernelPackages = pkgs.linuxPackages_latest;
         kernelParams = [ "amd_pstate=active" ];
+
+        # Load specific modules for WiFi and I2C HID devices
         kernelModules = [ "mt7921e" "mt7922e" "i2c_hid_acpi" ];
       };
 
@@ -660,7 +662,6 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
         linux-firmware  # Essential for many devices, including WiFi
         sof-firmware    # Sound Open Firmware for better audio support
       ];
-      boot.kernelModules = [ "mt7921e" "mt7922e" "i2c_hid_acpi" ]; # Load specific modules for WiFi and I2C HID devices
 
       # Power management daemons
       services.power-profiles-daemon.enable = true;
