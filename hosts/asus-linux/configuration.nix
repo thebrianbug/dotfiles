@@ -10,12 +10,104 @@
       ./hardware-configuration.nix
     ];
 
-  # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot = {
+    # EFI Partition Management: Limit bootloader generations for small EFI partitions
+    # If your EFI partition is small (e.g., 260 MiB), you might be limited to
+    # keeping only one NixOS generation to avoid running out of space.
+    # This limits your rollback capabilities directly from the bootloader.
+    # For more generations, consider expanding your EFI partition.
+    loader.systemd-boot = {
+      enable = true; # Allow NixOS to write its bootloader to the EFI partition
+      configurationLimit = 1; # Keep only one generation to save space
+    };
 
-  # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+    # Use latest stable kernel for best hardware support
+    # Note: Modern kernels auto-load most required modules for ASUS laptops
+    kernelPackages = pkgs.linuxPackages_latest;
+
+    # Essential power management for AMD CPUs
+    kernelParams = [ "amd_pstate=active" ];
+
+    # Only declare modules that don't auto-load on modern kernels
+    kernelModules = [
+      "mt7921e" "mt7922e"  # MediaTek WiFi (often needs manual loading)
+      "i2c_hid_acpi"       # Required for some touchpad/touchscreen devices
+    ];
+  };
+
+  # Services configuration
+  services = {
+    # ASUS hardware control
+    # Unified GPU control (replaces older solutions)
+    supergfxd.enable = true;
+
+    # System control daemon (fan curves, keyboard lighting, etc.)
+    asusd = {
+      enable = true;
+      enableUserService = true;
+    };
+
+    # Power management (do not use TLP with power-profiles-daemon + asusd)
+    power-profiles-daemon.enable = true;
+
+    # Input devices
+    libinput.enable = true; # Touchpad support
+    gestures.enable = true; # Enhanced touchpad/touchscreen gesture support
+    iio-sensor-proxy.enable = true; # Auto-rotation, light sensor
+
+    # Audio setup (modern replacement for PulseAudio)
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      pulse.enable = true; # PulseAudio compatibility
+      jack.enable = true;  # Professional audio support
+    };
+
+    # Display services
+    colord.enable = true;    # Color management for ProArt display
+    geoclue2.enable = true;  # Location-based features
+
+    # GNOME desktop with Wayland (for best HDR support)
+    xserver = {
+      desktopManager.gnome.enable = true;
+      displayManager.gdm.wayland = true;
+    };
+  };
+
+  # NVIDIA configuration for RTX 4070
+  hardware.nvidia = {
+    modesetting.enable = true; # Required for Wayland compatibility
+    powerManagement = {
+      enable = true;
+      finegrained = true; # Better power management for laptops
+    };
+    forceFullCompositionPipeline = true; # Eliminates screen tearing
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  # Essential environment variables for NVIDIA+Wayland
+  environment.variables = {
+    GBM_BACKEND = "nvidia-drm";        # Required for GNOME Wayland
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL vendor selection
+    WLR_NO_HARDWARE_CURSORS = "1";     # Fixes cursor issues in Wayland
+  };
+
+  # System diagnostic and hardware tools
+  environment.systemPackages = with pkgs; [
+    pciutils usbutils inxi glxinfo
+  ];
+
+  # Firmware for hardware components
+  hardware = {
+    enableAllFirmware = true; # Auto-detect needed firmware
+    firmware = with pkgs; [
+      linux-firmware  # Broad hardware support
+      sof-firmware    # Better audio support
+    ];
+  };
+
+  # Networking configuration
+  networking.networkmanager.enable = true;
 
   # networking.hostName = "nixos"; # Define your hostname.
   # Pick only one of the below networking options.
