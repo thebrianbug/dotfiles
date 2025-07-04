@@ -599,103 +599,93 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
       # If your EFI partition is small (e.g., 260 MiB), you might be limited to
       # keeping only one NixOS generation to avoid running out of space.
       # This limits your rollback capabilities directly from the bootloader.
-      # For more generations, consider expanding your EFI partition (see Appendix).
-      boot.loader.systemd-boot.configurationLimit = 1; # For systemd-boot
-      # boot.loader.grub.configurationLimit = 1;      # For GRUB, if you are using it instead
-
-      boot = {
-        # Use kernel 6.15.4 (or later) for best ASUS hardware support for this model
-        # NixOS 25.05 defaults to kernel 6.12, but 6.15.4 or later is recommended
-        # for newer AMD CPUs and NVIDIA GPUs.
-        # If you specifically want 6.15.4 and it's not 'latest', you might need:
-        # boot.kernelPackages = pkgs.linuxPackages_6_15; # (or whatever is the exact package name for 6.15)
-        kernelPackages = pkgs.linuxPackages_latest;
-        kernelParams = [ "amd_pstate=active" ];
-
-        # Load specific modules for WiFi and I2C HID devices
-        kernelModules = [ "mt7921e" "mt7922e" "i2c_hid_acpi" ];
+      # For more generations, consider expanding your EFI partition.
+      boot.loader.systemd-boot = {
+        enable = true;
+        configurationLimit = 1; # Keep only one generation to save space
       };
 
-      # ASUS-specific services for fan control, keyboard lighting, etc.
+      boot = {
+        # Use latest stable kernel for best hardware support
+        # Note: Modern kernels auto-load most required modules for ASUS laptops
+        kernelPackages = pkgs.linuxPackages_latest;
+
+        # Essential power management for AMD CPUs
+        kernelParams = [ "amd_pstate=active" ];
+
+        # Only declare modules that don't auto-load on modern kernels
+        kernelModules = [
+          "mt7921e" "mt7922e"  # MediaTek WiFi (often needs manual loading)
+          "i2c_hid_acpi"       # Required for some touchpad/touchscreen devices
+        ];
+      };
+
+      # ASUS hardware control
       services = {
-        supergfxd.enable = true; # For GPU mode switching
-        supergfxctl = {
-          enable = true;
-          gfx-vfio-enable = true; # Enable VFIO GPU passthrough support for virtualization
-        };
-        asusd = { # For asusctl features (ROG Control Center is included)
+        # Unified GPU control (replaces older solutions)
+        supergfxd.enable = true;
+
+        # System control daemon (fan curves, keyboard lighting, etc.)
+        asusd = {
           enable = true;
           enableUserService = true;
         };
-        # Battery charge threshold settings for extended battery lifespan
-        tlp.settings = {
-          START_CHARGE_THRESH_BAT0 = 40;  # Start charging when below 40%
-          STOP_CHARGE_THRESH_BAT0 = 80;   # Stop charging when above 80%
-        };
       };
-
-      # Fix for supergfxctl (ensures pciutils is in its path)
-      systemd.services.supergfxd.path = [ pkgs.pciutils ];
 
       # NVIDIA configuration for RTX 4070
       hardware.nvidia = {
-        modesetting.enable = true;
+        modesetting.enable = true; # Required for Wayland compatibility
         powerManagement = {
           enable = true;
-          finegrained = true; # More detailed power management for better battery life
+          finegrained = true; # Better power management for laptops
         };
-        forceFullCompositionPipeline = true; # Prevents screen tearing, important for creative work
-        nvidiaPersistenced = true; # Keeps the NVIDIA driver loaded, reduces startup latency for creative apps
-        package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable NVIDIA drivers
+        forceFullCompositionPipeline = true; # Eliminates screen tearing
+        package = config.boot.kernelPackages.nvidiaPackages.stable;
       };
 
-      # Environment variables for NVIDIA-Wayland compatibility
+      # Essential environment variables for NVIDIA+Wayland
       environment.variables = {
-        GBM_BACKEND = "nvidia-drm";
-        __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-        WLR_NO_HARDWARE_CURSORS = "1";
+        GBM_BACKEND = "nvidia-drm";        # Required for GNOME Wayland
+        __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL vendor selection
+        WLR_NO_HARDWARE_CURSORS = "1";     # Fixes cursor issues in Wayland
       };
 
-      # WiFi and firmware for MediaTek MT7922 and other devices
-      hardware.enableAllFirmware = true;
-      hardware.firmware = with pkgs; [
-        linux-firmware  # Essential for many devices, including WiFi
-        sof-firmware    # Sound Open Firmware for better audio support
-      ];
+      # Firmware for hardware components
+      hardware = {
+        enableAllFirmware = true; # Auto-detect needed firmware
+        firmware = with pkgs; [
+          linux-firmware  # Broad hardware support
+          sof-firmware    # Better audio support
+        ];
+      };
 
-      # Power management daemons
+      # Power management
       services.power-profiles-daemon.enable = true;
-      systemd.services.power-profiles-daemon = {
-        enable = true;
-        wantedBy = [ "multi-user.target" ]; # Ensure proper startup sequence
-      };
-      services.tlp.enable = lib.mkDefault true; # For advanced power saving
+      services.tlp.enable = lib.mkDefault true; # Additional power savings
 
-      # Touchpad and touchscreen support
-      services.libinput.enable = true; # Essential for touchpad
-      hardware.sensor.iio.enable = lib.mkDefault true; # For IIO devices like touchscreens
-      services.iio-sensor-proxy.enable = true; # Enable auto-rotation and ambient light sensing
+      # Input devices
+      services.libinput.enable = true; # Touchpad support
+      services.iio-sensor-proxy.enable = true; # Auto-rotation, light sensor
 
-      # Audio configuration using PipeWire (recommended over PulseAudio)
-      sound.enable = true;
-      hardware.pulseaudio.enable = false; # Disable PulseAudio if PipeWire is used
+      # Audio setup (modern replacement for PulseAudio)
       services.pipewire = {
         enable = true;
         alsa.enable = true;
-        pulse.enable = true; # For PulseAudio compatibility layer
+        pulse.enable = true; # PulseAudio compatibility
+        jack.enable = true;  # Professional audio support
       };
 
-      # Display and location services
-      services.colord.enable = true;   # Color management - essential for creative work on ProArt display
-      services.geoclue2.enable = true; # Location services for Night Light and timezone features
+      # Display services
+      services = {
+        colord.enable = true;    # Color management for ProArt display
+        geoclue2.enable = true;  # Location-based features
+      };
 
-      # GNOME 48 features, including HDR support
-      services.xserver.desktopManager.gnome.enable = true;
-      # Ensure Wayland is enabled for full HDR support with GNOME 48
-      services.xserver.displayManager.gdm.wayland = true;
-
-      # Uncomment this line only if experiencing issues with Wayland:
-      # services.xserver.displayManager.gdm.wayland = false; # Fall back to X11
+      # GNOME desktop with Wayland (for best HDR support)
+      services.xserver = {
+        desktopManager.gnome.enable = true;
+        displayManager.gdm.wayland = true;
+      };
     }
     ```
 
