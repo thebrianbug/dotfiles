@@ -628,6 +628,13 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
       package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable NVIDIA drivers
     };
 
+    # Environment variables for NVIDIA-Wayland compatibility
+    environment.variables = {
+      GBM_BACKEND = "nvidia-drm";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      WLR_NO_HARDWARE_CURSORS = "1";
+    };
+
     # WiFi and firmware for MediaTek MT7922 and other devices
     hardware.enableAllFirmware = true;
     hardware.firmware = [ pkgs.linux-firmware ]; # Essential for many devices, including WiFi
