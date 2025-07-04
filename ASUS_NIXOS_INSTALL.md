@@ -429,89 +429,95 @@ This method gives you full control over partitioning and BTRFS subvolume creatio
 
 **Important Note on EFI Partition Size (260 MiB):** If you reuse your existing 260 MiB EFI partition (`nvme0n1p1`) for manual installation, you will typically be **limited to keeping only 1 NixOS generation** due to space constraints after accounting for Windows boot files. This compromises NixOS's rollback capabilities. For more generations, consider expanding the EFI partition later as an advanced step (see the dedicated section below).
 
-1.  Boot from the NixOS installation media.
+1. Boot from the NixOS installation media.
 
-2.  **Identify existing partitions** and their device paths:
+2. **Identify existing partitions** and their device paths:
 
-    ```bash
-    lsblk -f
-    ```
+   ```bash
+   sudo lsblk -o NAME,FSTYPE,LABEL,UUID,SIZE,FSAVAIL,FSUSE%,MOUNTPOINTS
+   ```
 
-    Example output:
+   Example output:
 
-    ```
-    NAME        FSTYPE LABEL   UUID                                 MOUNTPOINT
-    nvme0n1
-    ├─nvme0n1p1 vfat   SYSTEM  1234-ABCD                            /mnt/boot/efi
-    ├─nvme0n1p3 ntfs   OS      5678-EFGH
-    └─nvme0n1p7 btrfs          9abc-1234
-    ```
+   ```
+   NAME        FSTYPE LABEL  UUID                                   SIZE FSAVAIL FSUSE% MOUNTPOINTS
+   zram0       swap   zram0  79a365f1-efde-4487-9eaa-b5642a77ce39     8G                [SWAP]
+   nvme0n1                                                          1.9T
+   ├─nvme0n1p1 vfat   SYSTEM CC14-6473                              260M  138.6M    46% /boot/efi
+   ├─nvme0n1p2                                                       16M
+   ├─nvme0n1p3 ntfs   OS     D678161C7815FC45                     733.4G
+   ├─nvme0n1p4 ntfs          AAACF0EAACF0B1C5                      1015M
+   ├─nvme0n1p5 ext4          54af068c-599e-4fcf-8e44-fc1922b9f1c9     1G  394.4M    53% /boot
+   ├─nvme0n1p6 btrfs  fedora 0a4fa0cb-bf84-47f5-b9a6-06f4e2a8941e   1.1T      1T     8% /home
+   │                                                                                    /
+   └─nvme0n1p7 vfat   MYASUS DEB6-CF26                              260M
+   ```
 
-3.  **Preserve Windows partitions**: **Do NOT** format or delete `nvme0n1p1` through `nvme0n1p5`. `nvme0n1p1` is your shared EFI partition.
+3. **Preserve Windows and vendor partitions**: **Do NOT** format or delete `nvme0n1p1`, `nvme0n1p2`, `nvme0n1p3`, `nvme0n1p4`, or `nvme0n1p7`. `nvme0n1p1` is your shared EFI partition.
 
-4.  **Delete existing Linux partitions and create new ones:**
+4. **Delete existing Linux partitions and create new ones:**
 
-    The NixOS live CD includes several partitioning tools such as `fdisk`, `cfdisk`, and `gparted`. While you can use any of these, we will show a detailed example using `cfdisk` due to its user-friendly, curses-based interface.
+   The NixOS live CD includes partitioning tools like `fdisk`, `cfdisk`, and `gparted`. This example uses `cfdisk` for its user-friendly, curses-based interface.
 
-    ```bash
-    sudo cfdisk /dev/nvme0n1
-    ```
+   ```bash
+   sudo cfdisk /dev/nvme0n1
+   ```
 
-    Inside `cfdisk`:
+   Inside `cfdisk`:
 
-    - **Select your disk**: Ensure `/dev/nvme0n1` is selected if prompted.
-    - **Delete existing Linux partitions**:
-      - Navigate to your existing Linux partitions (e.g., `nvme0n1p6` and `nvme0n1p7` if they are old Fedora partitions).
-      - Highlight each one and select `[ Delete ]`. This will mark the space as `Free space`.
-    - **Create the new `/boot` partition (512 MiB):**
-      - Navigate to the `Free space` where you want to create the `/boot` partition.
-      - Select `[ New ]`.
-      - Enter `512M` for the size.
-      - Select `[ Primary ]` (if prompted, usually auto-selected).
-      - Select `[ Type ]` and choose `Linux filesystem`. This will typically be assigned `nvme0n1p6`.
-    - **Create the new `swap` partition (32 GiB):**
-      - Navigate to the next block of `Free space`.
-      - Select `[ New ]`.
-      - Enter `32G` for the size (or `32768M`).
-      - Select `[ Primary ]`.
-      - Select `[ Type ]` and choose `Linux swap`. This will typically be assigned `nvme0n1p7`.
-    - **Create the new Root (`/`) partition (remaining space):**
-      - Navigate to the remaining `Free space`.
-      - Select `[ New ]`.
-      - Press `Enter` to accept the default, which will use the `[ Max size ]` (remaining space).
-      - Select `[ Primary ]`.
-      - Select `[ Type ]` and choose `Linux filesystem`. This will typically be assigned `nvme0n1p8`.
-    - **Write changes:**
-      - Select `[ Write ]`.
-      - Type `yes` and press `Enter` to confirm writing the partition table to disk. **This is the point of no return for changes.**
-    - **Quit `cfdisk`:**
-      - Select `[ Quit ]`.
+   - **Select your disk**: Ensure `/dev/nvme0n1` is selected if prompted.
+   - **Delete existing Linux partitions**:
+     - Navigate to `nvme0n1p5` and `nvme0n1p6` (current Fedora partitions).
+     - Highlight each and select `[ Delete ]` to mark the space as `Free space`.
+   - **Reuse or create the `/boot` partition (1 GiB)**:
+     - Navigate to the `Free space` where `nvme0n1p5` was (1 GiB).
+     - Select `[ New ]` if creating a new partition, or keep existing if reusing.
+     - Enter `1G` for the size (or accept existing size).
+     - Select `[ Primary ]`.
+     - Select `[ Type ]` and choose `Linux filesystem`. This will be `nvme0n1p5`.
+   - **Create the new `swap` partition (32 GiB)**:
+     - Navigate to the next block of `Free space`.
+     - Select `[ New ]`.
+     - Enter `32G` for the size.
+     - Select `[ Primary ]`.
+     - Select `[ Type ]` and choose `Linux swap`. This will be `nvme0n1p6`.
+   - **Create the new Root (`/`) partition (remaining space)**:
+     - Navigate to the remaining `Free space`.
+     - Select `[ New ]`.
+     - Press `Enter` to use the `[ Max size ]` (remaining space, ~1.1 TiB).
+     - Select `[ Primary ]`.
+     - Select `[ Type ]` and choose `Linux filesystem`. This will be `nvme0n1p8`.
+   - **Write changes**:
+     - Select `[ Write ]`.
+     - Type `yes` and press `Enter` to confirm. **This is the point of no return.**
+   - **Quit `cfdisk`**:
+     - Select `[ Quit ]`.
 
-5.  **Format new NixOS partitions**:
+5. **Format new NixOS partitions**:
 
-    ```bash
-    mkfs.ext4 /dev/nvme0n1p6     # Your new /boot partition (512 MiB)
-    mkswap /dev/nvme0n1p7        # Your new swap partition (32 GiB)
-    sudo swapon /dev/nvme0n1p7
+   ```bash
+   mkfs.ext4 /dev/nvme0n1p5     # /boot partition (1 GiB)
+   mkswap /dev/nvme0n1p6        # Swap partition (32 GiB)
+   sudo swapon /dev/nvme0n1p6
 
-    # Recommended: Use BTRFS for root
-    mkfs.btrfs /dev/nvme0n1p8     # Your new root partition (Remaining space)
-    # OR if using ext4 for root
-    # mkfs.ext4 /dev/nvme0n1p8
-    ```
+   # Use BTRFS for root (recommended)
+   mkfs.btrfs /dev/nvme0n1p8    # Root partition (~1.1 TiB)
+   # OR if using ext4 for root
+   # mkfs.ext4 /dev/nvme0n1p8
+   ```
 
-6.  **Mount partitions**:
+6. **Mount partitions**:
 
-    **For BTRFS with subvolumes (recommended)**:
+   **For BTRFS with subvolumes (recommended)**:
 
-    ```bash
-    # Mount the raw BTRFS partition
-    sudo mount /dev/nvme0n1p8 /mnt
+   ```bash
+   # Mount the raw BTRFS partition
+   sudo mount /dev/nvme0n1p8 /mnt
 
-    # Create desired subvolumes
-    sudo btrfs subvolume create /mnt/@
-    sudo btrfs subvolume create /mnt/@home
-    sudo btrfs subvolume create /mnt/@nix
+   # Create subvolumes
+   sudo btrfs subvolume create /mnt/@
+   sudo btrfs subvolume create /mnt/@home
+   sudo btrfs subvolume create /mnt/@nix
 
     # Unmount the raw partition
     sudo umount /mnt
@@ -526,21 +532,21 @@ This method gives you full control over partitioning and BTRFS subvolume creatio
     sudo mount -o subvol=@home,compress=zstd,noatime /dev/nvme0n1p8 /mnt/home
     sudo mount -o subvol=@nix,compress=zstd,noatime /dev/nvme0n1p8 /mnt/nix
 
-    # Mount the separate /boot partition (recommended)
-    sudo mount /dev/nvme0n1p6 /mnt/boot
+    # Mount the separate /boot partition
+    sudo mount /dev/nvme0n1p5 /mnt/boot
 
     # Mount the existing EFI partition
     sudo mkdir -p /mnt/boot/efi
     sudo mount -o fmask=0077,dmask=0077 /dev/nvme0n1p1 /mnt/boot/efi # Do NOT format!
-    ```
+   ```
 
-    _Note on omitting separate /boot_: If you choose _not_ to create a separate `/boot` partition and place `/boot` directly on the BTRFS root subvolume (`@`), you would simply omit `mount /dev/nvme0n1p6 /mnt/boot` and ensure your `/mnt/boot/efi` is mounted directly. This is generally less robust for dual-boot with GRUB.
+_Note on omitting separate /boot_: If you choose _not_ to create a separate `/boot` partition and place `/boot` directly on the BTRFS root subvolume (`@`), you would simply omit `mount /dev/nvme0n1p5 /mnt/boot` and ensure your `/mnt/boot/efi` is mounted directly. This is generally less robust for dual-boot with GRUB.
 
-7.  **Generate initial NixOS configuration files**:
+7. **Generate initial NixOS configuration files**:
 
-    ```bash
-    sudo nixos-generate-config --root /mnt
-    ```
+```bash
+sudo nixos-generate-config --root /mnt
+```
 
 ## Step 2: Clone Dotfiles Repository
 
