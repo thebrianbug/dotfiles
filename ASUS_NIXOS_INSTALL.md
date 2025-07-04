@@ -619,13 +619,9 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
           enable = true;
           gfx-vfio-enable = true; # Enable VFIO GPU passthrough support for virtualization
         };
-        asusd = { # For asusctl features
+        asusd = { # For asusctl features (ROG Control Center is included)
           enable = true;
           enableUserService = true;
-          # Enable ROG-specific features - useful for ROG series laptops
-          # For ProArt P16, this can be safely enabled but most features won't apply
-          # Only disable if you experience issues with asusd
-          rog-control = true;
         };
       };
 
