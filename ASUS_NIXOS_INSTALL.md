@@ -631,7 +631,10 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
       # NVIDIA configuration for RTX 4070
       hardware.nvidia = {
         modesetting.enable = true;
-        powerManagement.enable = true;
+        powerManagement = {
+          enable = true;
+          finegrained = true; # More detailed power management for better battery life
+        };
         forceFullCompositionPipeline = true; # Prevents screen tearing, important for creative work
         nvidiaPersistenced = true; # Keeps the NVIDIA driver loaded, reduces startup latency for creative apps
         package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable NVIDIA drivers
@@ -655,7 +658,6 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
       # Power management daemons
       services.power-profiles-daemon.enable = true;
       services.tlp.enable = lib.mkDefault true; # For advanced power saving
-      powerManagement.finegrained = true; # Better control over CPU frequency scaling for AMD processors
 
       # Touchpad and touchscreen support
       services.libinput.enable = true; # Essential for touchpad
