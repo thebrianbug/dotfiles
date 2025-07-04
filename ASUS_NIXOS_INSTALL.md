@@ -651,6 +651,7 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
     # Touchpad and touchscreen support
     services.libinput.enable = true; # Essential for touchpad
     hardware.sensor.iio.enable = lib.mkDefault true; # For IIO devices like touchscreens
+    services.iio-sensor-proxy.enable = true; # Enable auto-rotation and ambient light sensing
 
     # Audio configuration using PipeWire (recommended over PulseAudio)
     sound.enable = true;
