@@ -319,7 +319,23 @@ Your ProArt P16 H7606WI has a TPM 2.0 chip, which can automatically unlock the L
     boot.initrd.clevis.enable = true;
     ```
 
-    **Warning**: TPM unlocking is an advanced feature. Test it thoroughly and **always keep your passphrase as a backup**. Firmware updates or changes to the boot environment may require re-binding the TPM.
+    > ⚠️ **IMPORTANT TPM RECOVERY WARNING**
+    > 
+    > **Always retain your manual LUKS passphrase as a critical fallback!** TPM-based unlocking will fail in these scenarios:
+    > 
+    > - After BIOS/firmware updates (which reset TPM state)
+    > - After certain hardware changes or maintenance
+    > - Following boot environment modifications
+    > - If the TPM chip malfunctions
+    > 
+    > **Recovery Procedure:** When TPM unlocking fails, you'll be prompted for your manual passphrase.
+    > After booting successfully with your passphrase, rebind the TPM:
+    > 
+    > ```bash
+    > sudo clevis luks bind -d /dev/nvme0n1p7 tpm2 '{"pcr_bank":"sha256","pcr_ids":"7"}'
+    > ```
+    > 
+    > **Always test TPM unlocking** after binding before relying on it exclusively.
 
 ### Encryption and Dual-Boot Considerations
 
