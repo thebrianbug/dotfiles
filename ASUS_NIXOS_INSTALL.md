@@ -320,21 +320,21 @@ Your ProArt P16 H7606WI has a TPM 2.0 chip, which can automatically unlock the L
     ```
 
     > ⚠️ **IMPORTANT TPM RECOVERY WARNING**
-    > 
+    >
     > **Always retain your manual LUKS passphrase as a critical fallback!** TPM-based unlocking will fail in these scenarios:
-    > 
+    >
     > - After BIOS/firmware updates (which reset TPM state)
     > - After certain hardware changes or maintenance
     > - Following boot environment modifications
     > - If the TPM chip malfunctions
-    > 
+    >
     > **Recovery Procedure:** When TPM unlocking fails, you'll be prompted for your manual passphrase.
     > After booting successfully with your passphrase, rebind the TPM:
-    > 
+    >
     > ```bash
     > sudo clevis luks bind -d /dev/nvme0n1p7 tpm2 '{"pcr_bank":"sha256","pcr_ids":"7"}'
     > ```
-    > 
+    >
     > **Always test TPM unlocking** after binding before relying on it exclusively.
 
 ### Encryption and Dual-Boot Considerations
@@ -619,7 +619,7 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
         # This limits your rollback capabilities directly from the bootloader.
         # For more generations, consider expanding your EFI partition.
         loader.systemd-boot = {
-          enable = true;
+          enable = true; # Allow NixOS to write its bootloader to the EFI partition
           configurationLimit = 1; # Keep only one generation to save space
         };
 
@@ -799,8 +799,9 @@ sudo btrfs subvolume snapshot -r / /.snapshots/pre-update-$(date +%Y%m%d)
 
 > ⚠️ **WARNING: Secure Boot and NVIDIA Drivers**  
 > If Secure Boot is enabled in your UEFI settings, the proprietary NVIDIA drivers may silently fail to load. Either:
-> - Disable Secure Boot in UEFI settings (recommended for most users)  
-> - Or set up signed drivers with `sbctl` (advanced users only)  
+>
+> - Disable Secure Boot in UEFI settings (recommended for most users)
+> - Or set up signed drivers with `sbctl` (advanced users only)
 
 If `nvidia-smi` fails:
 
