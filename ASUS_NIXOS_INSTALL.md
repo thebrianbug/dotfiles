@@ -611,6 +611,17 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
       # If you specifically want 6.15.4 and it's not 'latest', you might need:
       # boot.kernelPackages = pkgs.linuxPackages_6_15; # (or whatever is the exact package name for 6.15)
 
+      # ASUS-specific kernel modules and parameters
+      boot.extraModulePackages = with config.boot.kernelPackages; [ 
+        asus-wmi
+        asus-nb-wmi 
+      ];
+      boot.kernelModules = [ "asus-wmi" "asus-nb-wmi" ];
+      boot.kernelParams = [ 
+        "amd_pstate=active"
+        "acpi_osi=Linux"
+        "acpi_call"
+      ];
 
       # ASUS-specific services for fan control, keyboard lighting, etc.
       services = {
@@ -622,6 +633,11 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
         asusd = { # For asusctl features (ROG Control Center is included)
           enable = true;
           enableUserService = true;
+        };
+        # Battery charge threshold settings for extended battery lifespan
+        tlp.settings = {
+          START_CHARGE_THRESH_BAT0 = 40;  # Start charging when below 40%
+          STOP_CHARGE_THRESH_BAT0 = 80;   # Stop charging when above 80%
         };
       };
 
