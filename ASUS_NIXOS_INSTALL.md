@@ -661,7 +661,6 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
 
       # Power management
       services.power-profiles-daemon.enable = true;
-      services.tlp.enable = lib.mkDefault true; # Additional power savings
 
       # Input devices
       services.libinput.enable = true; # Touchpad support
