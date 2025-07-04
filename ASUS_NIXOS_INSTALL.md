@@ -667,6 +667,7 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
 
       # Input devices
       services.libinput.enable = true; # Touchpad support
+      services.gestures.enable = true; # Enhanced touchpad/touchscreen gesture support
       services.iio-sensor-proxy.enable = true; # Auto-rotation, light sensor
 
       # Audio setup (modern replacement for PulseAudio)
