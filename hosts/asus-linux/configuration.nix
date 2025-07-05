@@ -221,6 +221,12 @@
   # Ensure the same keymap is used in console
   console.useXkbConfig = true;
 
+  # Swap Caps Lock and Control in GNOME
+  environment.etc."gsettings/gnome-desktop-input-sources".text = ''
+    [org.gnome.desktop.input-sources]
+    xkb-options=['ctrl:swapcaps']
+  '';
+
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
