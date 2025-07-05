@@ -10,10 +10,18 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # NUR packages
+    nur.url = "github:nix-community/NUR";
   };
 
   outputs =
-    { nixpkgs, home-manager, ... }:
+    {
+      nixpkgs,
+      home-manager,
+      nur,
+      ...
+    }:
     let
       # System configuration
       system = "x86_64-linux";
@@ -27,7 +35,8 @@
           modules = [
             ./hosts/vm/configuration.nix
             # Include home-manager as NixOS module for the VM
-            home-manager.nixosModules.home-manager {
+            home-manager.nixosModules.home-manager
+            {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.users.brianbug = import ./home-manager/vm;
@@ -37,9 +46,16 @@
 
         asus-linux = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
+          specialArgs = {
+            inherit nur;
+          };
           modules = [
             ./hosts/asus-linux/configuration.nix
-            home-manager.nixosModules.home-manager {
+            {
+              nixpkgs.overlays = [ nur.overlays.default ];
+            }
+            home-manager.nixosModules.home-manager
+            {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.users.brianbug = import ./home-manager/nixos;
@@ -55,13 +71,13 @@
           inherit pkgs;
           modules = [ ./home-manager/fedora ];
         };
-        
+
         # VM-specific configuration (for standalone use)
         "brianbug-vm" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
           modules = [ ./home-manager/vm ];
         };
-        
+
         # NixOS configuration (for standalone use)
         "brianbug-nixos" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;

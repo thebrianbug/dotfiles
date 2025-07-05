@@ -35,7 +35,7 @@
           "general.smoothScroll" = true;
           "privacy.trackingprotection.enabled" = true;
         };
-        extensions = with pkgs.nur.repos.rycee.firefox-addons; [
+        extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
           darkreader
           # enhancer-for-youtube # Distraction Free YouTube equivalent
         ];
