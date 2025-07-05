@@ -79,6 +79,8 @@
       enable = true;
       videoDrivers = [ "nvidia" ]; # Load NVidia Driver
     };
+
+    bluetooth.enable = true;
   };
 
   systemd.services.supergfxd.path = [ pkgs.pciutils ]; # Manually add pciutlis to supergfxd path
@@ -97,6 +99,10 @@
     glxinfo # Hardware Debugging
 
     iio-sensor-proxy # Auto-rotation, light sensor
+
+    # Bluetooth
+    bluez
+    blueman
 
     # NVIDIA offload helper script
     (pkgs.writeScriptBin "nvidia-offload" (builtins.readFile ./nvidia-offload.sh))
