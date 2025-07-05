@@ -45,7 +45,6 @@
     # ASUS hardware control
     supergfxd = {
       enable = true;
-      mode = "integrated";
     };
 
     # System control daemon (fan curves, keyboard lighting, etc.)
