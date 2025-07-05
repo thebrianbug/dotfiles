@@ -149,7 +149,6 @@
       sof-firmware # Better audio support
     ];
 
-    # opengl.extraPackages = with pkgs; [ mesa.drivers ]; # Enable AMD GPU
     graphics.enable = true;
     graphics.enable32Bit = true; # Useful for 32 bit applications
   };
@@ -226,6 +225,26 @@
     [org.gnome.desktop.input-sources]
     xkb-options=['ctrl:swapcaps']
   '';
+
+  # Enable hardware acceleration with Mesa support for AMD GPU
+  hardware.opengl = {
+    enable = true;
+    driSupport = true;
+    driSupport32Bit = true;
+    extraPackages = with pkgs; [
+      # Basic Mesa drivers
+      mesa.drivers
+      # AMD specific packages
+      amdvlk
+      # OpenCL support
+      rocmPackages.clr
+    ];
+    extraPackages32 = with pkgs.pkgsi686Linux; [
+      # 32-bit support
+      libva
+      amdvlk
+    ];
+  };
 
   # Enable CUPS to print documents.
   # services.printing.enable = true;
