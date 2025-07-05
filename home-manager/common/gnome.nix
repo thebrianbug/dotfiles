@@ -59,6 +59,7 @@ in
       favorite-apps = [
         "org.gnome.Nautilus.desktop"
         "org.mozilla.firefox.desktop"
+        "firefox.desktop"
         "gnome-console.desktop"
         "org.gnome.Ptyxis.desktop"
         "obsidian.desktop"
