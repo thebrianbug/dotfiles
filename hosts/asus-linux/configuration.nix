@@ -113,7 +113,6 @@
     glxinfo # Hardware Debugging
 
     iio-sensor-proxy # Auto-rotation, light sensor
-    nvidia-offload  # helper for NVIDIA Prime
   ];
 
   # Firmware for hardware components
@@ -132,7 +131,17 @@
 
       # Set up prime offloading for demanding apps only
       prime = {
-        offload.enable = true;
+        offload = {
+          enable = true;
+          # Add a convenient script for running on the NVIDIA GPU
+          script = "${pkgs.writeShellScriptBin "nvidia-offload" ''
+            export __NV_PRIME_RENDER_OFFLOAD=1
+            export __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0
+            export __GLX_VENDOR_LIBRARY_NAME=nvidia
+            export __VK_LAYER_NV_optimus=NVIDIA_only
+            exec "$@"
+          ''}/bin/nvidia-offload";
+        };
         sync.enable = false;
         # PCI bus IDs for hybrid graphics
         amdgpuBusId = "PCI:101:0:0"; # AMD GPU at 65:00.0
