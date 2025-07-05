@@ -87,8 +87,6 @@
     colord.enable = true;    # Color management for ProArt display
     geoclue2.enable = true;  # Location-based features
 
-    
-
     xserver = {
       enable = true;
       # videoDrivers = [ "nvidia" ]; # Load NVidia Driver
@@ -100,25 +98,6 @@
   };
 
   # systemd.services.supergfxd.path = [ pkgs.pciutils ];
-
-  # NVIDIA configuration for RTX 4070
-  hardware.nvidia = {
-    modesetting.enable = true; # Required for Wayland compatibility
-    powerManagement = {
-      enable = false;
-      finegrained = false; # Better power management for laptops, disabled temporarily to debug card issue
-    };
-    nvidiaSettings = true;
-    # forceFullCompositionPipeline = true; # Eliminates screen tearing
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-
-    # Set up prime offloading for demanding apps only
-    # prime = {
-    #   offload.enable = true;
-    #   sync.enable = false;
-    # };
-    open = false; # Prefer propritary driver
-  };
 
   # Essential environment variables for NVIDIA+Wayland
   environment.variables = {
@@ -134,20 +113,40 @@
     iio-sensor-proxy # Auto-rotation, light sensor
     # lightdm
 
-    mesa # AMD GPU
-    nvidia-offload  # helper for NVIDIA Prime
+    # mesa # AMD GPU
+    # nvidia-offload  # helper for NVIDIA Prime
     glxinfo # Debugging OpenGL
   ];
 
   # Firmware for hardware components
   hardware = {
+
+    # NVIDIA configuration for RTX 4070
+    nvidia = {
+      modesetting.enable = true; # Required for Wayland compatibility
+      powerManagement = {
+        enable = false;
+        finegrained = false; # Better power management for laptops, disabled temporarily to debug card issue
+      };
+      nvidiaSettings = true;
+      # forceFullCompositionPipeline = true; # Eliminates screen tearing
+      package = config.boot.kernelPackages.nvidiaPackages.stable;
+ 
+      # Set up prime offloading for demanding apps only
+      # prime = {
+      #   offload.enable = true;
+      #   sync.enable = false;
+      # };
+      open = false; # Prefer propritary driver
+    };
+
     enableAllFirmware = true; # Auto-detect needed firmware
     firmware = with pkgs; [
       linux-firmware  # Broad hardware support
       sof-firmware    # Better audio support
     ];
 
-    opengl.extraPackages = with pkgs; [ mesa.drivers ]; # Enable AMD GPU
+    # opengl.extraPackages = with pkgs; [ mesa.drivers ]; # Enable AMD GPU
     graphics.enable = true;
     graphics.enable32Bit = true; # Useful for 32 bit applications
   };
