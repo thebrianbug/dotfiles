@@ -23,6 +23,18 @@
     };
   };
 
+  programs.firefox = {
+    enable = true;
+    profiles.default = {
+      extensions = [
+        # Distraction Free YouTube (DF Tube)
+        "https://addons.mozilla.org/firefox/downloads/latest/distraction-free-youtube/latest.xpi"
+        # Dark Reader
+        "https://addons.mozilla.org/firefox/downloads/latest/darkreader/latest.xpi"
+      ];
+    };
+  };
+
   # Import shared component configurations
   imports = [
     ./editors.nix
