@@ -41,13 +41,13 @@
 
     # Only declare modules that don't auto-load on modern kernels
     kernelModules = [
-      "nvidia"
-      "nvidia_modeset"
-      "nvidia_uvm"
-      "nvidia_drm" # NVidia
-      "mt7921e"
-      "mt7922e" # MediaTek WiFi (often needs manual loading)
-      "i2c_hid_acpi" # Required for some touchpad/touchscreen devices
+      # "nvidia"
+      # "nvidia_modeset"
+      # "nvidia_uvm"
+      # "nvidia_drm" # NVidia
+      # "mt7921e"
+      # "mt7922e" # MediaTek WiFi (often needs manual loading)
+      # "i2c_hid_acpi" # Required for some touchpad/touchscreen devices
     ];
   };
 
