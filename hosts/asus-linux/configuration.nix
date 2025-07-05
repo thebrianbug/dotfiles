@@ -229,8 +229,6 @@
   # Enable hardware acceleration with Mesa support for AMD GPU
   hardware.opengl = {
     enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
     extraPackages = with pkgs; [
       # Basic Mesa drivers
       mesa.drivers
