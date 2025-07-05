@@ -26,14 +26,21 @@
   programs.firefox = {
     enable = true;
     profiles.default = {
-      extensions = [
-        # Distraction Free YouTube (DF Tube)
-        "https://addons.mozilla.org/firefox/downloads/latest/distraction-free-youtube/latest.xpi"
-        # Dark Reader
-        "https://addons.mozilla.org/firefox/downloads/latest/darkreader/latest.xpi"
-      ];
+      extensions = {
+        extraExtensions = [
+          (pkgs.fetchurl {
+            url = "https://addons.mozilla.org/firefox/downloads/latest/distraction-free-youtube/latest.xpi";
+            sha256 = "15fh4ga9wkp9m0599wrc5fa2411151bv2rgvw31jd1i0nn98b8dj";
+          })
+          (pkgs.fetchurl {
+            url = "https://addons.mozilla.org/firefox/downloads/latest/darkreader/latest.xpi";
+            sha256 = "040zzsis2fnvj2crxhknak5gz7q4mc8r3jj0mrzvb9is0s2l1j93";
+          })
+        ];
+      };
     };
   };
+
 
   # Import shared component configurations
   imports = [
