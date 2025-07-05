@@ -101,9 +101,10 @@
     (pkgs.writeScriptBin "nvidia-offload" (builtins.readFile ./nvidia-offload.sh))
 
     # System tools
-    firefox
     ptyxis
   ];
+
+  programs.firefox.enable = true; # Link Firefox and enable system-wide
 
   # Firmware for hardware components
   hardware = {
