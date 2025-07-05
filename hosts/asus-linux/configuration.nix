@@ -85,15 +85,14 @@
     colord.enable = true;    # Color management for ProArt display
     geoclue2.enable = true;  # Location-based features
 
-    # GNOME desktop with Wayland (for best HDR support)
-    desktopManager.gnome.enable = true;
-    # displayManager.gdm.wayland = true;
-    # displayManager.gdm.wayland = false;
+    
 
     xserver = {
       enable = true;
-      videoDrivers = [ "nvidia" ]; # Load NVidia Driver
-      displayManager.lightdm.enable = true;
+      # videoDrivers = [ "nvidia" ]; # Load NVidia Driver
+      # displayManager.lightdm.enable = true;
+      displayManager.gdm.wayland = true;
+      desktopManager.gnome.enable = true; # GNOME desktop with Wayland (for best HDR support)
     };
   };
 
@@ -130,7 +129,7 @@
     pciutils usbutils inxi glxinfo
 
     iio-sensor-proxy # Auto-rotation, light sensor
-    lightdm
+    # lightdm
   ];
 
   # Firmware for hardware components
