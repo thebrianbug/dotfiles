@@ -43,8 +43,10 @@
   # Services configuration
   services = {
     # ASUS hardware control
-    # Unified GPU control (replaces older solutions)
-    supergfxd.enable = true;
+    supergfxd = {
+      enable = true;
+      mode = "integrated";
+    };
 
     # System control daemon (fan curves, keyboard lighting, etc.)
     asusd = {

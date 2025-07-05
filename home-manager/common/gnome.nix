@@ -108,10 +108,12 @@ in
 
     # Power management settings
     "org/gnome/settings-daemon/plugins/power" = {
-      power-button-action = "interactive";
-      power-saver-profile-on-low-battery = true;
-      sleep-inactive-ac-timeout = 0;
-      sleep-inactive-ac-type = "nothing";
+      sleep-inactive-ac-type = "suspend";
+      sleep-inactive-ac-timeout = 1800; # 30 minutes on AC
+      sleep-inactive-battery-type = "suspend";
+      sleep-inactive-battery-timeout = 900; # 15 minutes on battery
+      lid-close-ac-action = "suspend";
+      lid-close-battery-action = "suspend";
     };
   };
 }
