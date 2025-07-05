@@ -87,6 +87,8 @@
 
   systemd.services.supergfxd.path = [ pkgs.pciutils ];
 
+  services.xserver.videoDrivers = [ "nvidia" ]; # Load NVidia Driver
+
   # NVIDIA configuration for RTX 4070
   hardware.nvidia = {
     modesetting.enable = true; # Required for Wayland compatibility
@@ -94,6 +96,8 @@
       enable = true;
       finegrained = true; # Better power management for laptops
     };
+    open = false; # Prefer propritary driver
+    nvidiaSettings = true;
     forceFullCompositionPipeline = true; # Eliminates screen tearing
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
