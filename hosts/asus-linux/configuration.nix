@@ -39,8 +39,11 @@
     # Note: Modern kernels auto-load most required modules for ASUS laptops
     kernelPackages = pkgs.linuxPackages_latest;
 
-    # Essential power management for AMD CPUs
-    kernelParams = [ "amd_pstate=active" ];
+    kernelParams = [
+      "amd_pstate=active" # Essential power management for AMD CPUs
+      "pci=noacpi" # Try for asus to not hide iGPU
+      # "amd_iommu=off" # Another try to not hide iGPU
+    ];
 
     # Only declare modules that don't auto-load on modern kernels
     kernelModules = [
