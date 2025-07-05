@@ -87,13 +87,13 @@
 
     # GNOME desktop with Wayland (for best HDR support)
     desktopManager.gnome.enable = true;
-    displayManager.lightdm.enable = true;
     # displayManager.gdm.wayland = true;
     # displayManager.gdm.wayland = false;
 
     xserver = {
       enable = true;
       videoDrivers = [ "nvidia" ]; # Load NVidia Driver
+      displayManager.lightdm.enable = true;
     };
   };
 
