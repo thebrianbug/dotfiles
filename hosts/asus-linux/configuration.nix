@@ -138,20 +138,7 @@
     # Enable hardware acceleration with Mesa support for AMD GPU
     graphics = {
       enable = true;
-      enable32Bit = true; # Useful for 32 bit applications
-      extraPackages = with pkgs; [
-        # Basic Mesa drivers
-        mesa
-        # AMD specific packages
-        amdvlk
-        # OpenCL support
-        rocmPackages.clr
-      ];
-      extraPackages32 = with pkgs.pkgsi686Linux; [
-        # 32-bit support
-        libva
-        amdvlk
-      ];
+      extraPackages = with pkgs; [ mesa ];
     };
   };
 
