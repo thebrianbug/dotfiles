@@ -61,7 +61,7 @@
   services = {
     # ASUS hardware control
     # Unified GPU control (replaces older solutions)
-    # supergfxd.enable = true;
+    supergfxd.enable = true;
 
     # System control daemon (fan curves, keyboard lighting, etc.)
     asusd = {
@@ -97,13 +97,13 @@
     };
   };
 
-  # systemd.services.supergfxd.path = [ pkgs.pciutils ];
+  systemd.services.supergfxd.path = [ pkgs.pciutils ]; # Manually add pciutlis to supergfxd path
 
   # Essential environment variables for NVIDIA+Wayland
   environment.variables = {
     GBM_BACKEND = "nvidia-drm";        # Required for GNOME Wayland
     __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL vendor selection
-    # WLR_NO_HARDWARE_CURSORS = "1";     # Fixes cursor issues in Wayland
+    WLR_NO_HARDWARE_CURSORS = "1";     # Fixes cursor issues in Wayland
   };
 
   # System diagnostic and hardware tools
@@ -111,11 +111,8 @@
     pciutils usbutils inxi glxinfo
 
     iio-sensor-proxy # Auto-rotation, light sensor
-    # lightdm
 
-    # mesa # AMD GPU
     # nvidia-offload  # helper for NVIDIA Prime
-    glxinfo # Debugging OpenGL
   ];
 
   # Firmware for hardware components
