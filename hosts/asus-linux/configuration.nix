@@ -41,10 +41,7 @@
 
     kernelParams = [
       "nvidia-drm.modeset=1" # Enable NVIDIA DRM for better compatiblity
-
       "amd_pstate=active" # Essential power management for AMD CPUs
-      # "pci=noacpi" # Try for asus to not hide iGPU
-      # "amd_iommu=off" # Another try to not hide iGPU
     ];
 
     # Only declare modules that don't auto-load on modern kernels
@@ -57,8 +54,6 @@
       "mt7922e" # MediaTek WiFi (often needs manual loading)
       "i2c_hid_acpi" # Required for some touchpad/touchscreen devices
     ];
-
-    # plymouth.enable = false; # Disable to reduce noise
   };
 
   # Services configuration
@@ -118,7 +113,7 @@
     glxinfo # Hardware Debugging
 
     iio-sensor-proxy # Auto-rotation, light sensor
-    # nvidia-offload  # helper for NVIDIA Prime
+    nvidia-offload  # helper for NVIDIA Prime
   ];
 
   # Firmware for hardware components
@@ -136,10 +131,13 @@
       package = config.boot.kernelPackages.nvidiaPackages.stable;
 
       # Set up prime offloading for demanding apps only
-      # prime = {
-      #   offload.enable = true;
-      #   sync.enable = false;
-      # };
+      prime = {
+        offload.enable = true;
+        sync.enable = false;
+        # PCI bus IDs for hybrid graphics
+        amdgpuBusId = "PCI:101:0:0"; # AMD GPU at 65:00.0
+        nvidiaBusId = "PCI:100:0:0"; # NVIDIA GPU at 64:00.0
+      };
       open = false; # Prefer propritary driver
     };
 
