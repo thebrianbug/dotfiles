@@ -115,8 +115,8 @@
 
   # Firmware for hardware components
   hardware = {
+    bluetooth.enable = true;
 
-    # NVIDIA configuration for RTX 4070
     nvidia = {
       package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable driver
       modesetting.enable = true; # Required for Wayland compatibility
