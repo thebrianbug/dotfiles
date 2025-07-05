@@ -2,13 +2,18 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+  ];
 
   boot = {
     # EFI Partition Management: Limit bootloader generations for small EFI partitions
@@ -44,9 +49,13 @@
 
     # Only declare modules that don't auto-load on modern kernels
     kernelModules = [
-      "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" # NVidia
-      "mt7921e" "mt7922e"  # MediaTek WiFi (often needs manual loading)
-      "i2c_hid_acpi"       # Required for some touchpad/touchscreen devices
+      "nvidia"
+      "nvidia_modeset"
+      "nvidia_uvm"
+      "nvidia_drm" # NVidia
+      "mt7921e"
+      "mt7922e" # MediaTek WiFi (often needs manual loading)
+      "i2c_hid_acpi" # Required for some touchpad/touchscreen devices
     ];
 
     # plymouth.enable = false; # Disable to reduce noise
@@ -75,12 +84,12 @@
       enable = true;
       alsa.enable = true;
       pulse.enable = true; # PulseAudio compatibility
-      jack.enable = true;  # Professional audio support
+      jack.enable = true; # Professional audio support
     };
 
     # Display services
-    colord.enable = true;    # Color management for ProArt display
-    geoclue2.enable = true;  # Location-based features
+    colord.enable = true; # Color management for ProArt display
+    geoclue2.enable = true; # Location-based features
 
     displayManager.gdm.enable = true;
     displayManager.gdm.wayland = true;
@@ -96,14 +105,17 @@
 
   # Essential environment variables for NVIDIA+Wayland
   environment.variables = {
-    GBM_BACKEND = "nvidia-drm";        # Required for GNOME Wayland
+    GBM_BACKEND = "nvidia-drm"; # Required for GNOME Wayland
     __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL vendor selection
-    WLR_NO_HARDWARE_CURSORS = "1";     # Fixes cursor issues in Wayland
+    WLR_NO_HARDWARE_CURSORS = "1"; # Fixes cursor issues in Wayland
   };
 
   # System diagnostic and hardware tools
   environment.systemPackages = with pkgs; [
-    pciutils usbutils inxi glxinfo # Hardware Debugging
+    pciutils
+    usbutils
+    inxi
+    glxinfo # Hardware Debugging
 
     iio-sensor-proxy # Auto-rotation, light sensor
     # nvidia-offload  # helper for NVIDIA Prime
@@ -122,7 +134,7 @@
       nvidiaSettings = true;
       # forceFullCompositionPipeline = true; # Eliminates screen tearing
       package = config.boot.kernelPackages.nvidiaPackages.stable;
- 
+
       # Set up prime offloading for demanding apps only
       # prime = {
       #   offload.enable = true;
@@ -133,8 +145,8 @@
 
     enableAllFirmware = true; # Auto-detect needed firmware
     firmware = with pkgs; [
-      linux-firmware  # Broad hardware support
-      sof-firmware    # Better audio support
+      linux-firmware # Broad hardware support
+      sof-firmware # Better audio support
     ];
 
     # opengl.extraPackages = with pkgs; [ mesa.drivers ]; # Enable AMD GPU
@@ -185,7 +197,7 @@
   #   keyMap = "us";
   #   useXkbConfig = true; # use xkb.options in tty.
   # };
-  
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.brianbug = {
     isNormalUser = true;
@@ -204,8 +216,8 @@
 
   # Configure keymap in X11 and Wayland
   # services.xserver.xkb.layout = "us";
-  services.xserver.xkb.options = "ctrl:swapcaps";  # Swap Caps Lock and Control
-  
+  services.xserver.xkb.options = "ctrl:swapcaps"; # Swap Caps Lock and Control
+
   # Ensure the same keymap is used in console
   console.useXkbConfig = true;
 
@@ -285,4 +297,3 @@
   system.stateVersion = "25.05"; # Did you read the comment?
 
 }
-
