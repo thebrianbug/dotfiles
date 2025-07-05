@@ -155,7 +155,7 @@
       enable32Bit = true; # Useful for 32 bit applications
       extraPackages = with pkgs; [
         # Basic Mesa drivers
-        mesa.drivers
+        mesa
         # AMD specific packages
         amdvlk
         # OpenCL support
