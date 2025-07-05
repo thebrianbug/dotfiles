@@ -41,6 +41,7 @@
 
     kernelParams = [
       "amd_pstate=active" # Essential power management for AMD CPUs
+      "nvidia-drm.modeset=1" # Enable NVIDIA DRM for better compatiblity
       # "pci=noacpi" # Try for asus to not hide iGPU
       # "amd_iommu=off" # Another try to not hide iGPU
     ];
