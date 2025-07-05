@@ -85,6 +85,8 @@
     xserver.enable = true;
   };
 
+  systemd.services.supergfxd.path = [ pkgs.pciutils ];
+
   # NVIDIA configuration for RTX 4070
   hardware.nvidia = {
     modesetting.enable = true; # Required for Wayland compatibility
