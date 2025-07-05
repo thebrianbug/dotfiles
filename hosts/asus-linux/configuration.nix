@@ -91,7 +91,7 @@
       enable = true;
       # videoDrivers = [ "nvidia" ]; # Load NVidia Driver
       # displayManager.lightdm.enable = true;
-      displayManger.gmd.enable = true;
+      displayManager.gmd.enable = true;
       displayManager.gdm.wayland = true;
       desktopManager.gnome.enable = true; # GNOME desktop with Wayland (for best HDR support)
     };
