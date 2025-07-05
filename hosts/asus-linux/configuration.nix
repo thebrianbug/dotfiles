@@ -53,7 +53,7 @@
   services = {
     # ASUS hardware control
     # Unified GPU control (replaces older solutions)
-    supergfxd.enable = true;
+    # supergfxd.enable = true;
 
     # System control daemon (fan curves, keyboard lighting, etc.)
     asusd = {
@@ -82,18 +82,20 @@
     # GNOME desktop with Wayland (for best HDR support)
     desktopManager.gnome.enable = true;
     displayManager.gdm.wayland = true;
-    xserver.enable = true;
+
+    xserver = {
+      enable = true;
+      videoDrivers = [ "nvidia" ]; # Load NVidia Driver
+    };
   };
 
-  systemd.services.supergfxd.path = [ pkgs.pciutils ];
-
-  services.xserver.videoDrivers = [ "nvidia" ]; # Load NVidia Driver
+  # systemd.services.supergfxd.path = [ pkgs.pciutils ];
 
   # NVIDIA configuration for RTX 4070
   hardware.nvidia = {
     modesetting.enable = true; # Required for Wayland compatibility
     powerManagement = {
-      enable = true;
+      enable = false;
       finegrained = false; # Better power management for laptops, disabled temporarily to debug card issue
     };
     # nvidiaSettings = true;
