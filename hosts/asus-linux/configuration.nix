@@ -94,17 +94,17 @@
     modesetting.enable = true; # Required for Wayland compatibility
     powerManagement = {
       enable = true;
-      finegrained = true; # Better power management for laptops
+      finegrained = false; # Better power management for laptops, disabled temporarily to debug card issue
     };
-    nvidiaSettings = true;
+    # nvidiaSettings = true;
     forceFullCompositionPipeline = true; # Eliminates screen tearing
     package = config.boot.kernelPackages.nvidiaPackages.stable;
 
     # Set up prime offloading for demanding apps only
-    prime = {
-      offload.enable = true;
-      sync.enable = false;
-    };
+    # prime = {
+    #   offload.enable = true;
+    #   sync.enable = false;
+    # };
     open = false; # Prefer propritary driver
   };
 
