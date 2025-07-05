@@ -99,6 +99,10 @@
 
     # NVIDIA offload helper script
     (pkgs.writeScriptBin "nvidia-offload" (builtins.readFile ./nvidia-offload.sh))
+
+    # System tools
+    firefox
+    ptyxis
   ];
 
   # Firmware for hardware components
