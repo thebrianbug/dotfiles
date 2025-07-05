@@ -101,7 +101,6 @@
   # Essential environment variables for NVIDIA+Wayland
   environment.variables = {
     GBM_BACKEND = "nvidia-drm"; # Required for GNOME Wayland
-    __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL vendor selection
     WLR_NO_HARDWARE_CURSORS = "1"; # Fixes cursor issues in Wayland
   };
 
@@ -139,8 +138,8 @@
         offload.enable = true;
         sync.enable = false;
         # PCI bus IDs for hybrid graphics
-        amdgpuBusId = "PCI:101:0:0"; # AMD GPU at 65:00.0
-        nvidiaBusId = "PCI:100:0:0"; # NVIDIA GPU at 64:00.0
+        amdgpuBusId = "PCI:65:00:0"; # AMD GPU at 65:00.0
+        nvidiaBusId = "PCI:64:00:0"; # NVIDIA GPU at 64:00.0
       };
       open = false; # Prefer propritary driver
     };
