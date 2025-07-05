@@ -96,10 +96,16 @@
       enable = true;
       finegrained = true; # Better power management for laptops
     };
-    open = false; # Prefer propritary driver
     nvidiaSettings = true;
     forceFullCompositionPipeline = true; # Eliminates screen tearing
     package = config.boot.kernelPackages.nvidiaPackages.stable;
+
+    # Set up prime offloading for demanding apps only
+    prime = {
+      offload.enable = true;
+      sync.enable = false;
+    };
+    open = false; # Prefer propritary driver
   };
 
   # Essential environment variables for NVIDIA+Wayland
