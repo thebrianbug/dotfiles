@@ -81,8 +81,6 @@
     };
   };
 
-  systemd.services.supergfxd.path = [ pkgs.pciutils ]; # Manually add pciutlis to supergfxd path
-
   # Essential environment variables for NVIDIA+Wayland
   environment.variables = {
     GBM_BACKEND = "nvidia-drm"; # Required for GNOME Wayland
