@@ -28,11 +28,6 @@
         efiSysMountPoint = "/boot/efi";
         canTouchEfiVariables = true;
       };
-
-      # systemd-boot = {
-      #   enable = true; # Allow NixOS to write its bootloader to the EFI partition
-      #   configurationLimit = 1; # Keep only one generation to save space
-      # };
     };
 
     # Use latest stable kernel for best hardware support
@@ -87,13 +82,13 @@
     colord.enable = true;    # Color management for ProArt display
     geoclue2.enable = true;  # Location-based features
 
+    displayManager.gdm.enable = true;
+    displayManager.gdm.wayland = true;
+    desktopManager.gnome.enable = true;
+
     xserver = {
       enable = true;
-      # videoDrivers = [ "nvidia" ]; # Load NVidia Driver
-      # displayManager.lightdm.enable = true;
-      displayManager.gdm.enable = true;
-      displayManager.gdm.wayland = true;
-      desktopManager.gnome.enable = true; # GNOME desktop with Wayland (for best HDR support)
+      videoDrivers = [ "nvidia" ]; # Load NVidia Driver
     };
   };
 
@@ -108,10 +103,9 @@
 
   # System diagnostic and hardware tools
   environment.systemPackages = with pkgs; [
-    pciutils usbutils inxi glxinfo
+    pciutils usbutils inxi glxinfo # Hardware Debugging
 
     iio-sensor-proxy # Auto-rotation, light sensor
-
     # nvidia-offload  # helper for NVIDIA Prime
   ];
 
