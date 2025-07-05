@@ -40,14 +40,16 @@
     kernelPackages = pkgs.linuxPackages_latest;
 
     kernelParams = [
-      "amd_pstate=active" # Essential power management for AMD CPUs
       "nvidia-drm.modeset=1" # Enable NVIDIA DRM for better compatiblity
+
+      "amd_pstate=active" # Essential power management for AMD CPUs
       # "pci=noacpi" # Try for asus to not hide iGPU
       # "amd_iommu=off" # Another try to not hide iGPU
     ];
 
     # Only declare modules that don't auto-load on modern kernels
     kernelModules = [
+      "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" # NVidia
       "mt7921e" "mt7922e"  # MediaTek WiFi (often needs manual loading)
       "i2c_hid_acpi"       # Required for some touchpad/touchscreen devices
     ];
@@ -91,7 +93,7 @@
       enable = true;
       # videoDrivers = [ "nvidia" ]; # Load NVidia Driver
       # displayManager.lightdm.enable = true;
-      displayManager.gmd.enable = true;
+      displayManager.gdm.enable = true;
       displayManager.gdm.wayland = true;
       desktopManager.gnome.enable = true; # GNOME desktop with Wayland (for best HDR support)
     };
@@ -104,9 +106,9 @@
     modesetting.enable = true; # Required for Wayland compatibility
     powerManagement = {
       enable = false;
-      # finegrained = false; # Better power management for laptops, disabled temporarily to debug card issue
+      finegrained = false; # Better power management for laptops, disabled temporarily to debug card issue
     };
-    # nvidiaSettings = true;
+    nvidiaSettings = true;
     # forceFullCompositionPipeline = true; # Eliminates screen tearing
     package = config.boot.kernelPackages.nvidiaPackages.stable;
 
@@ -131,6 +133,10 @@
 
     iio-sensor-proxy # Auto-rotation, light sensor
     # lightdm
+
+    mesa # AMD GPU
+    nvidia-offload  # helper for NVIDIA Prime
+    glxinfo # Debugging OpenGL
   ];
 
   # Firmware for hardware components
@@ -140,6 +146,10 @@
       linux-firmware  # Broad hardware support
       sof-firmware    # Better audio support
     ];
+
+    opengl.extraPackages = with pkgs; [ mesa.drivers ]; # Enable AMD GPU
+    graphics.enable = true;
+    enable32Bit = true; # Useful for 32 bit applications
   };
 
   # Enable flakes
