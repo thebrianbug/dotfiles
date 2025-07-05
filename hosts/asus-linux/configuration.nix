@@ -113,7 +113,7 @@
     glxinfo # Hardware Debugging
 
     iio-sensor-proxy # Auto-rotation, light sensor
-    
+
     # NVIDIA offload helper script
     (pkgs.writeScriptBin "nvidia-offload" (builtins.readFile ./nvidia-offload.sh))
   ];
@@ -123,14 +123,16 @@
 
     # NVIDIA configuration for RTX 4070
     nvidia = {
+      package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable driver
       modesetting.enable = true; # Required for Wayland compatibility
+
       powerManagement = {
-        enable = false;
-        finegrained = false; # Better power management for laptops, disabled temporarily to debug card issue
+        enable = true;
+        finegrained = true; # Better power management for laptops
       };
+
       nvidiaSettings = true;
       # forceFullCompositionPipeline = true; # Eliminates screen tearing
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
 
       # Set up prime offloading for demanding apps only
       prime = {
