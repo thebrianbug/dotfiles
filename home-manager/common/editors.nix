@@ -36,9 +36,15 @@ in
     in
     {
       enable = true;
-      package = if useVSCodium then pkgs.vscodium else pkgs.windsurf.overrideAttrs (oldAttrs: {
-        meta = oldAttrs.meta // { mainProgram = "windsurf"; };
-      });
+      package =
+        if useVSCodium then
+          pkgs.vscodium
+        else
+          pkgs.windsurf.overrideAttrs (oldAttrs: {
+            meta = oldAttrs.meta // {
+              mainProgram = "windsurf";
+            };
+          });
       profiles.default = {
         extensions = defaultExtensions;
         keybindings = if useVSCodium then contextAwareKeybindings else [ ];
