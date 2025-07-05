@@ -130,6 +130,7 @@
     pciutils usbutils inxi glxinfo
 
     iio-sensor-proxy # Auto-rotation, light sensor
+    lightdm
   ];
 
   # Firmware for hardware components
