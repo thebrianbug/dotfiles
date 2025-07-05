@@ -115,8 +115,6 @@
 
   # Firmware for hardware components
   hardware = {
-    bluetooth.enable = true;
-
     nvidia = {
       package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable driver
       modesetting.enable = true; # Required for Wayland compatibility
@@ -159,6 +157,8 @@
     "nix-command"
     "flakes"
   ];
+
+  hardware.bluetooth.enable = true;
 
   networking.networkmanager.enable = true;
 
