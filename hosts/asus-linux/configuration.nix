@@ -149,7 +149,7 @@
 
     opengl.extraPackages = with pkgs; [ mesa.drivers ]; # Enable AMD GPU
     graphics.enable = true;
-    enable32Bit = true; # Useful for 32 bit applications
+    graphics.enable32Bit = true; # Useful for 32 bit applications
   };
 
   # Enable flakes
