@@ -202,9 +202,12 @@
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
-  # Configure keymap in X11
+  # Configure keymap in X11 and Wayland
   # services.xserver.xkb.layout = "us";
   services.xserver.xkb.options = "ctrl:swapcaps";  # Swap Caps Lock and Control
+  
+  # Ensure the same keymap is used in console
+  console.useXkbConfig = true;
 
   # Enable CUPS to print documents.
   # services.printing.enable = true;
