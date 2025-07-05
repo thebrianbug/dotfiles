@@ -40,7 +40,7 @@
     kernelPackages = pkgs.linuxPackages_latest;
 
     kernelParams = [
-      # "amd_pstate=active" # Essential power management for AMD CPUs
+      "amd_pstate=active" # Essential power management for AMD CPUs
       # "pci=noacpi" # Try for asus to not hide iGPU
       # "amd_iommu=off" # Another try to not hide iGPU
     ];
@@ -84,7 +84,8 @@
 
     # GNOME desktop with Wayland (for best HDR support)
     desktopManager.gnome.enable = true;
-    displayManager.gdm.wayland = true;
+    # displayManager.gdm.wayland = true;
+    displayManager.gdm.wayland = false;
 
     xserver = {
       enable = true;
@@ -99,10 +100,10 @@
     modesetting.enable = true; # Required for Wayland compatibility
     powerManagement = {
       enable = false;
-      finegrained = false; # Better power management for laptops, disabled temporarily to debug card issue
+      # finegrained = false; # Better power management for laptops, disabled temporarily to debug card issue
     };
     # nvidiaSettings = true;
-    forceFullCompositionPipeline = true; # Eliminates screen tearing
+    # forceFullCompositionPipeline = true; # Eliminates screen tearing
     package = config.boot.kernelPackages.nvidiaPackages.stable;
 
     # Set up prime offloading for demanding apps only
@@ -117,7 +118,7 @@
   environment.variables = {
     GBM_BACKEND = "nvidia-drm";        # Required for GNOME Wayland
     __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL vendor selection
-    WLR_NO_HARDWARE_CURSORS = "1";     # Fixes cursor issues in Wayland
+    # WLR_NO_HARDWARE_CURSORS = "1";     # Fixes cursor issues in Wayland
   };
 
   # System diagnostic and hardware tools
