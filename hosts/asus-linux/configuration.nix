@@ -52,7 +52,7 @@
       "i2c_hid_acpi"       # Required for some touchpad/touchscreen devices
     ];
 
-    plymouth.enable = false; # Disable to reduce noise
+    # plymouth.enable = false; # Disable to reduce noise
   };
 
   # Services configuration
@@ -91,6 +91,7 @@
       enable = true;
       # videoDrivers = [ "nvidia" ]; # Load NVidia Driver
       # displayManager.lightdm.enable = true;
+      displayManger.gmd.enable = true;
       displayManager.gdm.wayland = true;
       desktopManager.gnome.enable = true; # GNOME desktop with Wayland (for best HDR support)
     };
