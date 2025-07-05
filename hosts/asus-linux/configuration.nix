@@ -51,6 +51,8 @@
       "mt7921e" "mt7922e"  # MediaTek WiFi (often needs manual loading)
       "i2c_hid_acpi"       # Required for some touchpad/touchscreen devices
     ];
+
+    plymouth.enable = false; # Disable to reduce noise
   };
 
   # Services configuration
@@ -85,8 +87,9 @@
 
     # GNOME desktop with Wayland (for best HDR support)
     desktopManager.gnome.enable = true;
+    displayManager.lightdm.enable = true;
     # displayManager.gdm.wayland = true;
-    displayManager.gdm.wayland = false;
+    # displayManager.gdm.wayland = false;
 
     xserver = {
       enable = true;
