@@ -37,7 +37,7 @@
         };
         extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
           darkreader
-          df-youtube
+          youtube-recommended-videos
           ublock-origin
         ];
       };
