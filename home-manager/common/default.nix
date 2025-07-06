@@ -34,6 +34,7 @@
           "browser.startup.homepage" = "https://start.duckduckgo.com";
           "general.smoothScroll" = true;
           "privacy.trackingprotection.enabled" = true;
+          "privacy.trackingprotection.socialtracking.enabled" = true;
         };
         extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
           darkreader
