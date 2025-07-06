@@ -37,7 +37,8 @@
         };
         extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
           darkreader
-          # enhancer-for-youtube # Distraction Free YouTube equivalent
+          df-youtube
+          ublock-origin
         ];
       };
     };
