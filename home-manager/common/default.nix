@@ -40,6 +40,7 @@
           darkreader
           youtube-recommended-videos
           ublock-origin
+          vimium-c
         ];
       };
     };
