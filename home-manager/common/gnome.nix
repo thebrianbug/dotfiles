@@ -140,19 +140,9 @@ in
       sleep-inactive-battery-timeout = 600; # 10 minutes (600 seconds)
       lid-close-ac-action = "suspend"; # Keep lid close behavior
       lid-close-battery-action = "suspend";
-      power-saver-profile-on-low-battery = false; # Avoid power-saver interference
+      power-saver-profile-on-low-battery = true; # Enable power-saver on low battery
+      power-profiles-on-ac = "balanced"; # Use balanced mode when on AC power
+      power-profiles-on-battery = "power-saver"; # Use power-saver mode when on battery
     };
-
-    # Power management settings
-    /*
-      "org/gnome/settings-daemon/plugins/power" = {
-        sleep-inactive-ac-type = "suspend";
-        sleep-inactive-ac-timeout = 1800; # 30 minutes on AC
-        sleep-inactive-battery-type = "suspend";
-        sleep-inactive-battery-timeout = 900; # 15 minutes on battery
-        lid-close-ac-action = "suspend";
-        lid-close-battery-action = "suspend";
-      };
-    */
   };
 }
