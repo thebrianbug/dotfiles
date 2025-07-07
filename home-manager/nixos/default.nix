@@ -13,6 +13,12 @@
     teams-for-linux
   ];
 
+  # Configure Zoom to not follow workspaces
+  xdg.configFile."zoomus.conf".text = ''
+    [General]
+    enableMiniWindow=false
+  '';
+
   # NixOS-specific session variables
   home.sessionVariables = {
     # NixOS-specific variables can go here
