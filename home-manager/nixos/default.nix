@@ -13,10 +13,16 @@
     teams-for-linux
   ];
 
-  # Configure Zoom to not follow workspaces
+  # Configure Zoom window behavior
   xdg.configFile."zoomus.conf".text = ''
     [General]
     enableMiniWindow=false
+    autoFitToViewWhenViewShrink=false
+    autoFitToViewWhenViewShow=false
+    autoFullScreenWhenViewShare=false
+    autoMinimizeWhenViewShare=false
+    bForceMaximizeWM=false
+    autoScale=false
   '';
 
   # NixOS-specific session variables
