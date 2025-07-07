@@ -9,7 +9,8 @@
   # NixOS-specific packages
   home.packages = with pkgs; [
     # Any NixOS-specific packages would go here
-    # gnome-console
+    zoom-us
+    teams
   ];
 
   # NixOS-specific session variables
