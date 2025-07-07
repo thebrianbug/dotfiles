@@ -19,6 +19,9 @@
     enableMiniWindow=false
   '';
 
+  # Configure Home Manager to create backup files instead of failing when files exist
+  home-manager.backupFileExtension = "backup";
+
   # NixOS-specific session variables
   home.sessionVariables = {
     # NixOS-specific variables can go here
