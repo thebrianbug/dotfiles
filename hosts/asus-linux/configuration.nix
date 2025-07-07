@@ -183,5 +183,16 @@
 
   services.printing.enable = true;
 
+  # Configure Home Manager
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    users.brianbug = import ../../home-manager/nixos;
+    backupFileExtension = "backup";
+  };
+
+  # This is what makes the home-manager configuration work with the user's packages
+  programs.zsh.enable = true; # or bash if you're using bash
+
   system.stateVersion = "25.05"; # DO NOT CHANGE after install, see `man configuration.nix`
 }
