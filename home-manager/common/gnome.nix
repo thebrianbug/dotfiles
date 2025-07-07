@@ -20,12 +20,18 @@ in
     google-chrome
   ];
 
-  # Run gsettings to enforce idle-delay at session startup
-  # Temporarily bug-fix for idle-delay not being disabled by dconf
-  # idle-delay is disabled as a bug fix for
-  # blank screen after suspend on resume ~30-60 seconds after resume
-  home.sessionCommands = ''
-    gsettings set org.gnome.desktop.session idle-delay 0
+  # Create autostart file to enforce idle-delay at session startup
+  # (Temporarily bug-fix for idle-delay not being disabled by dconf)
+  # idle-delay is disabled as a bug fix for blank screen after suspend on resume
+  # ~30-60 seconds after resume
+  home.file.".config/autostart/force-idle-delay.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Force GNOME Idle Delay
+    Exec=gsettings set org.gnome.desktop.session idle-delay 0
+    Hidden=false
+    NoDisplay=false
+    X-GNOME-Autostart-enabled=true
   '';
 
   # Common GNOME dconf settings
