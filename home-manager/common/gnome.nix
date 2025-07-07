@@ -20,6 +20,14 @@ in
     google-chrome
   ];
 
+  # Run gsettings to enforce idle-delay at session startup
+  # Temporarily bug-fix for idle-delay not being disabled by dconf
+  # idle-delay is disabled as a bug fix for
+  # blank screen after suspend on resume ~30-60 seconds after resume
+  home.sessionCommands = ''
+    gsettings set org.gnome.desktop.session idle-delay 0
+  '';
+
   # Common GNOME dconf settings
   dconf.settings = {
     # Mutter window and focus settings
@@ -101,11 +109,15 @@ in
       theme-variant = "dark";
     };
 
+    # idle-delay is disabled as a bug fix for
+    # blank screen after suspend on resume ~30-60 seconds after resume
     # Session settings
     "org/gnome/desktop/session" = {
       idle-delay = "uint32 0";
     };
 
+    # lock-enabled is disabled as a bug fix for
+    # blank screen after suspend on resume ~30-60 seconds after resume
     # Screen saver settings
     "org/gnome/desktop/screensaver" = {
       lock-enabled = false;
