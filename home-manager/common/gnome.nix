@@ -107,13 +107,26 @@ in
     };
 
     # Power management settings
+    # Test to disable suspend on AC and battery
     "org/gnome/settings-daemon/plugins/power" = {
-      sleep-inactive-ac-type = "suspend";
-      sleep-inactive-ac-timeout = 1800; # 30 minutes on AC
-      sleep-inactive-battery-type = "suspend";
-      sleep-inactive-battery-timeout = 900; # 15 minutes on battery
+      sleep-inactive-ac-type = "nothing"; # Disable suspend on AC
+      sleep-inactive-ac-timeout = 0; # Disable timeout
+      sleep-inactive-battery-type = "nothing"; # Disable suspend on battery
+      sleep-inactive-battery-timeout = 0; # Disable timeout
       lid-close-ac-action = "suspend";
       lid-close-battery-action = "suspend";
     };
+
+    # Power management settings
+    /*
+      "org/gnome/settings-daemon/plugins/power" = {
+        sleep-inactive-ac-type = "suspend";
+        sleep-inactive-ac-timeout = 1800; # 30 minutes on AC
+        sleep-inactive-battery-type = "suspend";
+        sleep-inactive-battery-timeout = 900; # 15 minutes on battery
+        lid-close-ac-action = "suspend";
+        lid-close-battery-action = "suspend";
+      };
+    */
   };
 }
