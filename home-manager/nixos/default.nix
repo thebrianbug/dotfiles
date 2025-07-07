@@ -10,7 +10,7 @@
   home.packages = with pkgs; [
     # Any NixOS-specific packages would go here
     zoom-us
-    teams
+    teams-for-linux
   ];
 
   # NixOS-specific session variables
