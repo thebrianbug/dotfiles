@@ -95,6 +95,12 @@ in
       picture-options = "zoom";
     };
 
+    # Terminal configuration
+    "org/gnome/terminal/legacy" = {
+      default-show-menubar = false;
+      theme-variant = "dark";
+    };
+
     # Session settings
     "org/gnome/desktop/session" = {
       idle-delay = "uint32 0";
@@ -104,12 +110,6 @@ in
     "org/gnome/desktop/screensaver" = {
       lock-enabled = false;
       lock-delay = "uint32 0";
-    };
-
-    # Terminal configuration
-    "org/gnome/terminal/legacy" = {
-      default-show-menubar = false;
-      theme-variant = "dark";
     };
 
     # Power management settings
