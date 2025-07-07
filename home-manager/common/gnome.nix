@@ -79,6 +79,7 @@ in
         "obsidian.desktop"
         "vesktop.desktop"
         "org.keepassxc.KeePassXC.desktop"
+        "windsurf.desktop"
       ];
       enabled-extensions = [
         "auto-move-windows@gnome-shell-extensions.gcampax.github.com"
