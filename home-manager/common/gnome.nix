@@ -100,6 +100,12 @@ in
       idle-delay = "uint32 0";
     };
 
+    # Screen saver settings
+    "org/gnome/desktop/screensaver" = {
+      lock-enabled = false;
+      lock-delay = "uint32 0";
+    };
+
     # Terminal configuration
     "org/gnome/terminal/legacy" = {
       default-show-menubar = false;
