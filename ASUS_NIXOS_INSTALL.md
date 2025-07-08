@@ -27,7 +27,7 @@ If Windows is installed, consider backing up proprietary ASUS drivers. While thi
 
 **IMPORTANT FOR DUAL BOOT USERS**: If Windows BitLocker is enabled, disable it first, or your data will become inaccessible\!
 
-1.  Press DEL repeatedly during boot to enter UEFI setup.
+1.  Press F2 repeatedly during boot to enter UEFI setup.
 2.  Press F7 for advanced mode.
 3.  Navigate to Security → Secure Boot Control → Disable.
 4.  Save and exit.
