@@ -1077,9 +1077,11 @@ If you created BTRFS snapshots, you can use them for recovery. This is an advanc
 
 ## Tested Features
 
-- **Validated**: GPU switching (integrated, hybrid, dedicated), RGB keyboard, WiFi (MT7922), Bluetooth, touchpad, touchscreen (basic input), power profiles, BTRFS snapshots, dual-boot, audio.
 - **Tested (with NixOS 25.05 and Kernel 6.15.4)**: HDR on 4K OLED, ASUS Pen 2.0 pressure sensitivity/tilt.
-- **Untested**: Hibernation. Test unverified features on your system and report any issues to the NixOS Discourse or ASUS Linux Community.
+- **Validated**: GPU switching (integrated, hybrid, dedicated), White keyboard backlight, WiFi (MT7922), touchpad, touchscreen (basic input), power profiles, dual-boot, audio, microphone, suspend.
+- **Untested**: Bluetooth, BTRFS snapshots, hibernate. Test unverified features on your system and report any issues to the NixOS Discourse or ASUS Linux Community.
+
+> Note: I've observed an issue with the screen temporarily going black on resume from suspend - but only when the lock screen is enabled. This is a known issue with the ASUS Linux kernel module and can be worked around by disabling the lock screen or using a different display manager.
 
 ## References
 
