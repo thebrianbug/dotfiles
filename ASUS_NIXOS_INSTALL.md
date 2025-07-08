@@ -43,6 +43,8 @@ For ASUS models from 2022 and newer—including the H7606WI—switch to **Standa
 1. Open the **MyASUS** app, navigate to **Customization** → **GPU Settings**, and select **Standard** mode (may also appear as _Optimus Mode_ or _Hybrid Mode_).
 2. Save changes and reboot **before** installing NixOS.
 
+> NOTE: You CANNOT currently switch the graphics mode except inside Windows and in the MyASUS app! As long as this is the case, compleatly removing the Windows partition is not recommended in case you need to switch the graphics mode again in the future.
+
 ### Backup the EFI Partition (CRUCIAL FOR DUAL BOOT)
 
 NixOS generally recommends a 1 GB EFI System Partition (ESP). While it's often possible to use an existing, smaller partition (like your 260 MB Windows-created ESP), this carries a significant space limitation. Because of this, and especially if you have existing EFI entries from other operating systems like Fedora or Windows, **it's highly recommended to back up your current EFI partition before proceeding with the NixOS installation**. You'll perform this essential backup step from the NixOS live USB environment.
