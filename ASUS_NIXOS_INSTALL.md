@@ -23,6 +23,15 @@ If Windows is installed, consider backing up proprietary ASUS drivers. While thi
 
 1.  In Windows, copy the entire `C:\eSupport` folder to external storage.
 
+### Switch to **Standard** Mode (Windows Default / MSHybrid) on Windows (2022+ Models)
+
+For ASUS models from 2022 and newer—including the H7606WI—switch to **Standard** graphics mode (also known as _Windows Default_ or _MSHybrid_) in Windows to avoid potential issues during NixOS installation:
+
+1.  Open the **MyASUS** app, navigate to **Customization** → **GPU Settings**, and select **Standard** mode (may also appear as _Optimus Mode_ or _Hybrid Mode_).
+2.  Save changes and reboot **before** installing NixOS.
+
+> NOTE: You CANNOT currently switch the graphics mode except inside Windows and in the MyASUS app\! As long as this is the case, completely removing the Windows partition is not recommended in case you need to switch the graphics mode again in the future.
+
 ### Disable Secure Boot
 
 **IMPORTANT FOR DUAL BOOT USERS**: If Windows BitLocker is enabled, disable it first, or your data will become inaccessible\!
@@ -35,15 +44,6 @@ If Windows is installed, consider backing up proprietary ASUS drivers. While thi
 ### Use the Laptop Screen
 
 Disconnect external displays during installation to avoid unpredictable behavior with graphics switching.
-
-### Switch to **Standard** Mode (Windows Default / MSHybrid) on Windows (2022+ Models)
-
-For ASUS models from 2022 and newer—including the H7606WI—switch to **Standard** graphics mode (also known as _Windows Default_ or _MSHybrid_) in Windows to avoid potential issues during NixOS installation:
-
-1.  Open the **MyASUS** app, navigate to **Customization** → **GPU Settings**, and select **Standard** mode (may also appear as _Optimus Mode_ or _Hybrid Mode_).
-2.  Save changes and reboot **before** installing NixOS.
-
-> NOTE: You CANNOT currently switch the graphics mode except inside Windows and in the MyASUS app\! As long as this is the case, completely removing the Windows partition is not recommended in case you need to switch the graphics mode again in the future.
 
 ### Backup the EFI Partition (CRUCIAL FOR DUAL BOOT)
 
