@@ -37,10 +37,8 @@
 
   # Services configuration
   services = {
-    # ASUS hardware control
-    supergfxd = {
-      enable = true;
-    };
+    # Unified ASUS hardware control
+    supergfxd.enable = true;
 
     # System control daemon (fan curves, keyboard lighting, etc.)
     asusd = {
