@@ -6,7 +6,7 @@ This guide has been tested with the ASUS ProArt P16 (H7606 series, including H76
 
 ## For New Users
 
-If you’re new to NixOS, use the Calamares graphical installer for simplicity. Refer to the [Zero-to-Nix Guide](https://zero-to-nix.com/) for basics. If errors occur during commands like `nixos-rebuild switch`, check `/etc/nixos/configuration.nix` for syntax errors and run `journalctl -p 3 -xb` for logs.
+If you’re new to NixOS, you can use the Calamares graphical installer for simplicity. But, if you can follow along the manual method is recommended for a better end result with separate `/boot` partition and BTRFS snapshots. Refer to the [Zero-to-Nix Guide](https://zero-to-nix.com/) for basics. If errors occur during commands like `nixos-rebuild switch`, check `/etc/nixos/configuration.nix` for syntax errors and run `journalctl -p 3 -xb` for logs.
 
 ## Prerequisites
 
