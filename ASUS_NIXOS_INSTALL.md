@@ -830,7 +830,7 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
 
 ## ✅ After Adding `asus-linux/configuration.nix`
 
-### 1. Update `flake.nix`
+### 1\. Update `flake.nix`
 
 Ensure your flake includes the `asus-linux` host like so:
 
@@ -852,7 +852,7 @@ nixosConfigurations = {
 
 Replace `brianbug` with your actual username if different.
 
-### 2. Build and Install NixOS
+### 2\. Build and Install NixOS
 
 From the root of your flake-based dotfiles repository:
 
@@ -860,18 +860,18 @@ From the root of your flake-based dotfiles repository:
 sudo nixos-install --flake .#asus-linux
 ```
 
-### 3. Reboot into NixOS
+### 3\. Reboot into NixOS
 
 ```bash
 reboot
 ```
 
-Log in and verify:
+Log in and verify core functionality:
 
 ```bash
 systemctl status supergfxd asusd
-supergfxctl -g
-nvidia-smi
+supergfxctl -g # Should show 'hybrid' or 'integrated'
+nvidia-smi # Should show your NVIDIA GPU details if supergfxd is in 'hybrid' or 'dedicated' mode
 ```
 
 ## 🔁 Keeping Your System Updated
@@ -879,7 +879,7 @@ nvidia-smi
 To apply updates or configuration changes:
 
 ```bash
-cd ~/source/dotfiles
+cd ~/source/dotfiles # Or wherever your dotfiles repo is cloned
 git pull
 sudo nix flake update
 sudo nixos-rebuild switch --flake .#asus-linux
@@ -891,138 +891,195 @@ Optionally, create a BTRFS snapshot before updating:
 sudo btrfs subvolume snapshot -r / /.snapshots/pre-update-$(date +%Y%m%d)
 ```
 
-## 🧰 Troubleshooting (Modern Hardware)
+## 🛠️ Post-Install Configuration & Troubleshooting (ProArt P16)
 
-### Display: Black Screen or No External Monitor
+This section covers common adjustments and simple checks after a successful base installation. Given that the provided `configuration.nix` is stable on your hardware, extensive troubleshooting should be less frequently needed.
 
-- Use `Ctrl+Alt+F3` to switch to a TTY
+### Setting Up NVIDIA Prime Offloading
 
-- Cycle GPU modes:
+Your `configuration.nix` currently has `prime.offload.enable = false;` as a safe default for the initial install. Once your system is confirmed stable, you can enable Prime Offloading to use your dedicated NVIDIA GPU for demanding applications.
 
+1.  **Identify PCI Bus IDs:**
+    Open a terminal and run:
+
+    ```bash
+    lspci -k | grep -EA3 'VGA|3D|Display'
+    ```
+
+    Look for lines similar to:
+
+    - `65:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Device XXXXX` (Your iGPU, probably `amdgpu`)
+    - `64:00.0 VGA compatible controller: NVIDIA Corporation Device YYYYY` (Your dGPU, probably `nvidia`)
+
+    Note the `PCI:XX:XX:X` format for both (e.g., `PCI:65:00:0` for AMD, `PCI:64:00:0` for NVIDIA).
+
+2.  **Enable Prime Offloading in `configuration.nix`:**
+    Edit `hosts/asus-linux/configuration.nix` and change the `hardware.nvidia.prime` section:
+
+    ```nix
+    hardware.nvidia = {
+      # ... other NVIDIA settings ...
+      prime = {
+        offload.enable = true; # Change to 'true'
+        sync.enable = false;    # Keep 'false' unless you experience tearing
+
+        # PCI bus IDs for hybrid graphics - REPLACE WITH YOUR ACTUAL IDs
+        amdgpuBusId = "PCI:65:00:0"; # Your AMD iGPU PCI ID
+        nvidiaBusId = "PCI:64:00:0"; # Your NVIDIA dGPU PCI ID
+      };
+    };
+    ```
+
+3.  **Apply the Change:**
+
+    ```bash
+    sudo nixos-rebuild switch --flake .#asus-linux
+    ```
+
+4.  **Test Prime Offloading:**
+    To run an application using the NVIDIA GPU:
+
+    ```bash
+    __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia glxinfo | grep "OpenGL renderer"
+    # Or for Vulkan:
+    __NV_PRIME_RENDER_OFFLOAD=1 __VK_LAYER_NV_optimus=VULKAN_LOADER vulkaninfo | grep "deviceName"
+    ```
+
+    The output should show your NVIDIA GPU. You can also run specific applications:
+
+    ```bash
+    prime-run <application-name> # For simpler execution (requires `pkgs.prime-run` to be added to systemPackages)
+    ```
+
+    If `prime-run` is not found, add `pkgs.prime-run` to `environment.systemPackages` and rebuild.
+
+### Display Issues
+
+If you encounter a black screen or issues with external monitors:
+
+- **Switch TTY:** Press `Ctrl+Alt+F3` to access a text console.
+- **Cycle GPU Modes:** Try switching between GPU modes:
   ```bash
   supergfxctl -m hybrid
   supergfxctl -m integrated
+  supergfxctl -m dedicated
+  ```
+  Then switch back to `Ctrl+Alt+F1` (or `F7`, depending on your setup) to see if the graphical environment recovers.
+- **Wayland Fallback:** If Wayland specific issues persist, consider falling back to X11 temporarily by changing `displayManager.gdm.wayland = true;` to `false;` in your `configuration.nix` and rebuilding.
+
+### Audio Not Working
+
+1.  **Test Speakers:**
+    ```bash
+    speaker-test -c 2 # Tests stereo output
+    ```
+2.  **Check Playback Devices:**
+    ```bash
+    arecord -l # Lists recording devices (microphones)
+    ```
+3.  **Adjust Volume:** Open `alsamixer` in the terminal to check and unmute channels.
+
+### Wi-Fi / Bluetooth Connectivity
+
+1.  **Check Module Status:**
+    ```bash
+    lsmod | grep mt792 # Should show mt7921e or mt7922e module loaded
+    ```
+2.  **Restart NetworkManager:**
+    ```bash
+    sudo systemctl restart NetworkManager
+    ```
+
+### Suspend / Hibernate Problems
+
+1.  **Test Suspend:**
+    ```bash
+    systemctl suspend
+    ```
+    Verify if the system suspends and resumes correctly.
+2.  **Check Swap:** Ensure your swap partition is adequately sized (at least equal to your RAM) if you intend to use hibernate.
+    ```bash
+    free -h # Check swap usage
+    ```
+3.  **Review Logs:**
+    ```bash
+    dmesg | grep -i hibernate
+    dmesg | grep -i suspend
+    ```
+
+## 🛠️ System Recovery (Quick Reference)
+
+### A. Chroot Recovery (from Live USB)
+
+If your system won't boot, you can use the NixOS live USB to chroot into your installation and fix issues.
+
+1.  **Boot from NixOS Live USB.**
+2.  **Open a Terminal.**
+3.  **Mount your NixOS partitions:**
+    ```bash
+    # Mount the BTRFS root subvolume (replace /dev/nvme0n1pX with your BTRFS partition)
+    sudo mount -o subvol=@ /dev/nvme0n1p6 /mnt
+    # Mount other BTRFS subvolumes
+    sudo mkdir -p /mnt/{home,nix}
+    sudo mount -o subvol=@home /dev/nvme0n1p6 /mnt/home
+    sudo mount -o subvol=@nix /dev/nvme0n1p6 /mnt/nix
+    # Mount the separate /boot partition
+    sudo mkdir -p /mnt/boot
+    sudo mount /dev/nvme0n1p5 /mnt/boot
+    # Mount the EFI System Partition
+    sudo mkdir -p /mnt/boot/efi
+    sudo mount /dev/nvme0n1p1 /mnt/boot/efi
+    ```
+    **Note:** Adjust partition paths (`/dev/nvme0n1p6`, `/dev/nvme0n1p5`, `/dev/nvme0n1p1`) to match your actual setup.
+4.  **Enter the NixOS environment:**
+    ```bash
+    sudo nixos-enter
+    ```
+5.  **Rebuild your system:**
+    Navigate to your dotfiles directory (e.g., `cd /home/brianbug/source/dotfiles` if `/home` is a separate subvolume/partition, or `cd /root/source/dotfiles` if you copied it to root):
+    ```bash
+    sudo nixos-rebuild switch --flake .#asus-linux
+    ```
+    This will apply your `configuration.nix` and attempt to fix any boot issues.
+
+### B. Bootloader Rollback
+
+If your system boots but a recent configuration change caused issues:
+
+- At the GRUB boot menu, select an **older NixOS generation** to boot into a working state.
+- Once logged in, you can roll back to the previous successful generation:
+  ```bash
+  sudo nixos-rebuild switch --rollback
   ```
 
-- Fallback to X11 if Wayland fails:
+### C. BTRFS Snapshot Recovery
 
-  ```nix
-  services.xserver.displayManager.gdm.wayland = false;
-  ```
+If you created BTRFS snapshots, you can use them for recovery. This is an advanced topic, but in short:
 
-### NVIDIA Issues
-
-> ⚠️ **WARNING: Secure Boot and NVIDIA Drivers**  
-> If Secure Boot is enabled in your UEFI settings, the proprietary NVIDIA drivers may silently fail to load. Either:
->
-> - Disable Secure Boot in UEFI settings (recommended for most users)
-> - Or set up signed drivers with `sbctl` (advanced users only)
-
-If `nvidia-smi` fails:
-
-```bash
-lsmod | grep nvidia
-dmesg | grep -i nvidia
-```
-
-Try forcing dedicated GPU:
-
-```bash
-supergfxctl -m dedicated
-```
-
-### Audio Problems
-
-```bash
-speaker-test -c 2
-arecord -l
-alsamixer
-```
-
-### Wi-Fi / Bluetooth
-
-Check module loading:
-
-```bash
-lsmod | grep mt792
-```
-
-Restart NetworkManager:
-
-```bash
-sudo systemctl restart NetworkManager
-```
-
-### Suspend / Hibernate
-
-Check:
-
-```bash
-systemctl suspend
-free -h
-dmesg | grep -i hibernat
-```
-
-Ensure swap is ≥ RAM.
-
-## 🛠️ System Recovery (Summary)
-
-### A. Chroot Recovery
-
-Boot from NixOS live USB:
-
-```bash
-mount -o subvol=@ /dev/nvme0n1pX /mnt
-mount -o subvol=@home /dev/nvme0n1pX /mnt/home
-mount -o subvol=@nix /dev/nvme0n1pX /mnt/nix
-mount /dev/nvme0n1p1 /mnt/boot/efi
-nixos-enter
-```
-
-Then rebuild:
-
-```bash
-cd ~/source/dotfiles
-sudo nixos-rebuild switch --flake .#asus-linux
-```
-
-### B. Bootloader Recovery
-
-At boot menu, choose an older generation to roll back. Then:
-
-```bash
-sudo nixos-rebuild switch --rollback
-```
-
-### C. Snapshot Recovery
-
-Mount snapshot:
-
-```bash
-mount -o subvol=.snapshots/123/snapshot /dev/nvme0n1pX /recovery
-```
-
-Copy or promote files from `/recovery`.
+1.  **Boot from Live USB** and mount your BTRFS partition as described in "Chroot Recovery," but mount the top-level BTRFS volume (without `subvol=@`):
+    ```bash
+    sudo mount /dev/nvme0n1p6 /mnt
+    ```
+2.  **List snapshots:**
+    ```bash
+    sudo btrfs subvolume list /mnt
+    ```
+    Find the snapshot you want to restore (e.g., `/.snapshots/pre-update-20250708`).
+3.  **Restore:** You would typically replace your current `@` subvolume with a snapshot. This is a destructive operation; consult `man btrfs-subvolume` or online guides carefully before proceeding. A common strategy involves deleting the current `@` and `@home` subvolumes, then creating writable snapshots of the desired backup snapshot, and renaming them to `@` and `@home`.
 
 ## 🔋 Power Management Note
 
-In modern setups with:
+As configured in your `configuration.nix` with:
 
 - `services.asusd.enable = true`
 - `services.power-profiles-daemon.enable = true`
 
-You **should not enable** `services.tlp.enable = true`. These conflict. `power-profiles-daemon` is lighter and works natively with GNOME, `asusd`, and dynamic GPU switching.
+You **should not enable** `services.tlp.enable = true`. These services provide overlapping functionality and can cause conflicts leading to unpredictable power management behavior. `power-profiles-daemon` is a modern solution that integrates well with GNOME and `asusd` for dynamic GPU switching.
 
-Remove or comment out:
-
-```nix
-# services.tlp.enable = true
-```
-
-Stick with:
+If `services.tlp.enable` is present anywhere in your configuration, **remove or comment it out**:
 
 ```nix
-services.power-profiles-daemon.enable = true;
+# services.tlp.enable = true; # Do NOT enable TLP with asusd and power-profiles-daemon
 ```
 
 ## Glossary
