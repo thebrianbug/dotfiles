@@ -109,6 +109,7 @@
         finegrained = true; # Better power management for laptops
       };
 
+      open = false; # Prefer propritary driver
       nvidiaSettings = true;
       # forceFullCompositionPipeline = true; # Eliminates screen tearing
 
@@ -121,7 +122,6 @@
         amdgpuBusId = "PCI:65:00:0";
         nvidiaBusId = "PCI:64:00:0";
       };
-      open = false; # Prefer propritary driver
     };
 
     enableAllFirmware = true; # Auto-detect needed firmware
