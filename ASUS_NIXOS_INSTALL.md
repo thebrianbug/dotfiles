@@ -618,111 +618,215 @@ This guide uses a dotfiles repository to manage your NixOS configuration and hom
 
 4.  Add the following ASUS-specific settings to `hosts/asus-linux/configuration.nix` (ensure you merge these with any existing content, don't just paste over everything):
 
-    ```nix
-    { config, pkgs, lib, ... }:
+```nix
+# Edit this configuration file to define what should be installed on
+# your system. Help is available in the configuration.nix(5) man page, on
+# https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-    {
-      # Boot configuration
-      boot = {
-        # EFI Partition Management: Limit bootloader generations for small EFI partitions
-        # If your EFI partition is small (e.g., 260 MiB), you might be limited to
-        # keeping only one NixOS generation to avoid running out of space.
-        # This limits your rollback capabilities directly from the bootloader.
-        # For more generations, consider expanding your EFI partition.
-        loader.systemd-boot = {
-          enable = true; # Allow NixOS to write its bootloader to the EFI partition
-          configurationLimit = 1; # Keep only one generation to save space
-        };
+{ config, pkgs, lib, ... }: # Added 'lib' for potential future use, standard practice
 
-        # Use latest stable kernel for best hardware support
-        # Note: Modern kernels auto-load most required modules for ASUS laptops
-        kernelPackages = pkgs.linuxPackages_latest;
+{
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+  ];
 
-        # Essential power management for AMD CPUs
-        kernelParams = [ "amd_pstate=active" ];
-
-        # Only declare modules that don't auto-load on modern kernels
-        kernelModules = [
-          "mt7921e" "mt7922e"  # MediaTek WiFi (often needs manual loading)
-          "i2c_hid_acpi"       # Required for some touchpad/touchscreen devices
-        ];
+  boot = {
+    # Bootloader configuration
+    loader = {
+      # Use GRUB for better compatibility with small EFI partitions and dual-booting.
+      # This allows kernel generations to be stored on a separate /boot partition.
+      grub = {
+        enable = true;
+        efiSupport = true;
+        efiInstallAsRemovable = false;
+        device = "nodev"; # Required for EFI install with separate /boot partition
+        # No configurationLimit here, as kernels are stored on the separate /boot partition
       };
 
-      # Services configuration
-      services = {
-        # ASUS hardware control
-        # Unified GPU control (replaces older solutions)
-        supergfxd.enable = true;
-
-        # System control daemon (fan curves, keyboard lighting, etc.)
-        asusd = {
-          enable = true;
-          enableUserService = true;
-        };
-
-        # Power management (do not use TLP with power-profiles-daemon + asusd)
-        power-profiles-daemon.enable = true;
-
-        # Input devices
-        libinput.enable = true; # Touchpad support
-        gestures.enable = true; # Enhanced touchpad/touchscreen gesture support
-        iio-sensor-proxy.enable = true; # Auto-rotation, light sensor
-
-        # Audio setup (modern replacement for PulseAudio)
-        pipewire = {
-          enable = true;
-          alsa.enable = true;
-          pulse.enable = true; # PulseAudio compatibility
-          jack.enable = true;  # Professional audio support
-        };
-
-        # Display services
-        colord.enable = true;    # Color management for ProArt display
-        geoclue2.enable = true;  # Location-based features
-
-        # GNOME desktop with Wayland (for best HDR support)
-        xserver = {
-          desktopManager.gnome.enable = true;
-          displayManager.gdm.wayland = true;
-        };
+      # Mount point for the shared EFI System Partition (ESP)
+      efi = {
+        efiSysMountPoint = "/boot/efi";
+        canTouchEfiVariables = true;
       };
 
-      # NVIDIA configuration for RTX 4070
-      hardware.nvidia = {
-        modesetting.enable = true; # Required for Wayland compatibility
-        powerManagement = {
-          enable = true;
-          finegrained = true; # Better power management for laptops
-        };
-        forceFullCompositionPipeline = true; # Eliminates screen tearing
-        package = config.boot.kernelPackages.nvidiaPackages.stable;
+      # The systemd-boot configuration is removed here because we are using GRUB
+      # as the primary bootloader to manage the smaller EFI partition more effectively.
+      # If you were to use systemd-boot with a small EFI partition (e.g., 260 MiB),
+      # you would typically need to enable it here and set configurationLimit = 1.
+      # loader.systemd-boot = {
+      #   enable = true; # Allow NixOS to write its bootloader to the EFI partition
+      #   configurationLimit = 1; # Keep only one generation to save space
+      # };
+    };
+
+    # Use latest stable kernel for best hardware support
+    # Note: Modern kernels auto-load most required modules for ASUS laptops
+    kernelPackages = pkgs.linuxPackages_latest;
+
+    # Essential kernel parameters
+    kernelParams = [
+      "nvidia-drm.modeset=1" # Enable NVIDIA DRM for better compatibility with Wayland
+      "amd_pstate=active" # Essential power management for AMD CPUs (Ryzen)
+    ];
+  };
+
+  # Services configuration
+  services = {
+    # Unified ASUS hardware control
+    supergfxd.enable = true;
+
+    # System control daemon (fan curves, keyboard lighting, etc.)
+    asusd = {
+      enable = true;
+      enableUserService = true;
+    };
+
+    # Power management (do not use TLP with power-profiles-daemon + asusd)
+    power-profiles-daemon.enable = true;
+
+    # Input devices
+    libinput.enable = true; # Touchpad support
+    gestures.enable = true; # Enhanced touchpad/touchscreen gesture support
+    iio-sensor-proxy.enable = true; # Auto-rotation, light sensor (moved from systemPackages)
+
+    # Audio setup (modern replacement for PulseAudio)
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      pulse.enable = true; # PulseAudio compatibility
+      jack.enable = true; # Professional audio support
+    };
+
+    # Display services
+    colord.enable = true; # Color management for ProArt display
+    geoclue2.enable = true; # Location-based features
+
+    # GNOME desktop with Wayland (for best HDR support and NVIDIA compatibility)
+    displayManager.gdm.enable = true;
+    displayManager.gdm.wayland = true;
+    desktopManager.gnome.enable = true;
+
+    xserver = {
+      enable = true;
+      videoDrivers = [ "nvidia" ]; # Ensure NVIDIA driver is loaded by X server
+    };
+  };
+
+  # Essential environment variables for NVIDIA+Wayland
+  environment.variables = {
+    GBM_BACKEND = "nvidia-drm"; # Required for GNOME Wayland
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL vendor selection for NVIDIA
+    WLR_NO_HARDWARE_CURSORS = "1"; # Fixes cursor issues in Wayland
+  };
+
+  # System diagnostic and hardware tools
+  environment.systemPackages = with pkgs; [
+    pciutils
+    usbutils
+    inxi
+    glxinfo # Hardware Debugging
+
+    # Other system tools here
+  ];
+
+  programs.firefox.enable = true; # Link Firefox and enable system-wide
+
+  # Firmware for hardware components
+  hardware = {
+    nvidia = {
+      package = config.boot.kernelPackages.nvidiaPackages.stable; # Use stable driver
+      modesetting.enable = true; # Required for Wayland compatibility
+
+      powerManagement = {
+        enable = true;
+        finegrained = true; # Better power management for laptops
       };
 
-      # Essential environment variables for NVIDIA+Wayland
-      environment.variables = {
-        GBM_BACKEND = "nvidia-drm";        # Required for GNOME Wayland
-        __GLX_VENDOR_LIBRARY_NAME = "nvidia"; # OpenGL vendor selection
-        WLR_NO_HARDWARE_CURSORS = "1";     # Fixes cursor issues in Wayland
+      open = false; # Prefer proprietary driver for NVIDIA
+      nvidiaSettings = true;
+      forceFullCompositionPipeline = true; # Eliminates screen tearing (moved back here)
+
+      # PRIME offloading for demanding apps only.
+      # It is highly recommended to DISABLE prime offloading until AFTER a
+      # successful first install to simplify initial setup and debugging.
+      # Uncomment and configure this section after verifying your base NixOS installation.
+      prime = {
+        offload.enable = false; # Set to 'true' after first successful install
+        sync.enable = false;    # Set to 'true' if you experience tearing with offload enabled later
+
+        # PCI bus IDs for hybrid graphics (verify with 'lspci -k | grep -EA3 'VGA|3D|Display'')
+        # Replace these with your actual IDs
+        amdgpuBusId = "PCI:65:00:0"; # Example ID, verify on your system after first install
+        nvidiaBusId = "PCI:64:00:0"; # Example ID, verify on your system after first install
       };
+    };
 
-      # System diagnostic and hardware tools
-      environment.systemPackages = with pkgs; [
-        pciutils usbutils inxi glxinfo
-      ];
+    enableAllFirmware = true; # Auto-detect needed firmware
+    firmware = with pkgs; [
+      linux-firmware # Broad hardware support
+      sof-firmware # Better audio support
+    ];
 
-      # Firmware for hardware components
-      hardware = {
-        enableAllFirmware = true; # Auto-detect needed firmware
-        firmware = with pkgs; [
-          linux-firmware  # Broad hardware support
-          sof-firmware    # Better audio support
-        ];
-      };
+    # Enable hardware acceleration with Mesa support for AMD GPU
+    graphics = {
+      enable = true;
+      extraPackages = with pkgs; [ mesa ];
+    };
 
-      # Networking configuration
-      networking.networkmanager.enable = true;
-    }
-    ```
+    bluetooth.enable = true;
+  };
+
+  # Enable flakes
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
+
+  networking.networkmanager.enable = true;
+
+  time.timeZone = "America/Chicago";
+
+  # Configure network proxy if necessary
+  # networking.proxy.default = "http://user:password@proxy:port/";
+  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+
+  i18n.defaultLocale = "en_US.UTF-8";
+  console = {
+    font = "Lat2-Terminus16";
+    useXkbConfig = true; # use xkb.options in tty.
+  };
+
+  users.users.brianbug = {
+    isNormalUser = true;
+    description = "Brian Bug";
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+    ];
+    packages = [
+      # Add user-specific packages here if needed
+    ];
+  };
+
+  nixpkgs.config.allowUnfree = true;
+
+  services.printing.enable = true;
+
+  # Configure Home Manager
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    users.brianbug = import ../../home-manager/nixos;
+    backupFileExtension = "backup";
+  };
+
+  # This is what makes the home-manager configuration work with the user's packages
+  programs.zsh.enable = true; # or bash if you're using bash
+
+  system.stateVersion = "25.05"; # Use your generated version here; DO NOT CHANGE after install, see `man configuration.nix`
+}
+```
 
 ## ✅ After Adding `asus-linux/configuration.nix`
 
