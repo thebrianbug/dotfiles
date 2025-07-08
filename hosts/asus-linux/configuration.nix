@@ -137,6 +137,8 @@
       enable = true;
       extraPackages = with pkgs; [ mesa ];
     };
+
+    bluetooth.enable = true;
   };
 
   # Enable flakes
@@ -144,8 +146,6 @@
     "nix-command"
     "flakes"
   ];
-
-  hardware.bluetooth.enable = true;
 
   networking.networkmanager.enable = true;
 
