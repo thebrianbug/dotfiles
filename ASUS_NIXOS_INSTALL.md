@@ -1067,21 +1067,6 @@ If you created BTRFS snapshots, you can use them for recovery. This is an advanc
     Find the snapshot you want to restore (e.g., `/.snapshots/pre-update-20250708`).
 3.  **Restore:** You would typically replace your current `@` subvolume with a snapshot. This is a destructive operation; consult `man btrfs-subvolume` or online guides carefully before proceeding. A common strategy involves deleting the current `@` and `@home` subvolumes, then creating writable snapshots of the desired backup snapshot, and renaming them to `@` and `@home`.
 
-## 🔋 Power Management Note
-
-As configured in your `configuration.nix` with:
-
-- `services.asusd.enable = true`
-- `services.power-profiles-daemon.enable = true`
-
-You **should not enable** `services.tlp.enable = true`. These services provide overlapping functionality and can cause conflicts leading to unpredictable power management behavior. `power-profiles-daemon` is a modern solution that integrates well with GNOME and `asusd` for dynamic GPU switching.
-
-If `services.tlp.enable` is present anywhere in your configuration, **remove or comment it out**:
-
-```nix
-# services.tlp.enable = true; # Do NOT enable TLP with asusd and power-profiles-daemon
-```
-
 ## Glossary
 
 - **BTRFS Subvolume**: A flexible feature of the BTRFS filesystem that allows for creating isolated, named filesystem trees within a single BTRFS volume. Useful for snapshots and organizing data.
