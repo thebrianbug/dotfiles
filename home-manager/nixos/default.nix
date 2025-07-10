@@ -10,7 +10,6 @@
   home.packages = with pkgs; [
     # Any NixOS-specific packages would go here
     zoom-us
-    teams-for-linux
   ];
 
   # Configure Zoom window behavior

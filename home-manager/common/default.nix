@@ -15,6 +15,10 @@
       jq
       wget
       curl
+
+      # Business tools
+      teams-for-linux
+      libreoffice
     ];
 
     # Common session variables
