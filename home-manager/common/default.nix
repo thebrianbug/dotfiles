@@ -21,7 +21,7 @@
       libreoffice
 
       # Music production
-      lmms
+      # lmms
       musescore
     ];
 
