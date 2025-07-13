@@ -19,6 +19,10 @@
       # Business tools
       teams-for-linux
       libreoffice
+
+      # Music production
+      lmms
+      musescore
     ];
 
     # Common session variables
