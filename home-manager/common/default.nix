@@ -20,8 +20,7 @@
       teams-for-linux
       libreoffice
 
-      # Music production
-      # lmms
+      # Entertainment
       musescore
     ];
 
