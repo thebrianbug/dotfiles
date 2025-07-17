@@ -80,6 +80,7 @@ in
         "vesktop.desktop"
         "org.keepassxc.KeePassXC.desktop"
         "windsurf.desktop"
+        "musescore.desktop"
       ];
       enabled-extensions = [
         "auto-move-windows@gnome-shell-extensions.gcampax.github.com"
