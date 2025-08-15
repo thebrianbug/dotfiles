@@ -139,11 +139,23 @@
     bluetooth.enable = true;
   };
 
-  # Enable flakes
-  nix.settings.experimental-features = [
-    "nix-command"
-    "flakes"
-  ];
+  # Enable flakes and garbage collection
+  nix = {
+    settings.experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+    
+    # Automatic garbage collection - minimal, no-effort cleanup
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 30d";
+    };
+    
+    # Optimize store automatically
+    optimise.automatic = true;
+  };
 
   networking.networkmanager.enable = true;
 
