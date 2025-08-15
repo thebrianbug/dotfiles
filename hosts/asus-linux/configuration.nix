@@ -145,16 +145,35 @@
       "nix-command"
       "flakes"
     ];
-    
+
     # Automatic garbage collection - minimal, no-effort cleanup
     gc = {
       automatic = true;
       dates = "weekly";
       options = "--delete-older-than 30d";
     };
-    
+
     # Optimize store automatically
     optimise.automatic = true;
+  };
+
+  # Auto-update system configuration
+  system.autoUpgrade = {
+    enable = true;
+    dates = "Sun 04:00";
+    randomizedDelaySec = "45min";
+    allowReboot = false;
+
+    # Flake-based updates with git integration
+    flake = "/home/brianbug/source/dotfiles";
+    flags = [
+      "--update-input"
+      "nixpkgs"
+      "--commit-lock-file"
+    ];
+
+    # Safety: only update if sufficient disk space
+    operation = "switch";
   };
 
   networking.networkmanager.enable = true;
