@@ -40,6 +40,8 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.users.brianbug = import ./home-manager/vm;
+              # Add NUR overlay for Firefox extensions
+              nixpkgs.overlays = [ nur.overlay ];
             }
           ];
         };
