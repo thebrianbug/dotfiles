@@ -72,6 +72,10 @@ cd dotfiles
 sudo nixos-rebuild switch --flake .#vm
 ```
 
+```bash
+sudo nixos-rebuild switch --flake .#asus-linux
+```
+
 #### 3. Apply User Configuration (Optional)
 
 If you're not using the NixOS module approach and want to manage the user environment separately:
