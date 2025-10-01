@@ -5,6 +5,7 @@
     # Languages and runtimes
     python3
     nodejs_20
+    pnpm
 
     # Node.js packages
     nodePackages.live-server
