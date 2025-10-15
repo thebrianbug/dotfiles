@@ -165,7 +165,7 @@
     allowReboot = false;
 
     # Flake-based updates with git integration
-    flake = "/home/brianbug/source/dotfiles";
+    flake = "/home/brianbug/source/dotfiles#asus-linux";
     flags = [
       "--update-input"
       "nixpkgs"
