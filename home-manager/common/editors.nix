@@ -56,6 +56,9 @@ in
           "[nix]" = {
             "editor.defaultFormatter" = "jnoortheen.nix-ide";
           };
+          # Disable git sync prompts
+          "git.confirmSync" = false;
+          "git.postCommitCommand" = "none";
         };
       };
     };
