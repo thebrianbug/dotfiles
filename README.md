@@ -1,132 +1,56 @@
 # Dotfiles
 
-Personal system configuration using [Home Manager](https://nix-community.github.io/home-manager/) and [Nix](https://nixos.org/) for both Fedora 41 with GNOME on Wayland and NixOS virtual machines.
+Personal system configuration using [Nix Flakes](https://nixos.wiki/wiki/Flakes) and [Home Manager](https://nix-community.github.io/home-manager/) for declarative, reproducible system management.
+
+## Supported Systems
+
+- **Fedora 41+**: Base metal with GNOME/Wayland
+- **NixOS**: Virtual machines and ASUS laptop
 
 ## Features
 
-- **Package Management**: Declarative system package installation
-- **Program Configurations**:
-  - VSCodium with extensions
-  - Git configuration
-  - Neovim setup
-  - Bash configuration
-- **Desktop Environment**: GNOME configuration with custom preferences
-- **Development Tools**: Node.js, Python, and container management tools
-- **System Tools**: Various utility programs and applications
-
-## System Overview
-
-This repository supports:
-
-- **Fedora Base Metal**: Primary configuration for Fedora 41+ with GNOME/Wayland
-- **NixOS VM**: Complete system configuration for NixOS virtual machines
-
-## Nix Flakes
-
-This configuration uses [Nix Flakes](https://nixos.wiki/wiki/Flakes), a feature that provides:
-
-- **Reproducible Builds**: Exact dependency versions are locked and tracked
-- **Composable**: Easy to combine multiple configurations
-- **Hermetic**: Builds are isolated and deterministic
-- **Fast**: Efficient dependency resolution and caching
-- **Version Control**: Direct integration with Git for managing configurations
-
-This configuration uses [Nix Flakes](https://nixos.wiki/wiki/Flakes) for reproducible builds, composability, and version tracking.
+- Declarative package management (VSCodium, Git, Neovim, Bash, GNOME)
+- Development tools (Node.js, Python, containers)
+- Reproducible builds with locked dependencies
 
 ## Setup Instructions
 
-### Fedora Installation
-
-#### Prerequisites
-
-- Fedora 41 or later with GNOME and Wayland
-
-#### Quick Setup (Two Commands)
+### Fedora
 
 ```bash
-# 1. Install Nix with the determinate systems installer (automatically enables flakes)
+# Install Nix (enables flakes automatically)
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
-# 2. Apply dotfiles configuration
+# Apply configuration
 git clone https://github.com/thebrianbug/dotfiles.git && cd dotfiles && home-manager switch --flake .
 ```
 
-### NixOS VM Installation
-
-#### Prerequisites
-
-- A NixOS virtual machine installation
-- Git installed on the VM (available on default NixOS installations)
-- Root access via sudo
-
-#### 1. Clone Repository
+### NixOS
 
 ```bash
-git clone https://github.com/thebrianbug/dotfiles.git
-cd dotfiles
+# Clone repository
+git clone https://github.com/thebrianbug/dotfiles.git && cd dotfiles
+
+# Apply system configuration (choose your target)
+sudo nixos-rebuild switch --flake .#vm          # For VMs
+sudo nixos-rebuild switch --flake .#asus-linux  # For ASUS laptop
 ```
 
-#### 2. Apply System Configuration
+## Updates
 
 ```bash
-sudo nixos-rebuild switch --flake .#vm
-```
+# Update dependencies
+nix flake update                              # All inputs
+nix flake lock --update-input nixpkgs         # Specific input
 
-```bash
-sudo nixos-rebuild switch --flake .#asus-linux
-```
+# Apply changes
+home-manager switch --flake .                 # Fedora
+sudo nixos-rebuild switch --flake .#vm        # NixOS VM
+sudo nixos-rebuild switch --flake .#asus-linux # NixOS ASUS
 
-#### 3. Apply User Configuration (Optional)
-
-If you're not using the NixOS module approach and want to manage the user environment separately:
-
-```bash
-home-manager switch --flake .#brianbug-vm
-```
-
-## Maintaining Your System
-
-### Updating Dependencies
-
-To update your system packages and configurations:
-
-```bash
-# Update all flake inputs
-nix flake update
-
-# Or update a specific input
-nix flake lock --update-input nixpkgs
-```
-
-### Applying Updates
-
-#### Fedora
-
-```bash
-cd dotfiles
-home-manager switch --flake .
-```
-
-#### NixOS VM
-
-```bash
-cd dotfiles
-sudo nixos-rebuild switch --flake .#vm
-```
-
-```bash
-cd dotfiles
-sudo nixos-rebuild switch --flake .#asus-linux
-```
-
-### Checking Updates Before Applying
-
-```bash
-# Verify flake integrity
-nix flake check
-
-# Build without applying
-home-manager build --flake .
+# Verify before applying
+nix flake check                               # Check integrity
+home-manager build --flake .                  # Build without applying
 ```
 
 ## Repository Structure
@@ -141,14 +65,12 @@ home-manager build --flake .
 
 ## Troubleshooting
 
-### Common Issues
+- **Flake errors**: Ensure you're in the repository directory
+- **Build failures**: Run `nix flake update`
+- **Nix diagnostics**: Run `/nix/nix-installer diagnose`
+- **Missing home-manager**: Use full path `~/.nix-profile/bin/home-manager switch --flake .`
 
-- **Flake errors**: Make sure you're in the repository directory
-- **Build failures**: Try updating the flake inputs with `nix flake update`
-- **Nix issues**: The determinate installer provides built-in diagnostics - run `/nix/nix-installer diagnose`
-- **Missing Home Manager command**: The first time you run, use the full path: `~/.nix-profile/bin/home-manager switch --flake .`
+## Resources
 
-### Getting Help
-
-- Nix documentation: https://nixos.org/manual/nix/stable/
-- Home Manager manual: https://nix-community.github.io/home-manager/
+- [Nix Manual](https://nixos.org/manual/nix/stable/)
+- [Home Manager Manual](https://nix-community.github.io/home-manager/)
