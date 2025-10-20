@@ -78,6 +78,7 @@ in
         "org.gnome.Ptyxis.desktop"
         "obsidian.desktop"
         "vesktop.desktop"
+        "teams-for-linux.desktop"
         "org.keepassxc.KeePassXC.desktop"
         "windsurf.desktop"
         "org.musescore.MuseScore.desktop"
@@ -95,6 +96,7 @@ in
         "org.keepassxc.KeePassXC.desktop:2"
         "vesktop.desktop:2"
         "obsidian.desktop:3"
+        "teams-for-linux.desktop:4"
       ];
     };
 
