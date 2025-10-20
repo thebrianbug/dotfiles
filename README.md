@@ -114,6 +114,11 @@ cd dotfiles
 sudo nixos-rebuild switch --flake .#vm
 ```
 
+```bash
+cd dotfiles
+sudo nixos-rebuild switch --flake .#asus-linux
+```
+
 ### Checking Updates Before Applying
 
 ```bash
