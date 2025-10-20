@@ -51,7 +51,7 @@ in
         userSettings = {
           "nix.enableLanguageServer" = true;
           "nix.serverPath" = "nil";
-          "nix.formatterPath" = "nixfmt-classic";
+          "nix.formatterPath" = "nixfmt";
           "editor.formatOnSave" = true;
           "[nix]" = {
             "editor.defaultFormatter" = "jnoortheen.nix-ide";
