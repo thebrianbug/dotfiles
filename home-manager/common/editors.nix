@@ -59,6 +59,8 @@ in
           # Disable git sync prompts
           "git.confirmSync" = false;
           "git.postCommitCommand" = "none";
+          "git.enableSmartCommit" = true;
+          "git.confirmNoVerify" = false;
         };
       };
     };
