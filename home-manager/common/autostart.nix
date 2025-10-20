@@ -86,5 +86,18 @@
       Categories=Utility;Security;Qt;
       StartupNotify=true
     '';
+
+    "autostart/teams-for-linux.desktop".text = ''
+      [Desktop Entry]
+      Name=Microsoft Teams for Linux
+      Exec=${config.home.homeDirectory}/.config/bin/wait-for-env.sh teams-for-linux --enable-features=WaylandWindowDecorations --enable-webrtc-pipewire-capturer --enable-gpu-rasterization --enable-zero-copy
+      Terminal=false
+      Type=Application
+      Icon=teams-for-linux
+      StartupWMClass=teams-for-linux
+      Comment=Unofficial Microsoft Teams client for Linux
+      Categories=Network;InstantMessaging;
+      StartupNotify=true
+    '';
   };
 }
